@@ -5,12 +5,14 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-nati
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
+import { trpc } from "@/lib/trpc";
 import { CONTENT_MODULES, type ContentModule } from "@/shared/knowledge";
 
 export default function ConteudosScreen() {
   const colors = useColors();
   const [selected, setSelected] = useState<ContentModule | null>(null);
   const [saved, setSaved] = useState(false);
+  const materialsQuery = trpc.materials.list.useQuery();
 
   async function saveForOffline() {
     await AsyncStorage.setItem("sementes:conteudos", JSON.stringify(CONTENT_MODULES));
@@ -41,6 +43,10 @@ export default function ConteudosScreen() {
             );
           })}
         </View>
+        {!!materialsQuery.data?.length && <>
+          <Text style={[styles.extraKicker, { color: colors.primary }]}>ADICIONADOS PELA EQUIPE</Text>
+          {materialsQuery.data.map((material) => <View key={material.id} style={[styles.material, { backgroundColor: colors.surface, borderColor: colors.border }]}><View style={styles.materialTop}><IconSymbol name="doc.on.doc.fill" size={17} color={colors.primary} /><Text style={[styles.materialSource, { color: colors.primary }]}>{material.source || "Material publicado"}</Text></View><Text style={[styles.materialTitle, { color: colors.foreground }]}>{material.title}</Text><Text style={[styles.materialSummary, { color: colors.muted }]}>{material.summary || material.content.slice(0, 180)}</Text></View>)}
+        </>}
       </ScrollView>
     </ScreenContainer>
   );
@@ -73,4 +79,10 @@ const styles = StyleSheet.create({
   practiceLabel: { fontSize: 9, fontWeight: "800", letterSpacing: 1, marginTop: 16, marginBottom: 4 },
   practice: { fontSize: 12, lineHeight: 18 },
   pressed: { opacity: 0.8 },
+  extraKicker: { fontSize: 10, fontWeight: "800", letterSpacing: 1.3, marginTop: 28, marginBottom: 10 },
+  material: { borderRadius: 18, borderWidth: 1, padding: 14, marginBottom: 10 },
+  materialTop: { flexDirection: "row", alignItems: "center", gap: 7, marginBottom: 9 },
+  materialSource: { fontSize: 10, fontWeight: "800", letterSpacing: 0.5 },
+  materialTitle: { fontSize: 15, fontWeight: "800" },
+  materialSummary: { fontSize: 12, lineHeight: 18, marginTop: 5 },
 });

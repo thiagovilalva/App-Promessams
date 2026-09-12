@@ -59,6 +59,7 @@ export default function HomeScreen() {
           <View style={styles.offerCopy}><Text style={[styles.offerTitle, { color: colors.foreground }]}>Apoie o campo</Text><Text style={[styles.offerText, { color: colors.muted }]}>Conheça a chave PIX para apoiar a Convenção Regional Sul-Mato-Grossense.</Text></View><IconSymbol name="chevron.right" size={20} color="#A76418" />
         </Pressable>
         <Text style={[styles.footer, { color: colors.muted }]}>Conteúdo de trabalho da Convenção Regional Sul-Mato-Grossense</Text>
+        <Pressable onPress={() => router.push("/admin")} style={styles.teamLink}><IconSymbol name="lock.fill" size={13} color={colors.muted} /><Text style={[styles.teamLinkText, { color: colors.muted }]}>Área da equipe</Text></Pressable>
       </ScrollView>
     </ScreenContainer>
   );
@@ -98,5 +99,7 @@ const styles = StyleSheet.create({
   offerTitle: { fontSize: 14, fontWeight: "800", marginBottom: 3 },
   offerText: { fontSize: 11, lineHeight: 16 },
   footer: { textAlign: "center", fontSize: 10, marginTop: 26, lineHeight: 15 },
+  teamLink: { alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 5, marginTop: 12, padding: 5 },
+  teamLinkText: { fontSize: 10, fontWeight: "700" },
   pressed: { opacity: 0.78, transform: [{ scale: 0.985 }] },
 });

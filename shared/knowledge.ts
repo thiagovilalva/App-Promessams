@@ -1,3 +1,5 @@
+import { FULL_DOCUMENT_TEXT } from "./full-document";
+
 export type ContentModule = {
   id: string;
   eyebrow: string;
@@ -70,9 +72,21 @@ export const CONTENT_MODULES: ContentModule[] = [
     practice: "Identifique uma pessoa fiel e disponível que possa ser acompanhada para assumir um próximo serviço com mentoria.",
     duration: "5 min",
   },
+  {
+    id: "documento-integral",
+    eyebrow: "Documento-base",
+    title: "Filosofia da Semente — documento integral",
+    summary: "Leia o material completo da Convenção Regional Sul-Mato-Grossense, com as seções de filosofia, implantação, equipes, cuidado e avaliação.",
+    body: FULL_DOCUMENT_TEXT,
+    scripture: "Documento de trabalho teológico-ministerial",
+    practice: "Use a busca do seu dispositivo para localizar uma seção e converse com o guia sobre como aplicá-la com segurança na sua igreja.",
+    duration: "Leitura completa",
+  },
 ];
 
-export const SEMENTES_KNOWLEDGE = `
+export const SEMENTES_KNOWLEDGE = `${FULL_DOCUMENT_TEXT}
+
+RESUMO ORIENTADOR DO AGENTE
 BASE DE CONHECIMENTO — FILOSOFIA DA SEMENTE E PROJETO SEMENTES
 
 A Filosofia da Semente é uma visão bíblico-missional de igreja: chama todo discípulo a viver enviado, cultivar relacionamentos intencionais, proclamar e ensinar a Palavra, cuidar de pessoas e multiplicar discípulos. Seu lema é “Multiplicando vidas para o Reino de Deus”. A igreja não existe para preservar sua própria rotina; existe para participar da missão de Deus, fazendo discípulos de Jesus que fazem discípulos.

@@ -1,23 +1,31 @@
-import { useState } from "react";
-import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import QRCode from "qrcode";
+import { useEffect, useState } from "react";
+import { Alert, Image, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
-
-const PIX_KEY = "15760349000107";
+import { buildPixPayload, PIX_KEY } from "@/shared/pix";
 
 export default function OfertasScreen() {
   const colors = useColors();
+  const [amount, setAmount] = useState("");
   const [copied, setCopied] = useState(false);
+  const [qrData, setQrData] = useState("");
+  const numericAmount = Number.parseFloat(amount.replace(",", "."));
+  const payload = buildPixPayload(Number.isFinite(numericAmount) && numericAmount > 0 ? numericAmount : undefined);
 
-  async function copyKey() {
+  useEffect(() => {
+    QRCode.toDataURL(payload, { margin: 1, width: 240, color: { dark: "#173D2C", light: "#FFFFFF" } }).then(setQrData).catch(() => setQrData(""));
+  }, [payload]);
+
+  async function copy(value: string, label: string) {
     if (Platform.OS === "web" && globalThis.navigator?.clipboard) {
-      await globalThis.navigator.clipboard.writeText(PIX_KEY);
+      await globalThis.navigator.clipboard.writeText(value);
       setCopied(true);
       setTimeout(() => setCopied(false), 2200);
     } else {
-      Alert.alert("Chave PIX", PIX_KEY, [{ text: "Entendi" }]);
+      Alert.alert(label, value, [{ text: "Entendi" }]);
     }
   }
 
@@ -28,11 +36,19 @@ export default function OfertasScreen() {
         <Text style={[styles.kicker, { color: "#A76418" }]}>APOIE A MISSÃO</Text>
         <Text style={[styles.title, { color: colors.foreground }]}>Toda semente pode alcançar mais vidas.</Text>
         <Text style={[styles.subtitle, { color: colors.muted }]}>Sua oferta ajuda a Convenção Regional Sul-Mato-Grossense a manter, formar e investir no Projeto Sementes junto às igrejas locais.</Text>
-        <View style={[styles.pixCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><View style={styles.pixHeader}><View style={styles.pixBadge}><Text style={styles.pixBadgeText}>PIX</Text></View><Text style={[styles.pixLabel, { color: colors.muted }]}>Chave CNPJ</Text></View><Text style={[styles.key, { color: colors.foreground }]}>{PIX_KEY}</Text><Pressable onPress={copyKey} style={({ pressed }) => [styles.copyButton, { backgroundColor: copied ? "#E9F7F0" : colors.primary }, pressed && styles.pressed]}><IconSymbol name={copied ? "checkmark" : "doc.on.doc.fill"} size={17} color={copied ? "#167C55" : "#FFFFFF"} /><Text style={[styles.copyText, { color: copied ? "#167C55" : "#FFFFFF" }]}>{copied ? "Chave copiada" : "Copiar chave PIX"}</Text></Pressable></View>
-        <View style={[styles.info, { backgroundColor: "#F8F7F4" }]}><IconSymbol name="info.circle.fill" size={18} color={colors.primary} /><Text style={[styles.infoText, { color: colors.muted }]}>Confira o nome do recebedor no seu banco antes de confirmar qualquer oferta. O aplicativo não solicita senha, código de segurança ou dados do cartão.</Text></View>
-        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Sobre pagamentos pelo app</Text>
-        <Text style={[styles.body, { color: colors.muted }]}>Nesta primeira versão, a chave PIX oficial fica disponível para copiar e usar no aplicativo do seu banco. A geração automática de QR Code e cobranças depende da escolha de um provedor de pagamentos e da configuração segura de credenciais pela organização.</Text>
-        <View style={[styles.future, { borderColor: "#F3D9AF", backgroundColor: "#FFFDF8" }]}><IconSymbol name="sparkles" size={18} color="#A76418" /><Text style={[styles.futureText, { color: colors.foreground }]}>Próximo passo planejado: QR Code PIX dinâmico e comprovante opcional, com integração oficial.</Text></View>
+        <View style={[styles.pixCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={styles.pixHeader}><View style={styles.pixBadge}><Text style={styles.pixBadgeText}>PIX</Text></View><Text style={[styles.pixLabel, { color: colors.muted }]}>Oferta voluntária · CNPJ</Text></View>
+          <Text style={[styles.key, { color: colors.foreground }]}>{PIX_KEY}</Text>
+          <Text style={[styles.helper, { color: colors.muted }]}>Valor opcional para personalizar o QR Code</Text>
+          <View style={[styles.amountBox, { borderColor: colors.border }]}><Text style={[styles.currency, { color: colors.muted }]}>R$</Text><TextInput value={amount} onChangeText={setAmount} keyboardType="decimal-pad" placeholder="0,00" placeholderTextColor={colors.muted} style={[styles.amountInput, { color: colors.foreground }]} /></View>
+          {qrData ? <View style={styles.qrWrap}><Image source={{ uri: qrData }} style={styles.qr} accessibilityLabel="QR Code PIX para oferta" /><Text style={[styles.qrCaption, { color: colors.muted }]}>Aponte a câmera do banco para ofertar</Text></View> : null}
+          <Pressable onPress={() => copy(payload, "PIX Copia e Cola")} style={({ pressed }) => [styles.copyButton, { backgroundColor: copied ? "#E9F7F0" : colors.primary }, pressed && styles.pressed]}><IconSymbol name={copied ? "checkmark" : "qrcode"} size={17} color={copied ? "#167C55" : "#FFFFFF"} /><Text style={[styles.copyText, { color: copied ? "#167C55" : "#FFFFFF" }]}>{copied ? "Código copiado" : "Copiar PIX Copia e Cola"}</Text></Pressable>
+          <Pressable onPress={() => copy(PIX_KEY, "Chave PIX")} style={({ pressed }) => [styles.keyButton, { borderColor: colors.border }, pressed && styles.pressed]}><IconSymbol name="doc.on.doc.fill" size={16} color={colors.primary} /><Text style={[styles.keyButtonText, { color: colors.foreground }]}>Copiar somente a chave</Text></Pressable>
+        </View>
+        <View style={[styles.info, { backgroundColor: "#F8F7F4" }]}><IconSymbol name="info.circle.fill" size={18} color={colors.primary} /><Text style={[styles.infoText, { color: colors.muted }]}>Confira o nome do recebedor no seu banco antes de confirmar. O app não solicita senha, código de segurança ou dados do cartão.</Text></View>
+        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Transparência e segurança</Text>
+        <Text style={[styles.body, { color: colors.muted }]}>O QR Code e o código Copia e Cola são gerados localmente a partir da chave PIX informada pela Convenção. A confirmação acontece somente no aplicativo do seu banco.</Text>
+        <View style={[styles.future, { borderColor: "#F3D9AF", backgroundColor: "#FFFDF8" }]}><IconSymbol name="sparkles" size={18} color="#A76418" /><Text style={[styles.futureText, { color: colors.foreground }]}>Próximo passo: integrar um provedor oficial para cobranças dinâmicas, conciliação e comprovantes.</Text></View>
       </ScrollView>
     </ScreenContainer>
   );
@@ -56,8 +72,17 @@ const styles = StyleSheet.create({
   pixBadgeText: { color: "#167C55", fontSize: 10, fontWeight: "900", letterSpacing: 0.5 },
   pixLabel: { fontSize: 11 },
   key: { fontSize: 23, fontWeight: "800", letterSpacing: 1.2, marginTop: 18 },
-  copyButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderRadius: 14, paddingVertical: 13, marginTop: 17 },
+  helper: { fontSize: 11, marginTop: 14, marginBottom: 7 },
+  amountBox: { borderWidth: 1, borderRadius: 13, height: 46, flexDirection: "row", alignItems: "center", paddingHorizontal: 12 },
+  currency: { fontSize: 13, fontWeight: "700", marginRight: 6 },
+  amountInput: { flex: 1, fontSize: 16, fontWeight: "700" },
+  qrWrap: { alignItems: "center", paddingVertical: 16 },
+  qr: { width: 190, height: 190 },
+  qrCaption: { fontSize: 11, marginTop: 8 },
+  copyButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderRadius: 14, paddingVertical: 13, marginTop: 2 },
   copyText: { fontSize: 13, fontWeight: "800" },
+  keyButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderWidth: 1, borderRadius: 14, paddingVertical: 11, marginTop: 9 },
+  keyButtonText: { fontSize: 12, fontWeight: "700" },
   info: { flexDirection: "row", gap: 9, borderRadius: 14, padding: 13, marginTop: 14 },
   infoText: { flex: 1, fontSize: 11, lineHeight: 16 },
   sectionTitle: { fontSize: 18, fontWeight: "800", marginTop: 29, marginBottom: 7 },
