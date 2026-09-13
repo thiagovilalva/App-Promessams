@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
+import path from "path";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
@@ -30,6 +31,7 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
+  const webDist = path.join(process.cwd(), "web-dist");
 
   // Enable CORS for all routes - reflect the request origin to support credentials
   app.use((req, res, next) => {
@@ -69,6 +71,13 @@ async function startServer() {
       createContext,
     }),
   );
+
+  // The production container runs the API process, so explicitly serve the
+  // Expo static export as the public website and SPA fallback.
+  app.use(express.static(webDist, { index: "index.html" }));
+  app.get("*", (_req, res) => {
+    res.sendFile(path.join(webDist, "index.html"));
+  });
 
   const preferredPort = parseInt(process.env.PORT || "3000");
   const port = await findAvailablePort(preferredPort);
