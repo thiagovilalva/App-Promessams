@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Appearance, View } from "react-native";
 import { colorScheme as nativewindColorScheme, vars } from "nativewind";
 
@@ -19,6 +20,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // is added to the UI.
   const [colorScheme, setColorSchemeState] = useState<ColorScheme>("light");
 
+  useEffect(() => {
+    AsyncStorage.getItem("sementes:theme").then((saved) => {
+      if (saved === "light" || saved === "dark") setColorSchemeState(saved);
+    });
+  }, []);
+
   const applyScheme = useCallback((scheme: ColorScheme) => {
     nativewindColorScheme.set(scheme);
     Appearance.setColorScheme?.(scheme);
@@ -36,6 +43,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const setColorScheme = useCallback((scheme: ColorScheme) => {
     setColorSchemeState(scheme);
     applyScheme(scheme);
+    void AsyncStorage.setItem("sementes:theme", scheme);
   }, [applyScheme]);
 
   useEffect(() => {

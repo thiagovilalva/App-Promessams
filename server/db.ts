@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertMaterial, InsertUser, materials, users } from "../drizzle/schema";
+import { Conversation, InsertConversation, InsertMaterial, InsertUser, conversations, materials, users } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -68,4 +68,17 @@ export async function createMaterial(input: Omit<InsertMaterial, "id" | "created
   if (!db) throw new Error("Database not available");
   await db.insert(materials).values(input);
   return { created: true } as const;
+}
+
+export async function saveConversation(input: Omit<InsertConversation, "id" | "createdAt" | "updatedAt">) {
+  const db = await getDb();
+  if (!db) return null;
+  await db.insert(conversations).values(input);
+  return { saved: true } as const;
+}
+
+export async function getUserConversations(userId: number): Promise<Conversation[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(conversations).where(eq(conversations.userId, userId)).orderBy(desc(conversations.updatedAt)).limit(30);
 }

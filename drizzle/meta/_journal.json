@@ -15,6 +15,13 @@
       "when": 1789179995186,
       "tag": "0001_sudden_sheva_callister",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1789368673034,
+      "tag": "0002_flawless_the_santerians",
+      "breakpoints": true
     }
   ]
 }

@@ -3,12 +3,18 @@ import { z } from "zod";
 import { SEMENTES_KNOWLEDGE } from "../shared/knowledge";
 import { fallbackAnswer, needsOnlineResearch } from "../shared/chat-fallback";
 import { COOKIE_NAME } from "../shared/const";
-import { createMaterial, getAllMaterials, getPublishedMaterials } from "./db";
+import { createMaterial, getAllMaterials, getPublishedMaterials, getUserConversations, saveConversation } from "./db";
 import { invokeLLM } from "./_core/llm";
-import { adminProcedure, publicProcedure, router } from "./_core/trpc";
+import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { systemRouter } from "./_core/systemRouter";
 
-const chatMessageSchema = z.object({ role: z.enum(["user", "assistant"]), content: z.string().min(1).max(6000) });
+const chatAttachmentSchema = z.object({
+  name: z.string().max(255),
+  mimeType: z.string().max(120).optional(),
+  text: z.string().max(30000).optional(),
+  dataUrl: z.string().max(12000000).optional(),
+});
+const chatMessageSchema = z.object({ role: z.enum(["user", "assistant"]), content: z.string().min(1).max(6000), attachments: z.array(chatAttachmentSchema).max(3).optional() });
 
 function textFromContent(content: unknown): string {
   if (typeof content === "string") return content;
@@ -57,17 +63,32 @@ export const appRouter = router({
     adminList: adminProcedure.query(() => getAllMaterials()),
     create: adminProcedure.input(materialInput).mutation(({ ctx, input }) => createMaterial({ ...input, createdBy: ctx.user.id, summary: input.summary ?? null, source: input.source ?? null })),
   }),
+  history: router({
+    list: protectedProcedure.query(({ ctx }) => getUserConversations(ctx.user.id)),
+  }),
   chat: router({
-    ask: publicProcedure.input(z.object({ messages: z.array(chatMessageSchema).min(1).max(20) })).mutation(async ({ input }) => {
+    ask: publicProcedure.input(z.object({ messages: z.array(chatMessageSchema).min(1).max(20) })).mutation(async ({ ctx, input }) => {
       try {
         const databaseMaterials = await getPublishedMaterials();
         const databaseKnowledge = databaseMaterials.length ? `\n\nMATERIAIS ADICIONAIS PUBLICADOS PELA EQUIPE:\n${databaseMaterials.map((item) => `\n## ${item.title}\n${item.summary ?? ""}\n${item.content.slice(0, 18000)}\nFonte: ${item.source ?? "não informada"}`).join("\n")}` : "";
         const messages = [
         { role: "system" as const, content: `Você é o agente de orientação do aplicativo Projeto Sementes. Responda em português do Brasil, com tom humano, acolhedor, sereno e prático. Não diga que é uma IA de forma repetitiva. Use a base de conhecimento abaixo como prioridade. Cite referências bíblicas quando forem relevantes, sem inventar citações. Ajude o usuário a compreender, vivenciar, ensinar e desenvolver a Filosofia da Semente e o Projeto Sementes na igreja local. Faça perguntas de acompanhamento quando isso ajudar a transformar a reflexão em um próximo passo. Não substitua o pastor ou a liderança local em decisões sensíveis. Se recorrer à pesquisa online, diferencie claramente o que veio da base, o que é pesquisa e o que é sugestão.\n\n${SEMENTES_KNOWLEDGE}${databaseKnowledge}` },
-        ...input.messages.map((message) => ({ role: message.role as "user" | "assistant", content: message.content })),
+        ...input.messages.map((message) => {
+          const attachments = message.attachments ?? [];
+          const attachmentText = attachments.filter((item) => item.text).map((item) => `\n\nArquivo ${item.name}:\n${item.text}`).join("");
+          const imageParts = attachments.filter((item) => item.dataUrl && item.mimeType?.startsWith("image/")).map((item) => ({ type: "image_url" as const, image_url: { url: item.dataUrl!, detail: "auto" as const } }));
+          return imageParts.length
+            ? { role: message.role as "user" | "assistant", content: [{ type: "text" as const, text: `${message.content}${attachmentText}` }, ...imageParts] }
+            : { role: message.role as "user" | "assistant", content: `${message.content}${attachmentText}` };
+        }),
         ];
 
         const shouldResearch = needsOnlineResearch(input.messages[input.messages.length - 1]?.content ?? "");
+        const persist = async (answer: string) => {
+          if (!ctx.user) return;
+          const safeMessages = [...input.messages, { role: "assistant" as const, content: answer }].map(({ role, content, attachments }) => ({ role, content, attachments: attachments?.map(({ name, mimeType, text }) => ({ name, mimeType, text })) }));
+          await saveConversation({ userId: ctx.user.id, title: input.messages.find((item) => item.role === "user")?.content.slice(0, 80) || "Conversa Projeto Sementes", messages: JSON.stringify(safeMessages) });
+        };
         const first = await invokeLLM({
         model: "gpt-5-mini",
         messages,
@@ -82,12 +103,18 @@ export const appRouter = router({
           return args.query ? searchOnline(args.query) : "Consulta inválida.";
           }));
           const second = await invokeLLM({ model: "gpt-5-mini", messages: [...messages, { role: "user" as const, content: `A pesquisa online solicitada retornou o seguinte material. Use-o apenas como complemento, avalie sua confiabilidade e não invente fatos:\n\n${research.join("\n\n")}` }], maxTokens: 1000 });
-          return { answer: textFromContent(second.choices?.[0]?.message?.content) || fallbackAnswer(input.messages[input.messages.length - 1]?.content ?? ""), researched: true };
+          const answer = textFromContent(second.choices?.[0]?.message?.content) || fallbackAnswer(input.messages[input.messages.length - 1]?.content ?? "");
+          await persist(answer);
+          return { answer, researched: true };
         }
-        return { answer: textFromContent(firstMessage?.content) || fallbackAnswer(input.messages[input.messages.length - 1]?.content ?? ""), researched: false };
+        const answer = textFromContent(firstMessage?.content) || fallbackAnswer(input.messages[input.messages.length - 1]?.content ?? "");
+        await persist(answer);
+        return { answer, researched: false };
       } catch (error) {
         console.error("[Chat] LLM request failed:", error);
-        return { answer: fallbackAnswer(input.messages[input.messages.length - 1]?.content ?? ""), researched: false };
+        const answer = fallbackAnswer(input.messages[input.messages.length - 1]?.content ?? "");
+        if (ctx.user) await saveConversation({ userId: ctx.user.id, title: input.messages[0]?.content.slice(0, 80) || "Conversa Projeto Sementes", messages: JSON.stringify([...input.messages, { role: "assistant", content: answer }]) });
+        return { answer, researched: false };
       }
     }),
   }),

@@ -14,6 +14,7 @@ const MAPPING: Record<string, MaterialIconName> = {
   "arrow.forward": "arrow-forward",
   "arrow.up": "arrow-upward",
   "arrow.up.right": "north-east",
+  "paperclip": "attach-file",
   "arrow.down.circle.fill": "download",
   "checkmark.circle.fill": "check-circle",
   "checkmark": "check",

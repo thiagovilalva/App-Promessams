@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
+import { useThemeContext } from "@/lib/theme-provider";
 
 const principles = [
   { icon: "auto-stories", title: "Palavra no centro", text: "A semente é a Palavra de Deus; ela é recebida, compreendida e praticada." },
@@ -14,6 +15,7 @@ const principles = [
 export default function HomeScreen() {
   const router = useRouter();
   const colors = useColors();
+  const { colorScheme, setColorScheme } = useThemeContext();
 
   return (
     <ScreenContainer className="px-5" edges={["top", "left", "right"]}>
@@ -21,6 +23,7 @@ export default function HomeScreen() {
         <View style={styles.topline}>
           <View style={styles.brandMark}><Text style={styles.brandSeed}>S</Text></View>
           <View><Text style={[styles.brandName, { color: colors.foreground }]}>Projeto Sementes</Text><Text style={[styles.brandCaption, { color: colors.muted }]}>Igreja viva no Modo Missão</Text></View>
+          <Pressable onPress={() => setColorScheme(colorScheme === "light" ? "dark" : "light")} style={[styles.themeButton, { borderColor: colors.border, backgroundColor: colors.surface }]}><Text style={[styles.themeButtonText, { color: colors.foreground }]}>{colorScheme === "light" ? "Escuro" : "Claro"}</Text></Pressable>
         </View>
 
         <View style={[styles.hero, { backgroundColor: colors.primary }]}>
@@ -59,6 +62,7 @@ export default function HomeScreen() {
           <View style={styles.offerCopy}><Text style={[styles.offerTitle, { color: colors.foreground }]}>Apoie o campo</Text><Text style={[styles.offerText, { color: colors.muted }]}>Conheça a chave PIX para apoiar a Convenção Regional Sul-Mato-Grossense.</Text></View><IconSymbol name="chevron.right" size={20} color="#A76418" />
         </Pressable>
         <Text style={[styles.footer, { color: colors.muted }]}>Conteúdo de trabalho da Convenção Regional Sul-Mato-Grossense</Text>
+        <Pressable onPress={() => router.push("/conta")} style={[styles.accountLink, { borderColor: colors.border, backgroundColor: colors.surface }]}><Text style={[styles.accountLinkText, { color: colors.primary }]}>Entrar ou criar conta Manus</Text><Text style={[styles.accountLinkHint, { color: colors.muted }]}>Guardar sua jornada e histórico</Text></Pressable>
         <Pressable onPress={() => router.push("/admin")} style={styles.teamLink}><IconSymbol name="lock.fill" size={13} color={colors.muted} /><Text style={[styles.teamLinkText, { color: colors.muted }]}>Área da equipe</Text></Pressable>
       </ScrollView>
     </ScreenContainer>
@@ -68,6 +72,8 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   scroll: { paddingTop: 18, paddingBottom: 36 },
   topline: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 18 },
+  themeButton: { marginLeft: "auto", borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 7 },
+  themeButtonText: { fontSize: 10, fontWeight: "800" },
   brandMark: { width: 38, height: 38, borderRadius: 13, backgroundColor: "#E9F7F0", alignItems: "center", justifyContent: "center" },
   brandSeed: { color: "#167C55", fontSize: 20, fontWeight: "800" },
   brandName: { fontSize: 17, fontWeight: "800", letterSpacing: -0.2 },
@@ -99,6 +105,9 @@ const styles = StyleSheet.create({
   offerTitle: { fontSize: 14, fontWeight: "800", marginBottom: 3 },
   offerText: { fontSize: 11, lineHeight: 16 },
   footer: { textAlign: "center", fontSize: 10, marginTop: 26, lineHeight: 15 },
+  accountLink: { borderWidth: 1, borderRadius: 16, padding: 13, marginTop: 14, alignItems: "center" },
+  accountLinkText: { fontSize: 13, fontWeight: "800" },
+  accountLinkHint: { fontSize: 11, marginTop: 3 },
   teamLink: { alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 5, marginTop: 12, padding: 5 },
   teamLinkText: { fontSize: 10, fontWeight: "700" },
   pressed: { opacity: 0.78, transform: [{ scale: 0.985 }] },
