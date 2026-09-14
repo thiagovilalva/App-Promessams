@@ -36,9 +36,10 @@ export default function ChatScreen() {
       const mimeType = asset.mimeType ?? "application/octet-stream";
       if ((asset.size ?? 0) > 8_000_000) { Alert.alert("Arquivo muito grande", "Escolha um arquivo de até 8 MB."); return; }
       const isImage = mimeType.startsWith("image/");
-      const isText = textTypes.includes(mimeType) || mimeType.startsWith("text/");
+      const isPdf = mimeType === "application/pdf";
+      const isText = !isPdf && (textTypes.includes(mimeType) || mimeType.startsWith("text/"));
       let attachment: Attachment = { name: asset.name, mimeType };
-      if (isImage) {
+      if (isImage || isPdf) {
         let base64 = asset.base64;
         if (!base64 && Platform.OS === "web" && asset.file) {
           const bytes = new Uint8Array(await asset.file.arrayBuffer());

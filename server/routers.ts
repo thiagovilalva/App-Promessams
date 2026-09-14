@@ -77,8 +77,10 @@ export const appRouter = router({
           const attachments = message.attachments ?? [];
           const attachmentText = attachments.filter((item) => item.text).map((item) => `\n\nArquivo ${item.name}:\n${item.text}`).join("");
           const imageParts = attachments.filter((item) => item.dataUrl && item.mimeType?.startsWith("image/")).map((item) => ({ type: "image_url" as const, image_url: { url: item.dataUrl!, detail: "auto" as const } }));
-          return imageParts.length
-            ? { role: message.role as "user" | "assistant", content: [{ type: "text" as const, text: `${message.content}${attachmentText}` }, ...imageParts] }
+          const fileParts = attachments.filter((item) => item.dataUrl && item.mimeType === "application/pdf").map((item) => ({ type: "file_url" as const, file_url: { url: item.dataUrl!, mime_type: "application/pdf" as const } }));
+          const richParts = [...imageParts, ...fileParts];
+          return richParts.length
+            ? { role: message.role as "user" | "assistant", content: [{ type: "text" as const, text: `${message.content}${attachmentText}` }, ...richParts] }
             : { role: message.role as "user" | "assistant", content: `${message.content}${attachmentText}` };
         }),
         ];
