@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { SEMENTES_KNOWLEDGE } from "../shared/knowledge";
+import { fallbackAnswer, needsOnlineResearch } from "../shared/chat-fallback";
 import { COOKIE_NAME } from "../shared/const";
 import { createMaterial, getAllMaterials, getPublishedMaterials } from "./db";
 import { invokeLLM } from "./_core/llm";
@@ -58,31 +59,36 @@ export const appRouter = router({
   }),
   chat: router({
     ask: publicProcedure.input(z.object({ messages: z.array(chatMessageSchema).min(1).max(20) })).mutation(async ({ input }) => {
-      const databaseMaterials = await getPublishedMaterials();
-      const databaseKnowledge = databaseMaterials.length ? `\n\nMATERIAIS ADICIONAIS PUBLICADOS PELA EQUIPE:\n${databaseMaterials.map((item) => `\n## ${item.title}\n${item.summary ?? ""}\n${item.content.slice(0, 18000)}\nFonte: ${item.source ?? "não informada"}`).join("\n")}` : "";
-      const messages = [
+      try {
+        const databaseMaterials = await getPublishedMaterials();
+        const databaseKnowledge = databaseMaterials.length ? `\n\nMATERIAIS ADICIONAIS PUBLICADOS PELA EQUIPE:\n${databaseMaterials.map((item) => `\n## ${item.title}\n${item.summary ?? ""}\n${item.content.slice(0, 18000)}\nFonte: ${item.source ?? "não informada"}`).join("\n")}` : "";
+        const messages = [
         { role: "system" as const, content: `Você é o agente de orientação do aplicativo Projeto Sementes. Responda em português do Brasil, com tom humano, acolhedor, sereno e prático. Não diga que é uma IA de forma repetitiva. Use a base de conhecimento abaixo como prioridade. Cite referências bíblicas quando forem relevantes, sem inventar citações. Ajude o usuário a compreender, vivenciar, ensinar e desenvolver a Filosofia da Semente e o Projeto Sementes na igreja local. Faça perguntas de acompanhamento quando isso ajudar a transformar a reflexão em um próximo passo. Não substitua o pastor ou a liderança local em decisões sensíveis. Se recorrer à pesquisa online, diferencie claramente o que veio da base, o que é pesquisa e o que é sugestão.\n\n${SEMENTES_KNOWLEDGE}${databaseKnowledge}` },
         ...input.messages.map((message) => ({ role: message.role as "user" | "assistant", content: message.content })),
-      ];
+        ];
 
-      const first = await invokeLLM({
+        const shouldResearch = needsOnlineResearch(input.messages[input.messages.length - 1]?.content ?? "");
+        const first = await invokeLLM({
         model: "gpt-5-mini",
         messages,
         maxTokens: 900,
-        tools: [{ type: "function", function: { name: "search_online", description: "Pesquisar na internet quando a pergunta pedir informação atual ou assunto fora da base de conhecimento.", parameters: { type: "object", properties: { query: { type: "string", description: "Consulta curta em português" } }, required: ["query"] } } }],
-        toolChoice: "auto",
-      });
-      const firstMessage = first.choices?.[0]?.message as { content?: unknown; tool_calls?: Array<{ id: string; function: { name: string; arguments: string } }> } | undefined;
-      if (firstMessage?.tool_calls?.length) {
-        const research = await Promise.all(firstMessage.tool_calls.map(async (call) => {
+        ...(shouldResearch ? { tools: [{ type: "function" as const, function: { name: "search_online", description: "Pesquisar na internet para complementar uma pergunta que pede informação atual.", parameters: { type: "object", properties: { query: { type: "string", description: "Consulta curta em português" } }, required: ["query"] } } }], toolChoice: "auto" as const } : {}),
+        });
+        const firstMessage = first.choices?.[0]?.message as { content?: unknown; tool_calls?: Array<{ id: string; function: { name: string; arguments: string } }> } | undefined;
+        if (firstMessage?.tool_calls?.length) {
+          const research = await Promise.all(firstMessage.tool_calls.map(async (call) => {
           let args: { query?: string } = {};
           try { args = JSON.parse(call.function.arguments || "{}"); } catch { args = {}; }
           return args.query ? searchOnline(args.query) : "Consulta inválida.";
-        }));
-        const second = await invokeLLM({ model: "gpt-5-mini", messages: [...messages, { role: "user" as const, content: `A pesquisa online solicitada retornou o seguinte material. Use-o apenas como complemento, avalie sua confiabilidade e não invente fatos:\n\n${research.join("\n\n")}` }], maxTokens: 1000 });
-        return { answer: textFromContent(second.choices?.[0]?.message?.content) || "Não consegui concluir a resposta agora. Tente novamente.", researched: true };
+          }));
+          const second = await invokeLLM({ model: "gpt-5-mini", messages: [...messages, { role: "user" as const, content: `A pesquisa online solicitada retornou o seguinte material. Use-o apenas como complemento, avalie sua confiabilidade e não invente fatos:\n\n${research.join("\n\n")}` }], maxTokens: 1000 });
+          return { answer: textFromContent(second.choices?.[0]?.message?.content) || fallbackAnswer(input.messages[input.messages.length - 1]?.content ?? ""), researched: true };
+        }
+        return { answer: textFromContent(firstMessage?.content) || fallbackAnswer(input.messages[input.messages.length - 1]?.content ?? ""), researched: false };
+      } catch (error) {
+        console.error("[Chat] LLM request failed:", error);
+        return { answer: fallbackAnswer(input.messages[input.messages.length - 1]?.content ?? ""), researched: false };
       }
-      return { answer: textFromContent(firstMessage?.content) || "Não consegui concluir a resposta agora. Tente novamente.", researched: false };
     }),
   }),
 });
