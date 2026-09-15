@@ -1,10 +1,12 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 
 import { SEMENTES_KNOWLEDGE } from "../shared/knowledge";
 import { fallbackAnswer, needsOnlineResearch } from "../shared/chat-fallback";
 import { COOKIE_NAME } from "../shared/const";
-import { createMaterial, getAllMaterials, getPublishedMaterials, getUserConversations, saveConversation } from "./db";
+import { createMaterial, getAllMaterials, getPublishedMaterials, getUserConversations, publishMaterial, saveConversation } from "./db";
 import { invokeLLM } from "./_core/llm";
+import { ENV } from "./_core/env";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { systemRouter } from "./_core/systemRouter";
 
@@ -61,7 +63,11 @@ export const appRouter = router({
   materials: router({
     list: publicProcedure.query(() => getPublishedMaterials()),
     adminList: adminProcedure.query(() => getAllMaterials()),
-    create: adminProcedure.input(materialInput).mutation(({ ctx, input }) => createMaterial({ ...input, createdBy: ctx.user.id, summary: input.summary ?? null, source: input.source ?? null })),
+    create: adminProcedure.input(materialInput).mutation(({ ctx, input }) => createMaterial({ ...input, published: false, createdBy: ctx.user.id, summary: input.summary ?? null, source: input.source ?? null })),
+    approve: adminProcedure.input(z.object({ id: z.number().int().positive() })).mutation(({ ctx, input }) => {
+      if (!ENV.ownerOpenId || ctx.user.openId !== ENV.ownerOpenId) throw new TRPCError({ code: "FORBIDDEN", message: "Somente o gestor principal pode autorizar publicações." });
+      return publishMaterial(input.id);
+    }),
   }),
   history: router({
     list: protectedProcedure.query(({ ctx }) => getUserConversations(ctx.user.id)),

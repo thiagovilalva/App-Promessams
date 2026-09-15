@@ -51,3 +51,13 @@ Não foi encontrado um endpoint oficial exposto para gerar automaticamente links
 - [x] Adicionar tela de acessibilidade com texto padrão, grande e muito grande, persistente.
 - [x] Adicionar rótulos para leitor de tela e orientação para usuários surdos.
 - [x] Validar 15 testes, TypeScript, build e exportação web.
+
+## Governança, áudio e Libras — concluído
+
+- [x] Novos materiais entram como rascunho, nunca são publicados automaticamente.
+- [x] Apenas a conta proprietária identificada por OWNER_OPEN_ID pode autorizar a publicação.
+- [x] Administradores não proprietários podem enviar materiais para revisão, mas não publicá-los.
+- [x] Adicionar velocidade de leitura calma, natural e normal, persistente no dispositivo.
+- [x] Ajustar voz para português do Brasil com pitch levemente naturalizado.
+- [x] Adicionar acesso ao serviço oficial VLibras para apoio à tradução em Libras.
+- [x] Validar 17 testes, TypeScript, build e exportação web.

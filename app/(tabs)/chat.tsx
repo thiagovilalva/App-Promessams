@@ -21,7 +21,7 @@ const textTypes = ["text/plain", "text/markdown", "text/csv", "application/json"
 
 export default function ChatScreen() {
   const colors = useColors();
-  const { textScale } = useAccessibility();
+  const { textScale, speechRate } = useAccessibility();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [attachments, setAttachments] = useState<Attachment[]>([]);
@@ -88,7 +88,7 @@ export default function ChatScreen() {
 
   async function speakAnswer(text: string) {
     await Speech.stop();
-    Speech.speak(text, { language: "pt-BR", rate: 0.92 });
+    Speech.speak(text, { language: "pt-BR", rate: speechRate, pitch: 1.02 });
   }
 
   function deleteConversation() {

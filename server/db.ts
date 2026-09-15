@@ -70,6 +70,13 @@ export async function createMaterial(input: Omit<InsertMaterial, "id" | "created
   return { created: true } as const;
 }
 
+export async function publishMaterial(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(materials).set({ published: true }).where(eq(materials.id, id));
+  return { published: true } as const;
+}
+
 export async function saveConversation(input: Omit<InsertConversation, "id" | "createdAt" | "updatedAt">) {
   const db = await getDb();
   if (!db) return null;
