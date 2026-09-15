@@ -24,3 +24,18 @@ Não foi encontrado um endpoint oficial exposto para gerar automaticamente links
 - [ ] Adicionar botão de tentar novamente para respostas que falharem.
 - [ ] Adicionar pré-visualização de imagens antes do envio e suporte dedicado a PDF com extração no servidor.
 - [ ] Configurar um URL oficial de convite Manus quando ele for fornecido pela Manus.
+
+## Correção atual
+
+- [x] Permitir apagar toda a conversa local sem login, com confirmação explícita.
+- [x] Remover o scroll interno e o limite fixo de 260 px que cortavam respostas longas.
+- [x] Fazer somente a lista geral do chat rolar e acompanhar automaticamente a última mensagem.
+- [ ] Validar a experiência final em um dispositivo Android físico com resposta de várias telas.
+
+## Correção atual — validada
+
+- [x] Permitir apagar toda a conversa local sem login, com confirmação explícita.
+- [x] Remover o scroll interno e o limite fixo de 260 px que cortavam respostas longas.
+- [x] Fazer somente a lista geral do chat rolar e acompanhar automaticamente a última mensagem.
+- [x] Validar TypeScript, build, 12 testes automatizados e exportação web.
+- [x] Inspecionar a tela do chat em viewport móvel após a alteração.
