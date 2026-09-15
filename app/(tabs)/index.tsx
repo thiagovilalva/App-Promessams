@@ -63,6 +63,7 @@ export default function HomeScreen() {
         </Pressable>
         <Text style={[styles.footer, { color: colors.muted }]}>Conteúdo de trabalho da Convenção Regional Sul-Mato-Grossense</Text>
         <Pressable onPress={() => router.push("/conta")} style={[styles.accountLink, { borderColor: colors.border, backgroundColor: colors.surface }]}><Text style={[styles.accountLinkText, { color: colors.primary }]}>Entrar ou criar conta Manus</Text><Text style={[styles.accountLinkHint, { color: colors.muted }]}>Guardar sua jornada e histórico</Text></Pressable>
+        <Pressable onPress={() => router.push("/acessibilidade")} style={[styles.accessibilityLink, { borderColor: colors.border }]} accessibilityRole="button" accessibilityLabel="Abrir acessibilidade"><Text style={[styles.accessibilityLinkText, { color: colors.foreground }]}>Acessibilidade: texto grande, leitor de tela e ouvir respostas</Text></Pressable>
         <Pressable onPress={() => router.push("/admin")} style={styles.teamLink}><IconSymbol name="lock.fill" size={13} color={colors.muted} /><Text style={[styles.teamLinkText, { color: colors.muted }]}>Área da equipe</Text></Pressable>
       </ScrollView>
     </ScreenContainer>
@@ -108,6 +109,8 @@ const styles = StyleSheet.create({
   accountLink: { borderWidth: 1, borderRadius: 16, padding: 13, marginTop: 14, alignItems: "center" },
   accountLinkText: { fontSize: 13, fontWeight: "800" },
   accountLinkHint: { fontSize: 11, marginTop: 3 },
+  accessibilityLink: { borderWidth: 1, borderRadius: 14, padding: 12, marginTop: 9, alignItems: "center" },
+  accessibilityLinkText: { fontSize: 12, fontWeight: "700", textAlign: "center" },
   teamLink: { alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 5, marginTop: 12, padding: 5 },
   teamLinkText: { fontSize: 10, fontWeight: "700" },
   pressed: { opacity: 0.78, transform: [{ scale: 0.985 }] },

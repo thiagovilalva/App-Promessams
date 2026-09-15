@@ -39,3 +39,15 @@ Não foi encontrado um endpoint oficial exposto para gerar automaticamente links
 - [x] Fazer somente a lista geral do chat rolar e acompanhar automaticamente a última mensagem.
 - [x] Validar TypeScript, build, 12 testes automatizados e exportação web.
 - [x] Inspecionar a tela do chat em viewport móvel após a alteração.
+
+## Acessibilidade e compartilhamento — concluído
+
+- [x] Adicionar botão oficial de convite Manus com créditos.
+- [x] Adicionar botão de contato pelo WhatsApp para +55 67 99913-2610.
+- [x] Aumentar títulos, textos de leitura, rótulos e navegação inferior.
+- [x] Substituir a confirmação nativa de apagar por diálogo próprio compatível com web e celular.
+- [x] Adicionar copiar e compartilhar para respostas do chat e conteúdos.
+- [x] Adicionar leitura em voz alta em português do Brasil para respostas.
+- [x] Adicionar tela de acessibilidade com texto padrão, grande e muito grande, persistente.
+- [x] Adicionar rótulos para leitor de tela e orientação para usuários surdos.
+- [x] Validar 15 testes, TypeScript, build e exportação web.

@@ -1,12 +1,15 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Clipboard from "expo-clipboard";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
+import * as Speech from "expo-speech";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
+import { useAccessibility } from "@/lib/accessibility-provider";
 import { trpc } from "@/lib/trpc";
 
 type Attachment = { name: string; mimeType?: string; text?: string; dataUrl?: string };
@@ -18,9 +21,11 @@ const textTypes = ["text/plain", "text/markdown", "text/csv", "application/json"
 
 export default function ChatScreen() {
   const colors = useColors();
+  const { textScale } = useAccessibility();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const messagesScrollRef = useRef<ScrollView>(null);
   const mutation = trpc.chat.ask.useMutation();
 
@@ -72,31 +77,55 @@ export default function ChatScreen() {
     } catch { setMessages([...next, { role: "assistant", content: offlineAnswer }]); }
   }
 
+  async function copyAnswer(text: string) {
+    await Clipboard.setStringAsync(text);
+    Alert.alert("Texto copiado", "A resposta foi copiada para a área de transferência.");
+  }
+
+  async function shareAnswer(text: string) {
+    try { await Share.share({ message: text, title: "Projeto Sementes" }); } catch (error) { console.warn("[Chat] share cancelled", error); }
+  }
+
+  async function speakAnswer(text: string) {
+    await Speech.stop();
+    Speech.speak(text, { language: "pt-BR", rate: 0.92 });
+  }
+
+  function deleteConversation() {
+    setMessages([]);
+    setAttachments([]);
+    setInput("");
+    void AsyncStorage.removeItem("sementes:chat");
+    setConfirmDelete(false);
+  }
+
   return (
     <ScreenContainer className="px-4" edges={["top", "left", "right"]}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}>
         <View style={styles.header}><View><Text style={[styles.kicker, { color: colors.primary }]}>GUIA SEMENTES</Text><Text style={[styles.title, { color: colors.foreground }]}>Vamos conversar.</Text></View><View style={[styles.status, { backgroundColor: "#E9F7F0" }]}><View style={styles.dot} /><Text style={styles.statusText}>Online</Text></View></View>
-        {!!messages.length && <Pressable onPress={() => Alert.alert("Apagar conversa?", "As mensagens serão removidas deste dispositivo. Isso não exige login.", [{ text: "Cancelar", style: "cancel" }, { text: "Apagar", style: "destructive", onPress: () => { setMessages([]); void AsyncStorage.removeItem("sementes:chat"); } }])} style={styles.clearHistory}><Text style={[styles.clearHistoryText, { color: colors.primary }]}>Apagar conversa</Text></Pressable>}
+        {!!messages.length && <Pressable onPress={() => setConfirmDelete(true)} style={styles.clearHistory} accessibilityRole="button" accessibilityLabel="Apagar conversa local"><Text style={[styles.clearHistoryText, { color: colors.primary }]}>Apagar conversa</Text></Pressable>}
         <ScrollView ref={messagesScrollRef} style={styles.messages} contentContainerStyle={styles.messageContent} showsVerticalScrollIndicator keyboardShouldPersistTaps="handled" onContentSizeChange={() => messagesScrollRef.current?.scrollToEnd({ animated: false })}>
           {visibleMessages.map((message, index) => <View key={`${index}-${message.role}`} style={[styles.messageRow, message.role === "user" && styles.userRow]}>
             {message.role === "assistant" && <View style={[styles.avatar, { backgroundColor: colors.primary }]}><Text style={styles.avatarText}>S</Text></View>}
             <View style={[styles.bubble, message.role === "user" ? { backgroundColor: colors.primary } : { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}>
               {!!message.attachments?.length && <Text style={[styles.attachmentLabel, { color: message.role === "user" ? "#E8FAF2" : colors.primary }]}>Anexo: {message.attachments.map((file) => file.name).join(", ")}</Text>}
-              <Text style={[styles.messageText, { color: message.role === "user" ? "#FFFFFF" : colors.foreground }]}>{message.content}</Text>
+              <Text style={[styles.messageText, { color: message.role === "user" ? "#FFFFFF" : colors.foreground, fontSize: 15 * textScale, lineHeight: 23 * textScale }]}>{message.content}</Text>
+              {message.role === "assistant" && <View style={styles.messageActions}><Pressable onPress={() => void copyAnswer(message.content)} style={[styles.actionButton, { borderColor: colors.border }]} accessibilityRole="button" accessibilityLabel="Copiar resposta"><IconSymbol name="doc.on.doc.fill" size={15} color={colors.primary} /><Text style={[styles.actionText, { color: colors.primary }]}>Copiar</Text></Pressable><Pressable onPress={() => void shareAnswer(message.content)} style={[styles.actionButton, { borderColor: colors.border }]} accessibilityRole="button" accessibilityLabel="Compartilhar resposta"><IconSymbol name="share" size={15} color={colors.primary} /><Text style={[styles.actionText, { color: colors.primary }]}>Compartilhar</Text></Pressable><Pressable onPress={() => void speakAnswer(message.content)} style={[styles.actionButton, { borderColor: colors.border }]} accessibilityRole="button" accessibilityLabel="Ouvir resposta"><IconSymbol name="volume.up" size={15} color={colors.primary} /><Text style={[styles.actionText, { color: colors.primary }]}>Ouvir</Text></Pressable></View>}
               {message.researched && <Text style={[styles.sourceNote, { color: colors.muted }]}>Resposta complementada por pesquisa online.</Text>}
             </View>
           </View>)}
           {mutation.isPending && <View style={styles.messageRow}><View style={[styles.avatar, { backgroundColor: colors.primary }]}><Text style={styles.avatarText}>S</Text></View><View style={[styles.bubble, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}><ActivityIndicator size="small" color={colors.primary} /></View></View>}
-          {!messages.length && <View style={styles.starters}><Text style={[styles.starterLabel, { color: colors.muted }]}>Perguntas para começar</Text>{starters.map((starter) => <Pressable key={starter} onPress={() => sendMessage(starter)} style={({ pressed }) => [styles.starter, { borderColor: colors.border, backgroundColor: colors.background }, pressed && styles.pressed]}><Text style={[styles.starterText, { color: colors.foreground }]}>{starter}</Text><IconSymbol name="arrow.up.right" size={15} color={colors.primary} /></Pressable>)}</View>}
+          {!messages.length && <View style={styles.starters}><Text style={[styles.starterLabel, { color: colors.muted, fontSize: 13 * textScale }]}>Perguntas para começar</Text>{starters.map((starter) => <Pressable key={starter} onPress={() => sendMessage(starter)} style={({ pressed }) => [styles.starter, { borderColor: colors.border, backgroundColor: colors.background }, pressed && styles.pressed]}><Text style={[styles.starterText, { color: colors.foreground, fontSize: 14 * textScale, lineHeight: 20 * textScale }]}>{starter}</Text><IconSymbol name="arrow.up.right" size={15} color={colors.primary} /></Pressable>)}</View>}
         </ScrollView>
         {!!attachments.length && <View style={[styles.attachmentTray, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.attachmentTrayText, { color: colors.foreground }]} numberOfLines={1}>{attachments.map((file) => file.name).join(" • ")}</Text><Pressable onPress={() => setAttachments([])}><Text style={{ color: colors.error, fontWeight: "800" }}>Remover</Text></Pressable></View>}
-        <View style={[styles.composer, { backgroundColor: colors.surface, borderColor: colors.border }]}><Pressable onPress={pickAttachment} style={styles.attachButton}><IconSymbol name="paperclip" size={20} color={colors.primary} /></Pressable><TextInput value={input} onChangeText={setInput} onSubmitEditing={() => sendMessage()} placeholder="Escreva sua pergunta..." placeholderTextColor={colors.muted} multiline maxLength={1000} style={[styles.input, { color: colors.foreground }]} returnKeyType="send"/><Pressable onPress={() => sendMessage()} style={({ pressed }) => [styles.sendButton, { backgroundColor: input.trim() || attachments.length ? colors.primary : colors.border }, pressed && styles.pressed]}><IconSymbol name="arrow.up" size={19} color={input.trim() || attachments.length ? "#FFFFFF" : colors.muted} /></Pressable></View>
+        <View style={[styles.composer, { backgroundColor: colors.surface, borderColor: colors.border }]}><Pressable onPress={pickAttachment} style={styles.attachButton} accessibilityRole="button" accessibilityLabel="Anexar imagem ou texto"><IconSymbol name="paperclip" size={20} color={colors.primary} /></Pressable><TextInput value={input} onChangeText={setInput} onSubmitEditing={() => sendMessage()} placeholder="Escreva sua pergunta..." placeholderTextColor={colors.muted} multiline maxLength={1000} style={[styles.input, { color: colors.foreground, fontSize: 15 * textScale }]} returnKeyType="send"/><Pressable onPress={() => sendMessage()} style={({ pressed }) => [styles.sendButton, { backgroundColor: input.trim() || attachments.length ? colors.primary : colors.border }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Enviar pergunta"><IconSymbol name="arrow.up" size={19} color={input.trim() || attachments.length ? "#FFFFFF" : colors.muted} /></Pressable></View>
         <Text style={[styles.disclaimer, { color: colors.muted }]}>Anexe imagens ou textos para pedir uma análise mais específica.</Text>
+        {confirmDelete && <View style={[styles.confirmOverlay, { backgroundColor: colors.background }]}><Text style={[styles.confirmTitle, { color: colors.foreground }]}>Apagar conversa?</Text><Text style={[styles.confirmBody, { color: colors.muted }]}>As mensagens serão removidas deste dispositivo. Isso funciona sem login e não pode ser desfeito.</Text><View style={styles.confirmActions}><Pressable onPress={() => setConfirmDelete(false)} style={[styles.confirmButton, { borderColor: colors.border }]}><Text style={[styles.confirmButtonText, { color: colors.foreground }]}>Cancelar</Text></Pressable><Pressable onPress={deleteConversation} style={[styles.confirmButton, { backgroundColor: colors.error, borderColor: colors.error }]}><Text style={styles.confirmButtonLight}>Apagar</Text></Pressable></View></View>}
       </KeyboardAvoidingView>
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 }, header: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", paddingTop: 20, paddingBottom: 14 }, clearHistory: { alignSelf: "flex-end", paddingVertical: 5, paddingHorizontal: 4, marginBottom: 4 }, clearHistoryText: { fontSize: 11, fontWeight: "800" }, kicker: { fontSize: 10, fontWeight: "800", letterSpacing: 1.3, marginBottom: 6 }, title: { fontSize: 29, lineHeight: 35, fontWeight: "800", letterSpacing: -0.6 }, status: { flexDirection: "row", gap: 6, alignItems: "center", paddingHorizontal: 10, paddingVertical: 7, borderRadius: 99, marginBottom: 3 }, dot: { width: 7, height: 7, backgroundColor: "#17A66E", borderRadius: 4 }, statusText: { color: "#167C55", fontSize: 11, fontWeight: "800" }, messages: { flex: 1 }, messageContent: { paddingBottom: 16, gap: 13 }, messageRow: { flexDirection: "row", alignItems: "flex-end", gap: 8, maxWidth: "94%" }, userRow: { alignSelf: "flex-end" }, avatar: { width: 28, height: 28, borderRadius: 10, alignItems: "center", justifyContent: "center" }, avatarText: { color: "#FFFFFF", fontSize: 14, fontWeight: "800" }, bubble: { borderRadius: 18, paddingHorizontal: 14, paddingVertical: 12, maxWidth: "100%" }, messageText: { fontSize: 13, lineHeight: 20 }, attachmentLabel: { fontSize: 10, fontWeight: "800", marginBottom: 6 }, sourceNote: { fontSize: 10, marginTop: 8, fontStyle: "italic" }, starters: { gap: 8, marginTop: 7 }, starterLabel: { fontSize: 11, fontWeight: "700", marginBottom: 2 }, starter: { borderWidth: 1, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 11, minHeight: 46, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }, starterText: { fontSize: 12, flex: 1, paddingRight: 8 }, attachmentTray: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8, borderWidth: 1, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 7, marginBottom: 5 }, attachmentTrayText: { flex: 1, fontSize: 11 }, composer: { minHeight: 54, borderWidth: 1, borderRadius: 18, flexDirection: "row", alignItems: "center", paddingLeft: 6, paddingRight: 6, marginTop: 4 }, attachButton: { width: 38, height: 40, alignItems: "center", justifyContent: "center" }, input: { flex: 1, maxHeight: 90, fontSize: 13, paddingTop: 10, paddingBottom: 10 }, sendButton: { width: 40, height: 40, borderRadius: 14, alignItems: "center", justifyContent: "center" }, disclaimer: { fontSize: 10, textAlign: "center", lineHeight: 14, paddingVertical: 8 }, pressed: { opacity: 0.75 },
+  flex: { flex: 1 }, header: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", paddingTop: 20, paddingBottom: 14 }, clearHistory: { alignSelf: "flex-end", paddingVertical: 5, paddingHorizontal: 4, marginBottom: 4 }, clearHistoryText: { fontSize: 13, fontWeight: "800" }, kicker: { fontSize: 12, fontWeight: "800", letterSpacing: 1.3, marginBottom: 6 }, title: { fontSize: 32, lineHeight: 39, fontWeight: "800", letterSpacing: -0.6 }, status: { flexDirection: "row", gap: 6, alignItems: "center", paddingHorizontal: 10, paddingVertical: 7, borderRadius: 99, marginBottom: 3 }, dot: { width: 7, height: 7, backgroundColor: "#17A66E", borderRadius: 4 }, statusText: { color: "#167C55", fontSize: 12, fontWeight: "800" }, messages: { flex: 1 }, messageContent: { paddingBottom: 16, gap: 13 }, messageRow: { flexDirection: "row", alignItems: "flex-end", gap: 8, maxWidth: "94%" }, userRow: { alignSelf: "flex-end" }, avatar: { width: 32, height: 32, borderRadius: 11, alignItems: "center", justifyContent: "center" }, avatarText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" }, bubble: { borderRadius: 18, paddingHorizontal: 15, paddingVertical: 13, maxWidth: "100%" }, messageText: { fontSize: 15, lineHeight: 23 }, attachmentLabel: { fontSize: 12, fontWeight: "800", marginBottom: 6 }, messageActions: { flexDirection: "row", flexWrap: "wrap", gap: 7, marginTop: 12 }, actionButton: { flexDirection: "row", alignItems: "center", gap: 5, borderWidth: 1, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 7 }, actionText: { fontSize: 12, fontWeight: "800" }, sourceNote: { fontSize: 11, marginTop: 8, fontStyle: "italic" }, starters: { gap: 9, marginTop: 7 }, starterLabel: { fontSize: 13, fontWeight: "700", marginBottom: 2 }, starter: { borderWidth: 1, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 12, minHeight: 50, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }, starterText: { fontSize: 14, lineHeight: 20, flex: 1, paddingRight: 8 }, attachmentTray: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8, borderWidth: 1, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 8, marginBottom: 5 }, attachmentTrayText: { flex: 1, fontSize: 12 }, composer: { minHeight: 58, borderWidth: 1, borderRadius: 18, flexDirection: "row", alignItems: "center", paddingLeft: 6, paddingRight: 6, marginTop: 4 }, attachButton: { width: 42, height: 44, alignItems: "center", justifyContent: "center" }, input: { flex: 1, maxHeight: 100, fontSize: 15, paddingTop: 10, paddingBottom: 10 }, sendButton: { width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center" }, disclaimer: { fontSize: 11, textAlign: "center", lineHeight: 16, paddingVertical: 8 }, confirmOverlay: { position: "absolute", left: 12, right: 12, bottom: 72, borderRadius: 18, padding: 18, borderWidth: 1, borderColor: "#CBD5D0", shadowColor: "#000", shadowOpacity: 0.18, shadowRadius: 12, elevation: 8 }, confirmTitle: { fontSize: 20, fontWeight: "800" }, confirmBody: { fontSize: 14, lineHeight: 21, marginTop: 8 }, confirmActions: { flexDirection: "row", justifyContent: "flex-end", gap: 10, marginTop: 16 }, confirmButton: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 15, paddingVertical: 11 }, confirmButtonText: { fontSize: 14, fontWeight: "800" }, confirmButtonLight: { color: "#FFFFFF", fontSize: 14, fontWeight: "800" }, pressed: { opacity: 0.75 },
 });

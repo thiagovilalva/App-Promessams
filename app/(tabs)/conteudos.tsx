@@ -1,15 +1,18 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Clipboard from "expo-clipboard";
 import { useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
+import { useAccessibility } from "@/lib/accessibility-provider";
 import { trpc } from "@/lib/trpc";
 import { CONTENT_MODULES, type ContentModule } from "@/shared/knowledge";
 
 export default function ConteudosScreen() {
   const colors = useColors();
+  const { textScale } = useAccessibility();
   const [selected, setSelected] = useState<ContentModule | null>(null);
   const [saved, setSaved] = useState(false);
   const materialsQuery = trpc.materials.list.useQuery();
@@ -20,12 +23,21 @@ export default function ConteudosScreen() {
     if (selected) Alert.alert("Conteúdo salvo", "Este material já está disponível dentro do app, mesmo sem internet.");
   }
 
+  async function copyText(text: string) {
+    await Clipboard.setStringAsync(text);
+    Alert.alert("Texto copiado", "O conteúdo foi copiado para a área de transferência.");
+  }
+
+  async function shareText(text: string) {
+    try { await Share.share({ message: text, title: "Projeto Sementes" }); } catch (error) { console.warn("[Conteúdos] share cancelled", error); }
+  }
+
   return (
     <ScreenContainer className="px-5" edges={["top", "left", "right"]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         <Text style={[styles.kicker, { color: colors.primary }]}>BIBLIOTECA SEMENTES</Text>
-        <Text style={[styles.title, { color: colors.foreground }]}>Aprenda no seu ritmo.</Text>
-        <Text style={[styles.subtitle, { color: colors.muted }]}>Conteúdos essenciais para compreender a visão, praticar o cuidado e formar discípulos.</Text>
+        <Text style={[styles.title, { color: colors.foreground, fontSize: 29 * textScale, lineHeight: 35 * textScale }]}>Aprenda no seu ritmo.</Text>
+        <Text style={[styles.subtitle, { color: colors.muted, fontSize: 14 * textScale, lineHeight: 21 * textScale }]}>Conteúdos essenciais para compreender a visão, praticar o cuidado e formar discípulos.</Text>
         <Pressable onPress={saveForOffline} style={({ pressed }) => [styles.offlineButton, { backgroundColor: saved ? "#E9F7F0" : colors.surface, borderColor: saved ? "#B6E6CF" : colors.border }, pressed && styles.pressed]}>
           <IconSymbol name={saved ? "checkmark.circle.fill" : "arrow.down.circle.fill"} size={19} color={saved ? "#167C55" : colors.primary} />
           <Text style={[styles.offlineText, { color: saved ? "#167C55" : colors.foreground }]}>{saved ? "Salvo para leitura offline" : "Salvar biblioteca no dispositivo"}</Text>
@@ -38,7 +50,7 @@ export default function ConteudosScreen() {
                 <View style={styles.cardTop}><View style={[styles.number, { backgroundColor: index === 0 ? "#E9F7F0" : "#F4F0FF" }]}><Text style={[styles.numberText, { color: index === 0 ? "#167C55" : "#7055AA" }]}>{String(index + 1).padStart(2, "0")}</Text></View><Text style={[styles.eyebrow, { color: colors.primary }]}>{item.eyebrow}</Text><Text style={[styles.duration, { color: colors.muted }]}>{item.duration}</Text></View>
                 <Text style={[styles.cardTitle, { color: colors.foreground }]}>{item.title}</Text><Text style={[styles.cardSummary, { color: colors.muted }]}>{item.summary}</Text>
                 <View style={styles.cardFooter}><Text style={[styles.readMore, { color: colors.primary }]}>{isOpen ? "Fechar leitura" : "Abrir conteúdo"}</Text><IconSymbol name={isOpen ? "chevron.up" : "chevron.right"} size={18} color={colors.primary} /></View>
-                {isOpen && <View style={[styles.expanded, { borderTopColor: colors.border }]}><Text style={[styles.body, { color: colors.foreground }]}>{item.body}</Text><View style={[styles.scripture, { backgroundColor: colors.primary + "12" }]}><Text style={[styles.scriptureLabel, { color: colors.primary }]}>LEITURA DE APOIO</Text><Text style={[styles.scriptureText, { color: colors.foreground }]}>{item.scripture}</Text></View><Text style={[styles.practiceLabel, { color: colors.primary }]}>PRÓXIMO PASSO</Text><Text style={[styles.practice, { color: colors.muted }]}>{item.practice}</Text></View>}
+                {isOpen && <View style={[styles.expanded, { borderTopColor: colors.border }]}><Text style={[styles.body, { color: colors.foreground }]}>{item.body}</Text><View style={[styles.scripture, { backgroundColor: colors.primary + "12" }]}><Text style={[styles.scriptureLabel, { color: colors.primary }]}>LEITURA DE APOIO</Text><Text style={[styles.scriptureText, { color: colors.foreground }]}>{item.scripture}</Text></View><Text style={[styles.practiceLabel, { color: colors.primary }]}>PRÓXIMO PASSO</Text><Text style={[styles.practice, { color: colors.muted }]}>{item.practice}</Text><View style={styles.contentActions}><Pressable onPress={() => void copyText(`${item.title}\n\n${item.body}\n\nLeitura de apoio: ${item.scripture}\n\nPróximo passo: ${item.practice}`)} style={[styles.contentAction, { borderColor: colors.border }]}><IconSymbol name="doc.on.doc.fill" size={16} color={colors.primary} /><Text style={[styles.contentActionText, { color: colors.primary }]}>Copiar</Text></Pressable><Pressable onPress={() => void shareText(`${item.title}\n\n${item.body}\n\nLeitura de apoio: ${item.scripture}\n\nPróximo passo: ${item.practice}`)} style={[styles.contentAction, { borderColor: colors.border }]}><IconSymbol name="share" size={16} color={colors.primary} /><Text style={[styles.contentActionText, { color: colors.primary }]}>Compartilhar</Text></Pressable></View></View>}
               </Pressable>
             );
           })}
@@ -67,17 +79,20 @@ const styles = StyleSheet.create({
   numberText: { fontSize: 11, fontWeight: "800" },
   eyebrow: { fontSize: 10, fontWeight: "800", letterSpacing: 0.8 },
   duration: { fontSize: 11, marginLeft: "auto" },
-  cardTitle: { fontSize: 18, fontWeight: "800", marginTop: 14 },
-  cardSummary: { fontSize: 12, lineHeight: 18, marginTop: 5 },
+  cardTitle: { fontSize: 20, fontWeight: "800", marginTop: 14 },
+  cardSummary: { fontSize: 14, lineHeight: 21, marginTop: 5 },
   cardFooter: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 16 },
-  readMore: { fontSize: 12, fontWeight: "800" },
+  readMore: { fontSize: 14, fontWeight: "800" },
   expanded: { borderTopWidth: 1, marginTop: 15, paddingTop: 15 },
-  body: { fontSize: 13, lineHeight: 21 },
+  body: { fontSize: 15, lineHeight: 24 },
+  contentActions: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 16 },
+  contentAction: { flexDirection: "row", alignItems: "center", gap: 6, borderWidth: 1, borderRadius: 11, paddingHorizontal: 11, paddingVertical: 8 },
+  contentActionText: { fontSize: 13, fontWeight: "800" },
   scripture: { borderRadius: 13, padding: 12, marginTop: 15 },
   scriptureLabel: { fontSize: 9, fontWeight: "800", letterSpacing: 1, marginBottom: 4 },
   scriptureText: { fontSize: 12, fontWeight: "700" },
   practiceLabel: { fontSize: 9, fontWeight: "800", letterSpacing: 1, marginTop: 16, marginBottom: 4 },
-  practice: { fontSize: 12, lineHeight: 18 },
+  practice: { fontSize: 14, lineHeight: 21 },
   pressed: { opacity: 0.8 },
   extraKicker: { fontSize: 10, fontWeight: "800", letterSpacing: 1.3, marginTop: 28, marginBottom: 10 },
   material: { borderRadius: 18, borderWidth: 1, padding: 14, marginBottom: 10 },

@@ -13,11 +13,11 @@ export default function TabLayout() {
   const tabBarHeight = 59 + bottomPadding;
 
   return (
-    <Tabs screenOptions={{ headerShown: false, tabBarActiveTintColor: colors.primary, tabBarInactiveTintColor: colors.muted, tabBarButton: HapticTab, tabBarStyle: { paddingTop: 6, paddingBottom: bottomPadding, height: tabBarHeight, backgroundColor: colors.background, borderTopColor: colors.border, borderTopWidth: 0.5 }, tabBarLabelStyle: { fontSize: 10, fontWeight: "700" } }}>
-      <Tabs.Screen name="index" options={{ title: "Início", tabBarIcon: ({ color }) => <IconSymbol size={21} name="house.fill" color={color} /> }} />
-      <Tabs.Screen name="conteudos" options={{ title: "Conteúdos", tabBarIcon: ({ color }) => <IconSymbol size={21} name="book.closed.fill" color={color} /> }} />
-      <Tabs.Screen name="chat" options={{ title: "Conversar", tabBarIcon: ({ color }) => <IconSymbol size={21} name="bubble.left.and.bubble.right.fill" color={color} /> }} />
-      <Tabs.Screen name="ofertas" options={{ title: "Ofertas", tabBarIcon: ({ color }) => <IconSymbol size={21} name="heart.fill" color={color} /> }} />
+    <Tabs screenOptions={{ headerShown: false, tabBarActiveTintColor: colors.primary, tabBarInactiveTintColor: colors.muted, tabBarButton: HapticTab, tabBarStyle: { paddingTop: 7, paddingBottom: bottomPadding, height: tabBarHeight + 3, backgroundColor: colors.background, borderTopColor: colors.border, borderTopWidth: 0.5 }, tabBarLabelStyle: { fontSize: 12, fontWeight: "700" } }}>
+      <Tabs.Screen name="index" options={{ title: "Início", tabBarIcon: ({ color }) => <IconSymbol size={23} name="house.fill" color={color} /> }} />
+      <Tabs.Screen name="conteudos" options={{ title: "Conteúdos", tabBarIcon: ({ color }) => <IconSymbol size={23} name="book.closed.fill" color={color} /> }} />
+      <Tabs.Screen name="chat" options={{ title: "Conversar", tabBarIcon: ({ color }) => <IconSymbol size={23} name="bubble.left.and.bubble.right.fill" color={color} /> }} />
+      <Tabs.Screen name="ofertas" options={{ title: "Ofertas", tabBarIcon: ({ color }) => <IconSymbol size={23} name="heart.fill" color={color} /> }} />
     </Tabs>
   );
 }

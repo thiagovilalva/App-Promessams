@@ -1,6 +1,6 @@
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
-import { Alert, Image, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -14,6 +14,8 @@ export default function OfertasScreen() {
   const [qrData, setQrData] = useState("");
   const numericAmount = Number.parseFloat(amount.replace(",", "."));
   const payload = buildPixPayload(Number.isFinite(numericAmount) && numericAmount > 0 ? numericAmount : undefined);
+  const inviteUrl = "https://manus.im/invitation/L6X1HAEPGOFARG?utm_source=invitation&utm_medium=social&utm_campaign=whatsapp";
+  const whatsappUrl = "https://wa.me/5567999132610?text=Ol%C3%A1%2C%20quero%20saber%20mais%20sobre%20o%20Projeto%20Sementes.";
 
   useEffect(() => {
     QRCode.toDataURL(payload, { margin: 1, width: 240, color: { dark: "#173D2C", light: "#FFFFFF" } }).then(setQrData).catch(() => setQrData(""));
@@ -49,6 +51,8 @@ export default function OfertasScreen() {
         <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Transparência e segurança</Text>
         <Text style={[styles.body, { color: colors.muted }]}>O QR Code e o código Copia e Cola são gerados localmente a partir da chave PIX informada pela Convenção. A confirmação acontece somente no aplicativo do seu banco.</Text>
         <View style={[styles.future, { borderColor: "#F3D9AF", backgroundColor: "#FFFDF8" }]}><IconSymbol name="sparkles" size={18} color="#A76418" /><Text style={[styles.futureText, { color: colors.foreground }]}>Próximo passo: integrar um provedor oficial para cobranças dinâmicas, conciliação e comprovantes.</Text></View>
+        <Pressable onPress={() => void Linking.openURL(inviteUrl)} style={[styles.inviteButton, { backgroundColor: colors.primary }]} accessibilityRole="link" accessibilityLabel="Junte-se ao Manus e ganhe créditos grátis"><IconSymbol name="sparkles" size={19} color="#FFFFFF" /><Text style={styles.inviteText}>Junte-se ao Manus e ganhe créditos grátis</Text></Pressable>
+        <Pressable onPress={() => void Linking.openURL(whatsappUrl)} style={[styles.whatsappButton, { borderColor: "#25D366" }]} accessibilityRole="link" accessibilityLabel="Fale conosco pelo WhatsApp"><IconSymbol name="whatsapp" size={19} color="#128C49" /><Text style={[styles.whatsappText, { color: colors.foreground }]}>Fale conosco pelo WhatsApp</Text></Pressable>
       </ScrollView>
     </ScreenContainer>
   );
@@ -64,8 +68,8 @@ const styles = StyleSheet.create({
   leftLeaf: { transform: [{ rotate: "-28deg" }], left: 92 },
   rightLeaf: { transform: [{ rotate: "28deg" }], right: 92 },
   kicker: { fontSize: 10, fontWeight: "800", letterSpacing: 1.3, marginBottom: 8 },
-  title: { fontSize: 29, lineHeight: 34, fontWeight: "800", letterSpacing: -0.6 },
-  subtitle: { fontSize: 14, lineHeight: 21, marginTop: 10 },
+  title: { fontSize: 32, lineHeight: 39, fontWeight: "800", letterSpacing: -0.6 },
+  subtitle: { fontSize: 16, lineHeight: 24, marginTop: 10 },
   pixCard: { borderWidth: 1, borderRadius: 22, padding: 18, marginTop: 22 },
   pixHeader: { flexDirection: "row", alignItems: "center", gap: 9 },
   pixBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 7, backgroundColor: "#DFF4E9" },
@@ -88,6 +92,10 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 18, fontWeight: "800", marginTop: 29, marginBottom: 7 },
   body: { fontSize: 13, lineHeight: 20 },
   future: { flexDirection: "row", gap: 9, borderWidth: 1, borderRadius: 14, padding: 13, marginTop: 18 },
-  futureText: { flex: 1, fontSize: 12, lineHeight: 18, fontWeight: "600" },
+  futureText: { flex: 1, fontSize: 14, lineHeight: 21, fontWeight: "600" },
+  inviteButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderRadius: 15, paddingVertical: 14, paddingHorizontal: 14, marginTop: 18 },
+  inviteText: { color: "#FFFFFF", fontSize: 14, fontWeight: "800", textAlign: "center" },
+  whatsappButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderWidth: 1, borderRadius: 15, paddingVertical: 13, paddingHorizontal: 14, marginTop: 10 },
+  whatsappText: { fontSize: 14, fontWeight: "800" },
   pressed: { opacity: 0.78 },
 });
