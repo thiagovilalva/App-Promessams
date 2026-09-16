@@ -61,3 +61,13 @@ Não foi encontrado um endpoint oficial exposto para gerar automaticamente links
 - [x] Ajustar voz para português do Brasil com pitch levemente naturalizado.
 - [x] Adicionar acesso ao serviço oficial VLibras para apoio à tradução em Libras.
 - [x] Validar 17 testes, TypeScript, build e exportação web.
+
+## Respostas completas e biblioteca por seção — concluído
+
+- [x] Aumentar o limite inicial de geração para 2200 tokens.
+- [x] Orientar o agente a concluir frases, listas e etapas com marcador de término.
+- [x] Adicionar continuação automática múltipla quando a resposta terminar em fragmento ou limite de geração.
+- [x] Confirmar por chamada real que uma resposta longa chega completa, com 25.879 caracteres e final pontuado.
+- [x] Separar a aba Conteúdos em “Filosofia da Semente” e “Projeto Sementes”.
+- [x] Manter leitura, copiar e compartilhar disponíveis dentro de cada conteúdo escolhido.
+- [x] Validar 19 testes, TypeScript, build e exportação web.

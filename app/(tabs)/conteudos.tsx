@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Clipboard from "expo-clipboard";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
@@ -14,8 +14,10 @@ export default function ConteudosScreen() {
   const colors = useColors();
   const { textScale } = useAccessibility();
   const [selected, setSelected] = useState<ContentModule | null>(null);
+  const [section, setSection] = useState<"filosofia" | "projeto">("filosofia");
   const [saved, setSaved] = useState(false);
   const materialsQuery = trpc.materials.list.useQuery();
+  const visibleModules = useMemo(() => CONTENT_MODULES.filter((item) => section === "filosofia" ? ["filosofia", "distincao", "principios", "lideranca"].includes(item.id) : ["distincao", "jornada", "igreja-viva", "documento-integral"].includes(item.id)), [section]);
 
   async function saveForOffline() {
     await AsyncStorage.setItem("sementes:conteudos", JSON.stringify(CONTENT_MODULES));
@@ -38,12 +40,13 @@ export default function ConteudosScreen() {
         <Text style={[styles.kicker, { color: colors.primary }]}>BIBLIOTECA SEMENTES</Text>
         <Text style={[styles.title, { color: colors.foreground, fontSize: 29 * textScale, lineHeight: 35 * textScale }]}>Aprenda no seu ritmo.</Text>
         <Text style={[styles.subtitle, { color: colors.muted, fontSize: 14 * textScale, lineHeight: 21 * textScale }]}>Conteúdos essenciais para compreender a visão, praticar o cuidado e formar discípulos.</Text>
+        <View style={[styles.sectionChooser, { borderColor: colors.border, backgroundColor: colors.surface }]}><Pressable onPress={() => { setSection("filosofia"); setSelected(null); }} style={[styles.sectionTab, section === "filosofia" && { backgroundColor: colors.primary }]} accessibilityRole="tab" accessibilityState={{ selected: section === "filosofia" }}><Text style={[styles.sectionTabText, { color: section === "filosofia" ? "#FFFFFF" : colors.foreground, fontSize: 13 * textScale }]}>Filosofia da Semente</Text></Pressable><Pressable onPress={() => { setSection("projeto"); setSelected(null); }} style={[styles.sectionTab, section === "projeto" && { backgroundColor: colors.primary }]} accessibilityRole="tab" accessibilityState={{ selected: section === "projeto" }}><Text style={[styles.sectionTabText, { color: section === "projeto" ? "#FFFFFF" : colors.foreground, fontSize: 13 * textScale }]}>Projeto Sementes</Text></Pressable></View>
         <Pressable onPress={saveForOffline} style={({ pressed }) => [styles.offlineButton, { backgroundColor: saved ? "#E9F7F0" : colors.surface, borderColor: saved ? "#B6E6CF" : colors.border }, pressed && styles.pressed]}>
           <IconSymbol name={saved ? "checkmark.circle.fill" : "arrow.down.circle.fill"} size={19} color={saved ? "#167C55" : colors.primary} />
           <Text style={[styles.offlineText, { color: saved ? "#167C55" : colors.foreground }]}>{saved ? "Salvo para leitura offline" : "Salvar biblioteca no dispositivo"}</Text>
         </Pressable>
         <View style={styles.list}>
-          {CONTENT_MODULES.map((item, index) => {
+          {visibleModules.map((item, index) => {
             const isOpen = selected?.id === item.id;
             return (
               <Pressable key={item.id} onPress={() => setSelected(isOpen ? null : item)} style={({ pressed }) => [styles.card, { backgroundColor: colors.surface, borderColor: isOpen ? colors.primary + "70" : colors.border }, isOpen && styles.openCard, pressed && styles.pressed]}>
@@ -71,7 +74,10 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 14, lineHeight: 21, marginTop: 9, maxWidth: 360 },
   offlineButton: { flexDirection: "row", alignItems: "center", gap: 8, alignSelf: "flex-start", paddingHorizontal: 13, paddingVertical: 10, borderRadius: 13, borderWidth: 1, marginTop: 18 },
   offlineText: { fontSize: 12, fontWeight: "700" },
-  list: { gap: 12, marginTop: 22 },
+  sectionChooser: { flexDirection: "row", borderWidth: 1, borderRadius: 15, padding: 4, gap: 4, marginTop: 20 },
+  sectionTab: { flex: 1, borderRadius: 11, paddingHorizontal: 8, paddingVertical: 11, alignItems: "center", justifyContent: "center" },
+  sectionTabText: { fontWeight: "800", textAlign: "center" },
+  list: { gap: 12, marginTop: 16 },
   card: { borderRadius: 20, borderWidth: 1, padding: 16 },
   openCard: { shadowColor: "#167C55", shadowOpacity: 0.07, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 2 },
   cardTop: { flexDirection: "row", alignItems: "center", gap: 8 },

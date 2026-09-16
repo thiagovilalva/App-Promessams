@@ -78,7 +78,7 @@ export const appRouter = router({
         const databaseMaterials = await getPublishedMaterials();
         const databaseKnowledge = databaseMaterials.length ? `\n\nMATERIAIS ADICIONAIS PUBLICADOS PELA EQUIPE:\n${databaseMaterials.map((item) => `\n## ${item.title}\n${item.summary ?? ""}\n${item.content.slice(0, 18000)}\nFonte: ${item.source ?? "não informada"}`).join("\n")}` : "";
         const messages = [
-        { role: "system" as const, content: `Você é o agente de orientação do aplicativo Projeto Sementes. Responda em português do Brasil, com tom humano, acolhedor, sereno e prático. Não diga que é uma IA de forma repetitiva. Use a base de conhecimento abaixo como prioridade. Cite referências bíblicas quando forem relevantes, sem inventar citações. Ajude o usuário a compreender, vivenciar, ensinar e desenvolver a Filosofia da Semente e o Projeto Sementes na igreja local. Faça perguntas de acompanhamento quando isso ajudar a transformar a reflexão em um próximo passo. Não substitua o pastor ou a liderança local em decisões sensíveis. Se recorrer à pesquisa online, diferencie claramente o que veio da base, o que é pesquisa e o que é sugestão.\n\n${SEMENTES_KNOWLEDGE}${databaseKnowledge}` },
+        { role: "system" as const, content: `Você é o agente de orientação do aplicativo Projeto Sementes. Responda em português do Brasil, com tom humano, acolhedor, sereno e prático. Não diga que é uma IA de forma repetitiva. Use a base de conhecimento abaixo como prioridade. Cite referências bíblicas quando forem relevantes, sem inventar citações. Ajude o usuário a compreender, vivenciar, ensinar e desenvolver a Filosofia da Semente e o Projeto Sementes na igreja local. Faça perguntas de acompanhamento quando isso ajudar a transformar a reflexão em um próximo passo. Não substitua o pastor ou a liderança local em decisões sensíveis. Se recorrer à pesquisa online, diferencie claramente o que veio da base, o que é pesquisa e o que é sugestão. Entregue respostas completas: não interrompa frases, listas ou etapas. Ao terminar todos os tópicos, acrescente exatamente o marcador [FIM].\n\n${SEMENTES_KNOWLEDGE}${databaseKnowledge}` },
         ...input.messages.map((message) => {
           const attachments = message.attachments ?? [];
           const attachmentText = attachments.filter((item) => item.text).map((item) => `\n\nArquivo ${item.name}:\n${item.text}`).join("");
@@ -97,25 +97,40 @@ export const appRouter = router({
           const safeMessages = [...input.messages, { role: "assistant" as const, content: answer }].map(({ role, content, attachments }) => ({ role, content, attachments: attachments?.map(({ name, mimeType, text }) => ({ name, mimeType, text })) }));
           await saveConversation({ userId: ctx.user.id, title: input.messages.find((item) => item.role === "user")?.content.slice(0, 80) || "Conversa Projeto Sementes", messages: JSON.stringify(safeMessages) });
         };
+        const completeAnswer = async (draft: string) => {
+          if (draft.includes("[FIM]")) return draft.replace(/\s*\[FIM\]\s*$/u, "").trim();
+          const trimmed = draft.trim();
+          const looksIncomplete = !/[.!?…»”)]$/u.test(trimmed);
+          if (trimmed.length < 1800 && !looksIncomplete) return trimmed;
+          let answer = trimmed;
+          for (let attempt = 0; attempt < 4 && !answer.includes("[FIM]"); attempt += 1) {
+            const continuation = await invokeLLM({ model: "gpt-5-mini", messages: [...messages, { role: "assistant" as const, content: answer }, { role: "user" as const, content: "A resposta ainda não terminou. Continue exatamente do ponto em que parou, sem repetir o texto anterior. Conclua todos os tópicos, frases e listas pendentes e finalize com [FIM]." }], maxTokens: 1800 });
+            const continuationText = textFromContent(continuation.choices?.[0]?.message?.content);
+            if (!continuationText) break;
+            answer = `${answer}\n\n${continuationText}`;
+          }
+          return answer.replace(/\s*\[FIM\]\s*$/u, "").trim();
+        };
         const first = await invokeLLM({
         model: "gpt-5-mini",
         messages,
-        maxTokens: 900,
+        maxTokens: 2200,
         ...(shouldResearch ? { tools: [{ type: "function" as const, function: { name: "search_online", description: "Pesquisar na internet para complementar uma pergunta que pede informação atual.", parameters: { type: "object", properties: { query: { type: "string", description: "Consulta curta em português" } }, required: ["query"] } } }], toolChoice: "auto" as const } : {}),
         });
-        const firstMessage = first.choices?.[0]?.message as { content?: unknown; tool_calls?: Array<{ id: string; function: { name: string; arguments: string } }> } | undefined;
+        const firstChoice = first.choices?.[0] as { message?: unknown; finish_reason?: string } | undefined;
+        const firstMessage = firstChoice?.message as { content?: unknown; tool_calls?: Array<{ id: string; function: { name: string; arguments: string } }> } | undefined;
         if (firstMessage?.tool_calls?.length) {
           const research = await Promise.all(firstMessage.tool_calls.map(async (call) => {
           let args: { query?: string } = {};
           try { args = JSON.parse(call.function.arguments || "{}"); } catch { args = {}; }
           return args.query ? searchOnline(args.query) : "Consulta inválida.";
           }));
-          const second = await invokeLLM({ model: "gpt-5-mini", messages: [...messages, { role: "user" as const, content: `A pesquisa online solicitada retornou o seguinte material. Use-o apenas como complemento, avalie sua confiabilidade e não invente fatos:\n\n${research.join("\n\n")}` }], maxTokens: 1000 });
-          const answer = textFromContent(second.choices?.[0]?.message?.content) || fallbackAnswer(input.messages[input.messages.length - 1]?.content ?? "");
+          const second = await invokeLLM({ model: "gpt-5-mini", messages: [...messages, { role: "user" as const, content: `A pesquisa online solicitada retornou o seguinte material. Use-o apenas como complemento, avalie sua confiabilidade e não invente fatos. Entregue uma resposta completa, sem interromper frases ou listas no meio; se ficar longa, conclua todos os tópicos antes de terminar:\n\n${research.join("\n\n")}` }], maxTokens: 2200 });
+          const answer = await completeAnswer(textFromContent(second.choices?.[0]?.message?.content) || fallbackAnswer(input.messages[input.messages.length - 1]?.content ?? ""));
           await persist(answer);
           return { answer, researched: true };
         }
-        const answer = textFromContent(firstMessage?.content) || fallbackAnswer(input.messages[input.messages.length - 1]?.content ?? "");
+        const answer = await completeAnswer(textFromContent(firstMessage?.content) || fallbackAnswer(input.messages[input.messages.length - 1]?.content ?? ""));
         await persist(answer);
         return { answer, researched: false };
       } catch (error) {
