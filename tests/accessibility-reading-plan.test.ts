@@ -19,7 +19,7 @@ describe("accessibility and reading plan updates", () => {
   });
   it("includes KJA reference notes, deeper theology and commentator dialogue", () => {
     const source = read("shared/reading-plan.ts");
-    expect(source).toContain("Leitura na BLivre");
+    expect(source).toContain("Bíblia Livre (BLivre)");
     expect(source).toContain("Em diálogo com");
     expect(source).toContain("Craig Keener");
     expect(source).toContain("Gordon Fee");
@@ -27,5 +27,9 @@ describe("accessibility and reading plan updates", () => {
     expect(read("app/plano-biblico.tsx")).toContain("TEXTO BÍBLICO — BLIVRE");
     expect(read("app/plano-biblico.tsx")).toContain("blivre.org");
     expect(read("app/(tabs)/chat.tsx")).toContain("maleHints");
+    expect(read("app/biblia-livre.tsx")).toContain("nestedScrollEnabled");
+    expect(read("app/biblia-livre.tsx")).toContain("chapterOptions");
+    expect(source).not.toContain("deve ser consultado");
+    expect(source).toContain("Bíblia Livre (BLivre)");
   });
 });
