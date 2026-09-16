@@ -47,6 +47,10 @@ export default function HomeScreen() {
             <View style={[styles.iconBox, { backgroundColor: "#FFF1DE" }]}><IconSymbol name="bubble.left.and.bubble.right.fill" size={22} color="#B66A12" /></View>
             <Text style={[styles.quickTitle, { color: colors.foreground }]}>Perguntar</Text><Text style={[styles.quickText, { color: colors.muted }]}>Tire dúvidas e transforme ideias em ação.</Text>
           </Pressable>
+          <Pressable onPress={() => void Linking.openURL("https://hinariopromessista.online/")} style={({ pressed }) => [styles.quickCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]} accessibilityRole="link" accessibilityLabel="Abrir Hinário Promessista online">
+            <View style={[styles.iconBox, { backgroundColor: "#EAF0FF" }]}><IconSymbol name="music-note" size={22} color="#4267A9" /></View>
+            <Text style={[styles.quickTitle, { color: colors.foreground }]}>Hinário</Text><Text style={[styles.quickText, { color: colors.muted }]}>Acesse o Brado de Júbilo online.</Text>
+          </Pressable>
         </View>
 
         <Text style={[styles.kicker, { color: colors.primary, marginTop: 26 }]}>O QUE NOS GUIA</Text>

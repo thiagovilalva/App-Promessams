@@ -25,8 +25,12 @@ describe("accessibility and reading plan updates", () => {
     expect(source).toContain("Gordon Fee");
     expect(read("app/plano-biblico.tsx")).toContain("EM DIÁLOGO COM COMENTARISTAS");
     expect(read("app/plano-biblico.tsx")).toContain("TEXTO BÍBLICO — BLIVRE");
-    expect(read("app/plano-biblico.tsx")).toContain("blivre.org");
+    expect(read("app/biblia-livre.tsx")).toContain("blivre.org");
     expect(read("app/(tabs)/chat.tsx")).toContain("maleHints");
+    expect(read("app/plano-biblico.tsx")).not.toContain("Sobre a licença da BLivre");
+    expect(read("app/biblia-livre.tsx")).toContain("scrollTo");
+    expect(read("app/biblia-livre.tsx")).toContain("versePositions");
+    expect(read("app/(tabs)/index.tsx")).toContain("hinariopromessista.online");
     expect(read("app/biblia-livre.tsx")).toContain("nestedScrollEnabled");
     expect(read("app/biblia-livre.tsx")).toContain("chapterOptions");
     expect(source).not.toContain("deve ser consultado");

@@ -19,6 +19,7 @@ const MAPPING: Record<string, MaterialIconName> = {
   "volume.up": "volume-up",
   "whatsapp": "chat",
   "accessibility": "accessibility",
+  "music-note": "music-note",
   "arrow.down.circle.fill": "download",
   "checkmark.circle.fill": "check-circle",
   "checkmark": "check",

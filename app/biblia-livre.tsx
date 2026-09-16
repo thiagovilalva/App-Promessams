@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { useAccessibility } from "@/lib/accessibility-provider";
@@ -21,6 +21,9 @@ export default function BibliaLivreScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [bookMenu, setBookMenu] = useState(false);
+  const scrollRef = useRef<ScrollView>(null);
+  const versePositions = useRef<Record<number, number>>({});
+  const chapterCardY = useRef(0);
   const selectedBook = BOOKS[bookIndex];
   const chapterOptions = useMemo(() => Array.from({ length: selectedBook[2] }, (_, index) => index + 1), [selectedBook]);
 
@@ -41,7 +44,12 @@ export default function BibliaLivreScreen() {
   useEffect(() => { void loadChapter(BOOKS[0], 1); }, []);
   const chooseBook = (index: number) => { const next = BOOKS[index]; setBookIndex(index); setChapter(1); setBookMenu(false); void loadChapter(next, 1); };
   const chooseChapter = (value: number) => { setChapter(value); void loadChapter(selectedBook, value); };
-  return <ScreenContainer className="px-4" edges={["top", "left", "right"]}><ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+  const chooseVerse = (value: number) => {
+    setVerse(value);
+    const y = versePositions.current[value];
+    if (typeof y === "number") setTimeout(() => scrollRef.current?.scrollTo({ y: Math.max(0, y - 110), animated: true }), 40);
+  };
+  return <ScreenContainer className="px-4" edges={["top", "left", "right"]}><ScrollView ref={scrollRef} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
     <Text style={[styles.kicker, { color: colors.primary }]}>BÍBLIA LIVRE · BLIVRE</Text>
     <Text style={[styles.title, { color: colors.foreground, fontSize: 29 * textScale, lineHeight: 36 * textScale }]}>Leia a Bíblia</Text>
     <Text style={[styles.subtitle, { color: colors.muted, fontSize: 14 * textScale, lineHeight: 21 * textScale }]}>Selecione um livro e deslize os capítulos. O capítulo escolhido aparece imediatamente abaixo.</Text>
@@ -50,10 +58,10 @@ export default function BibliaLivreScreen() {
     {bookMenu && <View style={[styles.bookPanel, { backgroundColor: colors.surface, borderColor: colors.border }]}><ScrollView nestedScrollEnabled showsVerticalScrollIndicator style={styles.bookScroll}>{BOOKS.map((book, index) => <Pressable key={book[0]} onPress={() => chooseBook(index)} style={[styles.bookItem, index === bookIndex && { backgroundColor: colors.primary + "20" }]}><Text style={[styles.bookText, { color: colors.foreground, fontSize: 15 * textScale }]}>{book[1]}</Text><Text style={{ color: colors.muted }}>{index < 39 ? "AT" : "NT"}</Text></Pressable>)}</ScrollView></View>}
     <Text style={[styles.label, { color: colors.foreground }]}>Capítulo <Text style={{ color: colors.primary }}>— deslize para o lado</Text></Text>
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chapterOptions}>{chapterOptions.map((value) => <Pressable key={value} onPress={() => chooseChapter(value)} style={[styles.chapterButton, { borderColor: chapter === value ? colors.primary : colors.border, backgroundColor: chapter === value ? colors.primary : colors.surface }]}><Text style={{ color: chapter === value ? "#FFFFFF" : colors.foreground, fontWeight: "800", fontSize: 15 }}>{value}</Text></Pressable>)}</ScrollView>
-    {!!data && <View style={styles.versePicker}><Text style={[styles.label, { color: colors.foreground }]}>Versículo — deslize para o lado</Text><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chapterOptions}>{data.chapter.content.filter((item) => item.type === "verse").map((item) => <Pressable key={item.number} onPress={() => setVerse(item.number)} style={[styles.verseButton, { borderColor: verse === item.number ? colors.primary : colors.border, backgroundColor: verse === item.number ? colors.primary : colors.surface }]}><Text style={{ color: verse === item.number ? "#FFFFFF" : colors.foreground, fontWeight: "800" }}>{item.number}</Text></Pressable>)}</ScrollView></View>}
+    {!!data && <View style={styles.versePicker}><Text style={[styles.label, { color: colors.foreground }]}>Versículo — deslize para o lado</Text><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chapterOptions}>{data.chapter.content.filter((item) => item.type === "verse").map((item) => <Pressable key={item.number} onPress={() => chooseVerse(item.number)} style={[styles.verseButton, { borderColor: verse === item.number ? colors.primary : colors.border, backgroundColor: verse === item.number ? colors.primary : colors.surface }]}><Text style={{ color: verse === item.number ? "#FFFFFF" : colors.foreground, fontWeight: "800" }}>{item.number}</Text></Pressable>)}</ScrollView></View>}
     {loading && <ActivityIndicator color={colors.primary} size="large" style={styles.loading} />}
     {!!error && <Text style={[styles.error, { color: colors.error }]}>{error}</Text>}
-    {!!data && <View style={[styles.chapterCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.chapterTitle, { color: colors.foreground, fontSize: 22 * textScale }]}>{data.book.name} {data.chapter.number}</Text>{data.chapter.content.filter((item) => item.type === "verse").map((item) => <Text key={item.number} style={[styles.verseText, { color: colors.foreground, fontSize: 16 * textScale, lineHeight: 27 * textScale, backgroundColor: verse === item.number ? colors.primary + "18" : "transparent" }]}><Text style={{ color: colors.primary, fontWeight: "800" }}>{item.number} </Text>{item.content.join(" ")}</Text>)}</View>}
+    {!!data && <View onLayout={(event) => { chapterCardY.current = event.nativeEvent.layout.y; }} style={[styles.chapterCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.chapterTitle, { color: colors.foreground, fontSize: 22 * textScale }]}>{data.book.name} {data.chapter.number}</Text>{data.chapter.content.filter((item) => item.type === "verse").map((item) => <Text key={item.number} onLayout={(event) => { versePositions.current[item.number] = chapterCardY.current + event.nativeEvent.layout.y; }} style={[styles.verseText, { color: colors.foreground, fontSize: 16 * textScale, lineHeight: 27 * textScale, backgroundColor: verse === item.number ? colors.primary + "18" : "transparent" }]}><Text style={{ color: colors.primary, fontWeight: "800" }}>{item.number} </Text>{item.content.join(" ")}</Text>)}</View>}
     <Pressable onPress={() => void Linking.openURL("https://blivre.org/")} style={[styles.source, { borderColor: colors.primary }]}><Text style={[styles.sourceText, { color: colors.primary }]}>Fonte e licença da Bíblia Livre</Text></Pressable>
   </ScrollView></ScreenContainer>;
 }
