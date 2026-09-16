@@ -1,12 +1,11 @@
 import { useRouter } from "expo-router";
-import { useEffect } from "react";
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
+import { Linking, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { useThemeContext } from "@/lib/theme-provider";
+import { useRadio } from "@/lib/radio-provider";
 
 const principles = [
   { icon: "auto-stories", title: "Palavra no centro", text: "A semente é a Palavra de Deus; ela é recebida, compreendida e praticada." },
@@ -18,26 +17,13 @@ export default function HomeScreen() {
   const router = useRouter();
   const colors = useColors();
   const { colorScheme, setColorScheme } = useThemeContext();
-  const radioPlayer = useAudioPlayer("https://player.srvstm.com/proxy/30368");
-  const radioStatus = useAudioPlayerStatus(radioPlayer);
-
-  useEffect(() => {
-    void setAudioModeAsync({ playsInSilentMode: true, interruptionMode: "duckOthers" });
-  }, []);
-
-  const toggleRadio = () => {
-    if (radioStatus.playing) {
-      radioPlayer.pause();
-    } else {
-      radioPlayer.play();
-    }
-  };
+  const { playing: radioPlaying, isBuffering: radioBuffering, toggle: toggleRadio } = useRadio();
 
   return (
     <ScreenContainer className="px-5" edges={["top", "left", "right"]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         <View style={styles.topline}>
-          <View style={styles.brandMark}><Text style={styles.brandSeed}>S</Text></View>
+          <Image source={require("@/assets/images/projeto-sementes-logo.png")} style={styles.brandMark} resizeMode="contain" accessibilityLabel="Símbolo do Projeto Sementes" />
           <View><Text style={[styles.brandName, { color: colors.foreground }]}>Projeto Sementes</Text><Text style={[styles.brandCaption, { color: colors.muted }]}>Igreja viva no Modo Missão</Text></View>
           <View style={styles.topActions}><Pressable onPress={() => setColorScheme(colorScheme === "light" ? "dark" : "light")} style={[styles.themeButton, { borderColor: colors.border, backgroundColor: colors.surface }]} accessibilityLabel="Alternar modo claro e escuro"><Text style={[styles.themeButtonText, { color: colors.foreground }]}>{colorScheme === "light" ? "Escuro" : "Claro"}</Text></Pressable><Pressable onPress={() => router.push("/acessibilidade")} style={[styles.accessibilityButton, { borderColor: colors.border, backgroundColor: colors.surface }]} accessibilityRole="button" accessibilityLabel="Abrir acessibilidade"><IconSymbol name="accessibility" size={16} color={colors.foreground} /></Pressable></View>
         </View>
@@ -83,13 +69,13 @@ export default function HomeScreen() {
           <View style={styles.offerCopy}><Text style={[styles.offerTitle, { color: colors.foreground }]}>Apoie o campo</Text><Text style={[styles.offerText, { color: colors.muted }]}>Conheça a chave PIX para apoiar a Convenção Regional Sul-Mato-Grossense.</Text></View><IconSymbol name="chevron.right" size={20} color="#A76418" />
         </Pressable>
         <View style={[styles.radioCard, { backgroundColor: colors.surface, borderColor: colors.border }]} accessibilityLabel="Rádio da Promessa">
-          <View style={[styles.radioIcon, { backgroundColor: "#E9F7F0" }]}><IconSymbol name="radio" size={21} color="#167C55" /></View>
+          <Image source={require("@/assets/images/radio-da-promessa.jpg")} style={styles.radioIcon} accessibilityLabel="Ícone da Rádio da Promessa" />
           <View style={styles.radioCopy}>
             <Text style={[styles.radioTitle, { color: colors.foreground }]}>Rádio da Promessa</Text>
-            <Text style={[styles.radioText, { color: colors.muted }]}>{radioStatus.isBuffering ? "Conectando à transmissão..." : radioStatus.playing ? "Ao vivo agora" : "Ouça a programação online"}</Text>
+            <Text style={[styles.radioText, { color: colors.muted }]}>{radioBuffering ? "Conectando à transmissão..." : radioPlaying ? "Ao vivo agora" : "Toque para ouvir online"}</Text>
           </View>
-          <Pressable onPress={toggleRadio} style={({ pressed }) => [styles.radioButton, { backgroundColor: colors.primary }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel={radioStatus.playing ? "Pausar Rádio da Promessa" : "Ouvir Rádio da Promessa"}>
-            <IconSymbol name={radioStatus.playing ? "pause.fill" : "play.fill"} size={18} color="#FFFFFF" />
+          <Pressable onPress={toggleRadio} style={({ pressed }) => [styles.radioButton, { backgroundColor: colors.primary }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel={radioPlaying ? "Parar Rádio da Promessa" : "Ouvir Rádio da Promessa"}>
+            <IconSymbol name={radioPlaying ? "stop.fill" : "play.fill"} size={18} color="#FFFFFF" />
           </Pressable>
         </View>
         <Text style={[styles.footer, { color: colors.muted }]}>Conteúdo de trabalho da Convenção Regional Sul-Mato-Grossense</Text>
@@ -107,8 +93,7 @@ const styles = StyleSheet.create({
   themeButton: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 7 },
   accessibilityButton: { width: 32, height: 32, borderWidth: 1, borderRadius: 999, alignItems: "center", justifyContent: "center" },
   themeButtonText: { fontSize: 10, fontWeight: "800" },
-  brandMark: { width: 38, height: 38, borderRadius: 13, backgroundColor: "#E9F7F0", alignItems: "center", justifyContent: "center" },
-  brandSeed: { color: "#167C55", fontSize: 20, fontWeight: "800" },
+  brandMark: { width: 38, height: 38, borderRadius: 13 },
   brandName: { fontSize: 17, fontWeight: "800", letterSpacing: -0.2 },
   brandCaption: { fontSize: 11, marginTop: 1 },
   hero: { padding: 24, borderRadius: 28, overflow: "hidden", marginBottom: 26 },
@@ -147,7 +132,7 @@ const styles = StyleSheet.create({
   whatsappButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderWidth: 1, borderRadius: 15, paddingVertical: 13, paddingHorizontal: 14, marginTop: 10 },
   whatsappText: { fontSize: 14, fontWeight: "800" },
   radioCard: { flexDirection: "row", alignItems: "center", gap: 11, borderWidth: 1, borderRadius: 18, padding: 13, marginTop: 16 },
-  radioIcon: { width: 38, height: 38, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  radioIcon: { width: 42, height: 42, borderRadius: 12 },
   radioCopy: { flex: 1 },
   radioTitle: { fontSize: 14, fontWeight: "800", marginBottom: 3 },
   radioText: { fontSize: 11, lineHeight: 16 },
