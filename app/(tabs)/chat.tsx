@@ -26,8 +26,11 @@ function speechFriendlyText(text: string) {
 async function findPortugueseVoice(gender: SpeechVoiceGender) {
   const voices = await Speech.getAvailableVoicesAsync();
   const portuguese = voices.filter((voice) => voice.language?.toLowerCase().startsWith("pt"));
-  const genderMatch = portuguese.find((voice: any) => String(voice.gender ?? "").toLowerCase() === gender);
-  return (genderMatch ?? portuguese[gender === "female" ? 0 : 1] ?? portuguese[0])?.identifier;
+  const maleHints = /male|masc|homem|man|male|daniel|jorge|ricardo|felipe|matej|thomas|miguel|lucas|bruno/i;
+  const femaleHints = /female|fem|mulher|woman|female|luciana|helena|joana|samantha|vitoria|victoria|alice|susan/i;
+  const hints = gender === "male" ? maleHints : femaleHints;
+  const genderMatch = portuguese.find((voice: any) => hints.test(`${voice.identifier ?? ""} ${voice.name ?? ""} ${voice.quality ?? ""}`) || String(voice.gender ?? "").toLowerCase() === gender);
+  return (genderMatch ?? portuguese[gender === "female" ? 0 : Math.min(1, portuguese.length - 1)] ?? portuguese[0])?.identifier;
 }
 
 export default function ChatScreen() {
@@ -105,7 +108,7 @@ export default function ChatScreen() {
     await Speech.stop();
     setSpeakingKey(key); setSpeechPaused(false);
     const voice = await findPortugueseVoice(speechVoice);
-    Speech.speak(speechFriendlyText(text), { language: "pt-BR", voice, rate: speechRate, pitch: speechVoice === "female" ? 1.08 : 0.92, onDone: () => { setSpeakingKey(null); setSpeechPaused(false); }, onStopped: () => { setSpeakingKey(null); setSpeechPaused(false); }, onError: () => { setSpeakingKey(null); setSpeechPaused(false); } });
+    Speech.speak(speechFriendlyText(text), { language: "pt-BR", voice, rate: speechRate, pitch: speechVoice === "female" ? 1.08 : 0.78, onDone: () => { setSpeakingKey(null); setSpeechPaused(false); }, onStopped: () => { setSpeakingKey(null); setSpeechPaused(false); }, onError: () => { setSpeakingKey(null); setSpeechPaused(false); } });
   }
 
   function deleteConversation() {
