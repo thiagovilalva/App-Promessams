@@ -9,7 +9,7 @@ import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, Sc
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
-import { useAccessibility } from "@/lib/accessibility-provider";
+import { useAccessibility, type SpeechVoiceGender } from "@/lib/accessibility-provider";
 import { trpc } from "@/lib/trpc";
 
 type Attachment = { name: string; mimeType?: string; text?: string; dataUrl?: string };
@@ -19,9 +19,20 @@ const starters = ["Como começar o Projeto Sementes na minha igreja?", "Qual a d
 const offlineAnswer = "Estou sem conexão neste momento. Você pode continuar lendo a biblioteca offline. Quando a internet voltar, envie sua pergunta novamente para receber uma orientação personalizada com a base do Projeto Sementes.";
 const textTypes = ["text/plain", "text/markdown", "text/csv", "application/json", "application/pdf"];
 
+function speechFriendlyText(text: string) {
+  return text.replace(/\b(\d?\s?[1-3]?\s?[A-ZÁÉÍÓÚÃÕÇ][\wÁÉÍÓÚÃÕÇ-]*(?:\s+[A-ZÁÉÍÓÚÃÕÇ][\wÁÉÍÓÚÃÕÇ-]*)?)\s+(\d{1,3})[:.](\d{1,3})\b/g, (_match, book: string, chapter: string, verse: string) => `${book}, capítulo ${chapter}, versículo ${verse}`);
+}
+
+async function findPortugueseVoice(gender: SpeechVoiceGender) {
+  const voices = await Speech.getAvailableVoicesAsync();
+  const portuguese = voices.filter((voice) => voice.language?.toLowerCase().startsWith("pt"));
+  const genderMatch = portuguese.find((voice: any) => String(voice.gender ?? "").toLowerCase() === gender);
+  return (genderMatch ?? portuguese[gender === "female" ? 0 : 1] ?? portuguese[0])?.identifier;
+}
+
 export default function ChatScreen() {
   const colors = useColors();
-  const { textScale, speechRate } = useAccessibility();
+  const { textScale, speechRate, speechVoice } = useAccessibility();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [attachments, setAttachments] = useState<Attachment[]>([]);
@@ -93,7 +104,8 @@ export default function ChatScreen() {
     if (speakingKey === key) { await Speech.pause(); setSpeechPaused(true); return; }
     await Speech.stop();
     setSpeakingKey(key); setSpeechPaused(false);
-    Speech.speak(text, { language: "pt-BR", rate: speechRate, pitch: 1.02, onDone: () => { setSpeakingKey(null); setSpeechPaused(false); }, onStopped: () => { setSpeakingKey(null); setSpeechPaused(false); }, onError: () => { setSpeakingKey(null); setSpeechPaused(false); } });
+    const voice = await findPortugueseVoice(speechVoice);
+    Speech.speak(speechFriendlyText(text), { language: "pt-BR", voice, rate: speechRate, pitch: speechVoice === "female" ? 1.08 : 0.92, onDone: () => { setSpeakingKey(null); setSpeechPaused(false); }, onStopped: () => { setSpeakingKey(null); setSpeechPaused(false); }, onError: () => { setSpeakingKey(null); setSpeechPaused(false); } });
   }
 
   function deleteConversation() {

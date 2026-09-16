@@ -18,6 +18,6 @@ describe("admin approval and accessibility", () => {
     const chat = read("app/(tabs)/chat.tsx");
     expect(screen).toContain("Abrir VLibras");
     expect(provider).toContain("speechRate");
-    expect(chat).toContain("pitch: 1.02");
+    expect(chat).toContain("speechVoice === \"female\"");
   });
 });

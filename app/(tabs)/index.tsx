@@ -64,7 +64,6 @@ export default function HomeScreen() {
         </Pressable>
         <Text style={[styles.footer, { color: colors.muted }]}>Conteúdo de trabalho da Convenção Regional Sul-Mato-Grossense</Text>
         <Pressable onPress={() => router.push("/conta")} style={[styles.accountLink, { borderColor: colors.border, backgroundColor: colors.surface }]}><Text style={[styles.accountLinkText, { color: colors.primary }]}>Entrar ou criar conta Manus</Text><Text style={[styles.accountLinkHint, { color: colors.muted }]}>Guardar sua jornada e histórico</Text></Pressable>
-        <Pressable onPress={() => router.push("/acessibilidade")} style={[styles.accessibilityLink, { borderColor: colors.border }]} accessibilityRole="button" accessibilityLabel="Abrir acessibilidade"><Text style={[styles.accessibilityLinkText, { color: colors.foreground }]}>Acessibilidade: texto grande, leitor de tela e ouvir respostas</Text></Pressable>
         <Pressable onPress={() => void Linking.openURL("https://wa.me/5567999132610?text=Ol%C3%A1%2C%20quero%20saber%20mais%20sobre%20o%20Projeto%20Sementes.")} style={[styles.whatsappButton, { borderColor: "#25D366" }]} accessibilityRole="link" accessibilityLabel="Fale conosco pelo WhatsApp"><IconSymbol name="whatsapp" size={19} color="#128C49" /><Text style={[styles.whatsappText, { color: colors.foreground }]}>Fale conosco pelo WhatsApp</Text></Pressable>
       </ScrollView>
     </ScreenContainer>
@@ -113,8 +112,6 @@ const styles = StyleSheet.create({
   accountLink: { borderWidth: 1, borderRadius: 16, padding: 13, marginTop: 14, alignItems: "center" },
   accountLinkText: { fontSize: 13, fontWeight: "800" },
   accountLinkHint: { fontSize: 11, marginTop: 3 },
-  accessibilityLink: { borderWidth: 1, borderRadius: 14, padding: 12, marginTop: 9, alignItems: "center" },
-  accessibilityLinkText: { fontSize: 12, fontWeight: "700", textAlign: "center" },
   teamLink: { alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 5, marginTop: 12, padding: 5 },
   teamLinkText: { fontSize: 10, fontWeight: "700" },
   whatsappButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderWidth: 1, borderRadius: 15, paddingVertical: 13, paddingHorizontal: 14, marginTop: 10 },
