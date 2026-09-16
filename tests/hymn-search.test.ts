@@ -11,11 +11,11 @@ describe("hinário interno", () => {
     expect(source).toContain("number");
     expect(source).toContain("title");
   });
-  it("oferece busca e abre a letra dentro do aplicativo", () => {
+  it("abre a letra em navegador compatível com celular e computador", () => {
     const source = read("app/hinario.tsx");
     expect(source).toContain("Buscar por número ou título");
-    expect(source).toContain("selected.url");
-    expect(source).toContain("WebView");
+    expect(source).toContain("Linking.openURL");
+    expect(source).not.toContain("WebView");
   });
   it("abre o hinário interno na tela inicial", () => {
     expect(read("app/(tabs)/index.tsx")).toContain('router.push("/hinario")');
