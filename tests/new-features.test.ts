@@ -17,6 +17,13 @@ describe("requested product updates", () => {
     expect(source).toContain("/acessibilidade");
     expect(source).toContain("accessibility");
   });
+  it("adds the Promessa radio player above the WhatsApp contact", () => {
+    const source = read("app/(tabs)/index.tsx");
+    expect(source).toContain("https://player.srvstm.com/proxy/30368");
+    expect(source).toContain("Rádio da Promessa");
+    expect(source).toContain("useAudioPlayer");
+    expect(source).toContain("toggleRadio");
+  });
   it("supports account choices, speech pause/resume, reading plan and revised project document", () => {
     expect(read("app/conta.tsx")).toContain("Criar conta na Manus");
     expect(read("app/(tabs)/chat.tsx")).toContain("Speech.pause");

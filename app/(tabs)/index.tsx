@@ -1,5 +1,7 @@
 import { useRouter } from "expo-router";
+import { useEffect } from "react";
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -16,6 +18,20 @@ export default function HomeScreen() {
   const router = useRouter();
   const colors = useColors();
   const { colorScheme, setColorScheme } = useThemeContext();
+  const radioPlayer = useAudioPlayer("https://player.srvstm.com/proxy/30368");
+  const radioStatus = useAudioPlayerStatus(radioPlayer);
+
+  useEffect(() => {
+    void setAudioModeAsync({ playsInSilentMode: true, interruptionMode: "duckOthers" });
+  }, []);
+
+  const toggleRadio = () => {
+    if (radioStatus.playing) {
+      radioPlayer.pause();
+    } else {
+      radioPlayer.play();
+    }
+  };
 
   return (
     <ScreenContainer className="px-5" edges={["top", "left", "right"]}>
@@ -66,6 +82,16 @@ export default function HomeScreen() {
           <View style={[styles.offerIcon, { backgroundColor: "#F8E3BF" }]}><IconSymbol name="heart.fill" size={20} color="#A76418" /></View>
           <View style={styles.offerCopy}><Text style={[styles.offerTitle, { color: colors.foreground }]}>Apoie o campo</Text><Text style={[styles.offerText, { color: colors.muted }]}>Conheça a chave PIX para apoiar a Convenção Regional Sul-Mato-Grossense.</Text></View><IconSymbol name="chevron.right" size={20} color="#A76418" />
         </Pressable>
+        <View style={[styles.radioCard, { backgroundColor: colors.surface, borderColor: colors.border }]} accessibilityLabel="Rádio da Promessa">
+          <View style={[styles.radioIcon, { backgroundColor: "#E9F7F0" }]}><IconSymbol name="radio" size={21} color="#167C55" /></View>
+          <View style={styles.radioCopy}>
+            <Text style={[styles.radioTitle, { color: colors.foreground }]}>Rádio da Promessa</Text>
+            <Text style={[styles.radioText, { color: colors.muted }]}>{radioStatus.isBuffering ? "Conectando à transmissão..." : radioStatus.playing ? "Ao vivo agora" : "Ouça a programação online"}</Text>
+          </View>
+          <Pressable onPress={toggleRadio} style={({ pressed }) => [styles.radioButton, { backgroundColor: colors.primary }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel={radioStatus.playing ? "Pausar Rádio da Promessa" : "Ouvir Rádio da Promessa"}>
+            <IconSymbol name={radioStatus.playing ? "pause.fill" : "play.fill"} size={18} color="#FFFFFF" />
+          </Pressable>
+        </View>
         <Text style={[styles.footer, { color: colors.muted }]}>Conteúdo de trabalho da Convenção Regional Sul-Mato-Grossense</Text>
         <Pressable onPress={() => router.push("/conta")} style={[styles.accountLink, { borderColor: colors.border, backgroundColor: colors.surface }]}><Text style={[styles.accountLinkText, { color: colors.primary }]}>Entrar ou criar conta Manus</Text><Text style={[styles.accountLinkHint, { color: colors.muted }]}>Guardar sua jornada e histórico</Text></Pressable>
         <Pressable onPress={() => void Linking.openURL("https://wa.me/5567999132610?text=Ol%C3%A1%2C%20quero%20saber%20mais%20sobre%20o%20Projeto%20Sementes.")} style={[styles.whatsappButton, { borderColor: "#25D366" }]} accessibilityRole="link" accessibilityLabel="Fale conosco pelo WhatsApp"><IconSymbol name="whatsapp" size={19} color="#128C49" /><Text style={[styles.whatsappText, { color: colors.foreground }]}>Fale conosco pelo WhatsApp</Text></Pressable>
@@ -120,5 +146,11 @@ const styles = StyleSheet.create({
   teamLinkText: { fontSize: 10, fontWeight: "700" },
   whatsappButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderWidth: 1, borderRadius: 15, paddingVertical: 13, paddingHorizontal: 14, marginTop: 10 },
   whatsappText: { fontSize: 14, fontWeight: "800" },
+  radioCard: { flexDirection: "row", alignItems: "center", gap: 11, borderWidth: 1, borderRadius: 18, padding: 13, marginTop: 16 },
+  radioIcon: { width: 38, height: 38, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  radioCopy: { flex: 1 },
+  radioTitle: { fontSize: 14, fontWeight: "800", marginBottom: 3 },
+  radioText: { fontSize: 11, lineHeight: 16 },
+  radioButton: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   pressed: { opacity: 0.78, transform: [{ scale: 0.985 }] },
 });
