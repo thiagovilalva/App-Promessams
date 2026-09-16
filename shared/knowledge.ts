@@ -1,5 +1,6 @@
 import { FULL_DOCUMENT_TEXT } from "./full-document";
 import { PROJECT_FULL_DOCUMENT } from "./project-full-document";
+import { PHILOSOPHY_FULL_DOCUMENT } from "./philosophy-full-document";
 
 export type ContentModule = {
   id: string;
@@ -76,11 +77,11 @@ export const CONTENT_MODULES: ContentModule[] = [
   {
     id: "documento-integral",
     eyebrow: "Documento-base",
-    title: "Filosofia da Semente — documento integral (base atual)",
-    summary: "Leia o material completo da Convenção Regional Sul-Mato-Grossense, com as seções de filosofia, implantação, equipes, cuidado e avaliação.",
-    body: FULL_DOCUMENT_TEXT,
-    scripture: "Documento de trabalho teológico-ministerial",
-    practice: "Use a busca do seu dispositivo para localizar uma seção e converse com o guia sobre como aplicá-la com segurança na sua igreja.",
+    title: "Filosofia da Semente — documento integral revisado",
+    summary: "Leia o documento teológico-ministerial completo, com identidade, distinção entre filosofia e projeto, base bíblica, princípios, liderança e avaliação.",
+    body: PHILOSOPHY_FULL_DOCUMENT,
+    scripture: "Documento revisado da Convenção Regional Sul-Mato-Grossense",
+    practice: "Leia uma seção por vez, destaque uma convicção e converse com a liderança sobre como ela pode se tornar prática na igreja.",
     duration: "Leitura completa",
   },
   {
@@ -125,7 +126,10 @@ export const CONTENT_MODULES: ContentModule[] = [
   },
 ];
 
-export const SEMENTES_KNOWLEDGE = `${FULL_DOCUMENT_TEXT}
+export const SEMENTES_KNOWLEDGE = `${PHILOSOPHY_FULL_DOCUMENT}
+
+DOCUMENTO COMPLETO DO PROJETO SEMENTES:
+${PROJECT_FULL_DOCUMENT}
 
 RESUMO ORIENTADOR DO AGENTE
 BASE DE CONHECIMENTO — FILOSOFIA DA SEMENTE E PROJETO SEMENTES
