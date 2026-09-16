@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -23,7 +23,7 @@ export default function HomeScreen() {
         <View style={styles.topline}>
           <View style={styles.brandMark}><Text style={styles.brandSeed}>S</Text></View>
           <View><Text style={[styles.brandName, { color: colors.foreground }]}>Projeto Sementes</Text><Text style={[styles.brandCaption, { color: colors.muted }]}>Igreja viva no Modo Missão</Text></View>
-          <Pressable onPress={() => setColorScheme(colorScheme === "light" ? "dark" : "light")} style={[styles.themeButton, { borderColor: colors.border, backgroundColor: colors.surface }]}><Text style={[styles.themeButtonText, { color: colors.foreground }]}>{colorScheme === "light" ? "Escuro" : "Claro"}</Text></Pressable>
+          <View style={styles.topActions}><Pressable onPress={() => setColorScheme(colorScheme === "light" ? "dark" : "light")} style={[styles.themeButton, { borderColor: colors.border, backgroundColor: colors.surface }]} accessibilityLabel="Alternar modo claro e escuro"><Text style={[styles.themeButtonText, { color: colors.foreground }]}>{colorScheme === "light" ? "Escuro" : "Claro"}</Text></Pressable><Pressable onPress={() => router.push("/acessibilidade")} style={[styles.accessibilityButton, { borderColor: colors.border, backgroundColor: colors.surface }]} accessibilityRole="button" accessibilityLabel="Abrir acessibilidade"><IconSymbol name="accessibility" size={16} color={colors.foreground} /></Pressable></View>
         </View>
 
         <View style={[styles.hero, { backgroundColor: colors.primary }]}>
@@ -50,6 +50,7 @@ export default function HomeScreen() {
         </View>
 
         <Text style={[styles.kicker, { color: colors.primary, marginTop: 26 }]}>O QUE NOS GUIA</Text>
+        <Pressable onPress={() => router.push("/plano-biblico")} style={[styles.readingBanner, { backgroundColor: colors.surface, borderColor: colors.border }]}><View style={[styles.smallIcon, { backgroundColor: colors.primary + "18" }]}><IconSymbol name="book.closed.fill" size={20} color={colors.primary} /></View><View style={styles.principleBody}><Text style={[styles.principleTitle, { color: colors.foreground }]}>Plano de leitura bíblica</Text><Text style={[styles.principleText, { color: colors.muted }]}>Textos, contexto e aplicações para viver a missão.</Text></View><IconSymbol name="chevron.right" size={18} color={colors.primary} /></Pressable>
         {principles.map((item) => (
           <View key={item.title} style={[styles.principle, { borderBottomColor: colors.border }]}>
             <View style={[styles.smallIcon, { backgroundColor: colors.primary + "18" }]}><IconSymbol name={item.icon as any} size={20} color={colors.primary} /></View>
@@ -64,7 +65,7 @@ export default function HomeScreen() {
         <Text style={[styles.footer, { color: colors.muted }]}>Conteúdo de trabalho da Convenção Regional Sul-Mato-Grossense</Text>
         <Pressable onPress={() => router.push("/conta")} style={[styles.accountLink, { borderColor: colors.border, backgroundColor: colors.surface }]}><Text style={[styles.accountLinkText, { color: colors.primary }]}>Entrar ou criar conta Manus</Text><Text style={[styles.accountLinkHint, { color: colors.muted }]}>Guardar sua jornada e histórico</Text></Pressable>
         <Pressable onPress={() => router.push("/acessibilidade")} style={[styles.accessibilityLink, { borderColor: colors.border }]} accessibilityRole="button" accessibilityLabel="Abrir acessibilidade"><Text style={[styles.accessibilityLinkText, { color: colors.foreground }]}>Acessibilidade: texto grande, leitor de tela e ouvir respostas</Text></Pressable>
-        <Pressable onPress={() => router.push("/admin")} style={styles.teamLink}><IconSymbol name="lock.fill" size={13} color={colors.muted} /><Text style={[styles.teamLinkText, { color: colors.muted }]}>Área da equipe</Text></Pressable>
+        <Pressable onPress={() => void Linking.openURL("https://wa.me/5567999132610?text=Ol%C3%A1%2C%20quero%20saber%20mais%20sobre%20o%20Projeto%20Sementes.")} style={[styles.whatsappButton, { borderColor: "#25D366" }]} accessibilityRole="link" accessibilityLabel="Fale conosco pelo WhatsApp"><IconSymbol name="whatsapp" size={19} color="#128C49" /><Text style={[styles.whatsappText, { color: colors.foreground }]}>Fale conosco pelo WhatsApp</Text></Pressable>
       </ScrollView>
     </ScreenContainer>
   );
@@ -73,7 +74,9 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   scroll: { paddingTop: 18, paddingBottom: 36 },
   topline: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 18 },
-  themeButton: { marginLeft: "auto", borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 7 },
+  topActions: { marginLeft: "auto", flexDirection: "row", alignItems: "center", gap: 7 },
+  themeButton: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 7 },
+  accessibilityButton: { width: 32, height: 32, borderWidth: 1, borderRadius: 999, alignItems: "center", justifyContent: "center" },
   themeButtonText: { fontSize: 10, fontWeight: "800" },
   brandMark: { width: 38, height: 38, borderRadius: 13, backgroundColor: "#E9F7F0", alignItems: "center", justifyContent: "center" },
   brandSeed: { color: "#167C55", fontSize: 20, fontWeight: "800" },
@@ -100,6 +103,7 @@ const styles = StyleSheet.create({
   principleBody: { flex: 1 },
   principleTitle: { fontSize: 14, fontWeight: "800", marginBottom: 4 },
   principleText: { fontSize: 12, lineHeight: 18 },
+  readingBanner: { flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1, borderRadius: 16, padding: 13, marginBottom: 4 },
   offerBanner: { flexDirection: "row", alignItems: "center", gap: 10, borderWidth: 1, borderRadius: 18, padding: 14, marginTop: 22 },
   offerIcon: { width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center" },
   offerCopy: { flex: 1 },
@@ -113,5 +117,7 @@ const styles = StyleSheet.create({
   accessibilityLinkText: { fontSize: 12, fontWeight: "700", textAlign: "center" },
   teamLink: { alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 5, marginTop: 12, padding: 5 },
   teamLinkText: { fontSize: 10, fontWeight: "700" },
+  whatsappButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderWidth: 1, borderRadius: 15, paddingVertical: 13, paddingHorizontal: 14, marginTop: 10 },
+  whatsappText: { fontSize: 14, fontWeight: "800" },
   pressed: { opacity: 0.78, transform: [{ scale: 0.985 }] },
 });

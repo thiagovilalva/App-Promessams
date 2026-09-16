@@ -1,6 +1,6 @@
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
-import { Alert, Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Image, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -9,13 +9,12 @@ import { buildPixPayload, PIX_KEY } from "@/shared/pix";
 
 export default function OfertasScreen() {
   const colors = useColors();
-  const [amount, setAmount] = useState("");
+  const [amountDigits, setAmountDigits] = useState("");
   const [copied, setCopied] = useState(false);
   const [qrData, setQrData] = useState("");
-  const numericAmount = Number.parseFloat(amount.replace(",", "."));
+  const numericAmount = amountDigits ? Number(amountDigits) / 100 : 0;
   const payload = buildPixPayload(Number.isFinite(numericAmount) && numericAmount > 0 ? numericAmount : undefined);
-  const inviteUrl = "https://manus.im/invitation/L6X1HAEPGOFARG?utm_source=invitation&utm_medium=social&utm_campaign=whatsapp";
-  const whatsappUrl = "https://wa.me/5567999132610?text=Ol%C3%A1%2C%20quero%20saber%20mais%20sobre%20o%20Projeto%20Sementes.";
+  const displayedAmount = amountDigits ? (Number(amountDigits) / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "";
 
   useEffect(() => {
     QRCode.toDataURL(payload, { margin: 1, width: 240, color: { dark: "#173D2C", light: "#FFFFFF" } }).then(setQrData).catch(() => setQrData(""));
@@ -42,7 +41,8 @@ export default function OfertasScreen() {
           <View style={styles.pixHeader}><View style={styles.pixBadge}><Text style={styles.pixBadgeText}>PIX</Text></View><Text style={[styles.pixLabel, { color: colors.muted }]}>Oferta voluntária · CNPJ</Text></View>
           <Text style={[styles.key, { color: colors.foreground }]}>{PIX_KEY}</Text>
           <Text style={[styles.helper, { color: colors.muted }]}>Valor opcional para personalizar o QR Code</Text>
-          <View style={[styles.amountBox, { borderColor: colors.border }]}><Text style={[styles.currency, { color: colors.muted }]}>R$</Text><TextInput value={amount} onChangeText={setAmount} keyboardType="decimal-pad" placeholder="0,00" placeholderTextColor={colors.muted} style={[styles.amountInput, { color: colors.foreground }]} /></View>
+          <View style={[styles.amountBox, { borderColor: colors.border }]}><Text style={[styles.currency, { color: colors.muted }]}>R$</Text><TextInput value={displayedAmount} onChangeText={(value) => setAmountDigits(value.replace(/\D/g, "").replace(/^0+(?=\d)/, "").slice(0, 12))} keyboardType="number-pad" placeholder="0,00" placeholderTextColor={colors.muted} style={[styles.amountInput, { color: colors.foreground }]} accessibilityLabel="Valor da oferta em reais" /></View>
+          <Text style={[styles.amountHint, { color: colors.muted }]}>Digite somente números: 1000 = R$ 10,00 · 500 = R$ 5,00 · 12020 = R$ 120,20</Text>
           {qrData ? <View style={styles.qrWrap}><Image source={{ uri: qrData }} style={styles.qr} accessibilityLabel="QR Code PIX para oferta" /><Text style={[styles.qrCaption, { color: colors.muted }]}>Aponte a câmera do banco para ofertar</Text></View> : null}
           <Pressable onPress={() => copy(payload, "PIX Copia e Cola")} style={({ pressed }) => [styles.copyButton, { backgroundColor: copied ? "#E9F7F0" : colors.primary }, pressed && styles.pressed]}><IconSymbol name={copied ? "checkmark" : "qrcode"} size={17} color={copied ? "#167C55" : "#FFFFFF"} /><Text style={[styles.copyText, { color: copied ? "#167C55" : "#FFFFFF" }]}>{copied ? "Código copiado" : "Copiar PIX Copia e Cola"}</Text></Pressable>
           <Pressable onPress={() => copy(PIX_KEY, "Chave PIX")} style={({ pressed }) => [styles.keyButton, { borderColor: colors.border }, pressed && styles.pressed]}><IconSymbol name="doc.on.doc.fill" size={16} color={colors.primary} /><Text style={[styles.keyButtonText, { color: colors.foreground }]}>Copiar somente a chave</Text></Pressable>
@@ -51,8 +51,6 @@ export default function OfertasScreen() {
         <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Transparência e segurança</Text>
         <Text style={[styles.body, { color: colors.muted }]}>O QR Code e o código Copia e Cola são gerados localmente a partir da chave PIX informada pela Convenção. A confirmação acontece somente no aplicativo do seu banco.</Text>
         <View style={[styles.future, { borderColor: "#F3D9AF", backgroundColor: "#FFFDF8" }]}><IconSymbol name="sparkles" size={18} color="#A76418" /><Text style={[styles.futureText, { color: colors.foreground }]}>Próximo passo: integrar um provedor oficial para cobranças dinâmicas, conciliação e comprovantes.</Text></View>
-        <Pressable onPress={() => void Linking.openURL(inviteUrl)} style={[styles.inviteButton, { backgroundColor: colors.primary }]} accessibilityRole="link" accessibilityLabel="Junte-se ao Manus e ganhe créditos grátis"><IconSymbol name="sparkles" size={19} color="#FFFFFF" /><Text style={styles.inviteText}>Junte-se ao Manus e ganhe créditos grátis</Text></Pressable>
-        <Pressable onPress={() => void Linking.openURL(whatsappUrl)} style={[styles.whatsappButton, { borderColor: "#25D366" }]} accessibilityRole="link" accessibilityLabel="Fale conosco pelo WhatsApp"><IconSymbol name="whatsapp" size={19} color="#128C49" /><Text style={[styles.whatsappText, { color: colors.foreground }]}>Fale conosco pelo WhatsApp</Text></Pressable>
       </ScrollView>
     </ScreenContainer>
   );
@@ -77,6 +75,7 @@ const styles = StyleSheet.create({
   pixLabel: { fontSize: 11 },
   key: { fontSize: 23, fontWeight: "800", letterSpacing: 1.2, marginTop: 18 },
   helper: { fontSize: 11, marginTop: 14, marginBottom: 7 },
+  amountHint: { fontSize: 11, lineHeight: 16, marginTop: 6 },
   amountBox: { borderWidth: 1, borderRadius: 13, height: 46, flexDirection: "row", alignItems: "center", paddingHorizontal: 12 },
   currency: { fontSize: 13, fontWeight: "700", marginRight: 6 },
   amountInput: { flex: 1, fontSize: 16, fontWeight: "700" },
@@ -93,9 +92,5 @@ const styles = StyleSheet.create({
   body: { fontSize: 13, lineHeight: 20 },
   future: { flexDirection: "row", gap: 9, borderWidth: 1, borderRadius: 14, padding: 13, marginTop: 18 },
   futureText: { flex: 1, fontSize: 14, lineHeight: 21, fontWeight: "600" },
-  inviteButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderRadius: 15, paddingVertical: 14, paddingHorizontal: 14, marginTop: 18 },
-  inviteText: { color: "#FFFFFF", fontSize: 14, fontWeight: "800", textAlign: "center" },
-  whatsappButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderWidth: 1, borderRadius: 15, paddingVertical: 13, paddingHorizontal: 14, marginTop: 10 },
-  whatsappText: { fontSize: 14, fontWeight: "800" },
   pressed: { opacity: 0.78 },
 });

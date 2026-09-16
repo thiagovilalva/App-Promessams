@@ -71,3 +71,17 @@ Não foi encontrado um endpoint oficial exposto para gerar automaticamente links
 - [x] Separar a aba Conteúdos em “Filosofia da Semente” e “Projeto Sementes”.
 - [x] Manter leitura, copiar e compartilhar disponíveis dentro de cada conteúdo escolhido.
 - [x] Validar 19 testes, TypeScript, build e exportação web.
+
+## Atualização de 16/09 — concluída
+
+- [x] Entrada PIX trata os dígitos como centavos e mostra exemplos de conversão.
+- [x] Remover convite Manus da aba Ofertas.
+- [x] Mover WhatsApp para a tela inicial.
+- [x] Separar login e criação de conta Manus na tela Conta; criação abre o convite oficial em página externa.
+- [x] Mover Área da equipe para a tela de conta autenticada.
+- [x] Ouvir resposta alterna entre Ouvir, Pausar e Continuar no mesmo botão.
+- [x] Colocar acessibilidade ao lado do botão claro/escuro na capa.
+- [x] Adicionar plano de leitura bíblica com hermenêutica e aplicação missional.
+- [x] Importar o PDF revisado como documento integral do Projeto Sementes e criar módulos passo a passo.
+- [x] Manter a Filosofia da Semente separada, pronta para receber o documento específico pendente.
+- [x] Validar 22 testes, TypeScript, build e exportação web.

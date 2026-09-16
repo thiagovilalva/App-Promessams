@@ -1,4 +1,5 @@
 import { FULL_DOCUMENT_TEXT } from "./full-document";
+import { PROJECT_FULL_DOCUMENT } from "./project-full-document";
 
 export type ContentModule = {
   id: string;
@@ -75,11 +76,51 @@ export const CONTENT_MODULES: ContentModule[] = [
   {
     id: "documento-integral",
     eyebrow: "Documento-base",
-    title: "Filosofia da Semente — documento integral",
+    title: "Filosofia da Semente — documento integral (base atual)",
     summary: "Leia o material completo da Convenção Regional Sul-Mato-Grossense, com as seções de filosofia, implantação, equipes, cuidado e avaliação.",
     body: FULL_DOCUMENT_TEXT,
     scripture: "Documento de trabalho teológico-ministerial",
     practice: "Use a busca do seu dispositivo para localizar uma seção e converse com o guia sobre como aplicá-la com segurança na sua igreja.",
+    duration: "Leitura completa",
+  },
+  {
+    id: "projeto-acolhimento",
+    eyebrow: "Projeto Sementes",
+    title: "Acolhimento e Campanha de Oração no Lar",
+    summary: "Receber, ouvir, identificar pedidos de oração e cultivar relacionamentos com liberdade e cuidado.",
+    body: "Acolher é abrir uma porta segura para que a pessoa seja recebida, ouvida e respeitada. A Campanha de Oração no Lar cria um primeiro ciclo de relacionamento, oração e anúncio, sem pressão ou promessa automática. O objetivo é reconhecer o próximo passo possível e conectar a pessoa a uma equipe preparada.",
+    scripture: "Lucas 10:5–9 · Colossenses 4:5–6",
+    practice: "Escolha uma família ou pessoa, ore por ela e ofereça uma visita ou conversa respeitosa.",
+    duration: "5 min",
+  },
+  {
+    id: "projeto-discipulados",
+    eyebrow: "Projeto Sementes",
+    title: "Discipulados Um, Dois e Três",
+    summary: "Uma jornada progressiva de evangelho, fundamentos, integração, serviço e formação de liderança.",
+    body: "Os discipulados organizam o acompanhamento sem transformar pessoas em números. O primeiro apresenta o evangelho e oferece apoio; o segundo aprofunda fé, doutrina e preparação para o batismo; o terceiro integra, treina e prepara novos líderes. Cada etapa deve respeitar o ritmo, a liberdade, a dignidade e as necessidades de cuidado da pessoa.",
+    scripture: "Mateus 28:19–20 · 2 Timóteo 2:2",
+    practice: "Mapeie uma pessoa em acompanhamento e registre apenas o próximo passo claro, voluntário e seguro.",
+    duration: "7 min",
+  },
+  {
+    id: "projeto-equipes",
+    eyebrow: "Projeto Sementes",
+    title: "Equipes, semáforo e cuidado",
+    summary: "Papéis definidos, supervisão e sinais simples para que ninguém seja esquecido na jornada.",
+    body: "O Projeto Sementes distribui responsabilidades entre pastor, presbíteros, diáconos, diaconisas, líderes, auxiliares e equipes de discipulado. Reuniões regulares, registros confidenciais e um semáforo de acompanhamento ajudam a identificar quem está avançando, quem precisa de atenção e quem necessita de reintegração ou cuidado especializado.",
+    scripture: "Gálatas 6:1–2 · 1 Pedro 5:2–3",
+    practice: "Reúna a equipe e revise os acompanhamentos com confidencialidade, encaminhando situações de risco à liderança adequada.",
+    duration: "6 min",
+  },
+  {
+    id: "projeto-documento-integral",
+    eyebrow: "Documento-base",
+    title: "Projeto Sementes — documento integral revisado",
+    summary: "Leia o documento revisado completo, com objetivos, princípios, estrutura, implantação, fases, equipes, programas e avaliação.",
+    body: PROJECT_FULL_DOCUMENT,
+    scripture: "Documento revisado da Convenção Regional Sul-Mato-Grossense",
+    practice: "Use a leitura completa para montar um plano local e confirme decisões sensíveis com a liderança da igreja.",
     duration: "Leitura completa",
   },
 ];

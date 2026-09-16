@@ -26,6 +26,8 @@ export default function ChatScreen() {
   const [input, setInput] = useState("");
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [speakingKey, setSpeakingKey] = useState<string | null>(null);
+  const [speechPaused, setSpeechPaused] = useState(false);
   const messagesScrollRef = useRef<ScrollView>(null);
   const mutation = trpc.chat.ask.useMutation();
 
@@ -86,9 +88,12 @@ export default function ChatScreen() {
     try { await Share.share({ message: text, title: "Projeto Sementes" }); } catch (error) { console.warn("[Chat] share cancelled", error); }
   }
 
-  async function speakAnswer(text: string) {
+  async function toggleSpeech(text: string, key: string) {
+    if (speakingKey === key && speechPaused) { await Speech.resume(); setSpeechPaused(false); return; }
+    if (speakingKey === key) { await Speech.pause(); setSpeechPaused(true); return; }
     await Speech.stop();
-    Speech.speak(text, { language: "pt-BR", rate: speechRate, pitch: 1.02 });
+    setSpeakingKey(key); setSpeechPaused(false);
+    Speech.speak(text, { language: "pt-BR", rate: speechRate, pitch: 1.02, onDone: () => { setSpeakingKey(null); setSpeechPaused(false); }, onStopped: () => { setSpeakingKey(null); setSpeechPaused(false); }, onError: () => { setSpeakingKey(null); setSpeechPaused(false); } });
   }
 
   function deleteConversation() {
@@ -110,7 +115,7 @@ export default function ChatScreen() {
             <View style={[styles.bubble, message.role === "user" ? { backgroundColor: colors.primary } : { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}>
               {!!message.attachments?.length && <Text style={[styles.attachmentLabel, { color: message.role === "user" ? "#E8FAF2" : colors.primary }]}>Anexo: {message.attachments.map((file) => file.name).join(", ")}</Text>}
               <Text style={[styles.messageText, { color: message.role === "user" ? "#FFFFFF" : colors.foreground, fontSize: 15 * textScale, lineHeight: 23 * textScale }]}>{message.content}</Text>
-              {message.role === "assistant" && <View style={styles.messageActions}><Pressable onPress={() => void copyAnswer(message.content)} style={[styles.actionButton, { borderColor: colors.border }]} accessibilityRole="button" accessibilityLabel="Copiar resposta"><IconSymbol name="doc.on.doc.fill" size={15} color={colors.primary} /><Text style={[styles.actionText, { color: colors.primary }]}>Copiar</Text></Pressable><Pressable onPress={() => void shareAnswer(message.content)} style={[styles.actionButton, { borderColor: colors.border }]} accessibilityRole="button" accessibilityLabel="Compartilhar resposta"><IconSymbol name="share" size={15} color={colors.primary} /><Text style={[styles.actionText, { color: colors.primary }]}>Compartilhar</Text></Pressable><Pressable onPress={() => void speakAnswer(message.content)} style={[styles.actionButton, { borderColor: colors.border }]} accessibilityRole="button" accessibilityLabel="Ouvir resposta"><IconSymbol name="volume.up" size={15} color={colors.primary} /><Text style={[styles.actionText, { color: colors.primary }]}>Ouvir</Text></Pressable></View>}
+              {message.role === "assistant" && <View style={styles.messageActions}><Pressable onPress={() => void copyAnswer(message.content)} style={[styles.actionButton, { borderColor: colors.border }]} accessibilityRole="button" accessibilityLabel="Copiar resposta"><IconSymbol name="doc.on.doc.fill" size={15} color={colors.primary} /><Text style={[styles.actionText, { color: colors.primary }]}>Copiar</Text></Pressable><Pressable onPress={() => void shareAnswer(message.content)} style={[styles.actionButton, { borderColor: colors.border }]} accessibilityRole="button" accessibilityLabel="Compartilhar resposta"><IconSymbol name="share" size={15} color={colors.primary} /><Text style={[styles.actionText, { color: colors.primary }]}>Compartilhar</Text></Pressable><Pressable onPress={() => void toggleSpeech(message.content, `message-${index}`)} style={[styles.actionButton, { borderColor: speakingKey === `message-${index}` ? colors.primary : colors.border }]} accessibilityRole="button" accessibilityLabel={speakingKey === `message-${index}` && !speechPaused ? "Pausar resposta" : speakingKey === `message-${index}` ? "Continuar resposta" : "Ouvir resposta"}><IconSymbol name="volume.up" size={15} color={colors.primary} /><Text style={[styles.actionText, { color: colors.primary }]}>{speakingKey === `message-${index}` ? (speechPaused ? "Continuar" : "Pausar") : "Ouvir"}</Text></Pressable></View>}
               {message.researched && <Text style={[styles.sourceNote, { color: colors.muted }]}>Resposta complementada por pesquisa online.</Text>}
             </View>
           </View>)}
