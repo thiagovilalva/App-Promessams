@@ -22,7 +22,7 @@ describe("requested product updates", () => {
     expect(source).toContain("Rádio da Promessa");
     expect(source).toContain("useRadio");
     expect(source).toContain("stop.fill");
-    expect(source).toContain("radio-da-promessa.jpg");
+    expect(source).toContain("radio-da-promessa-correta.jpg");
     const provider = read("lib/radio-provider.tsx");
     expect(provider).toContain("https://player.srvstm.com/proxy/30368");
     expect(provider).toContain("shouldPlayInBackground: true");
@@ -32,6 +32,9 @@ describe("requested product updates", () => {
     const source = read("app/(tabs)/index.tsx");
     expect(source).toContain("projeto-sementes-logo.png");
     expect(fs.existsSync(path.join(process.cwd(), "assets/images/projeto-sementes-logo.png"))).toBe(true);
+  });
+  it("uses the supplied mission image on the offers page", () => {
+    expect(read("app/(tabs)/ofertas.tsx")).toContain("ofertas-missao.png");
   });
   it("supports account choices, speech pause/resume, reading plan and revised project document", () => {
     expect(read("app/conta.tsx")).toContain("Criar conta na Manus");

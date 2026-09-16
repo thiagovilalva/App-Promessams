@@ -69,7 +69,7 @@ export default function HomeScreen() {
           <View style={styles.offerCopy}><Text style={[styles.offerTitle, { color: colors.foreground }]}>Apoie o campo</Text><Text style={[styles.offerText, { color: colors.muted }]}>Conheça a chave PIX para apoiar a Convenção Regional Sul-Mato-Grossense.</Text></View><IconSymbol name="chevron.right" size={20} color="#A76418" />
         </Pressable>
         <View style={[styles.radioCard, { backgroundColor: colors.surface, borderColor: colors.border }]} accessibilityLabel="Rádio da Promessa">
-          <Image source={require("@/assets/images/radio-da-promessa.jpg")} style={styles.radioIcon} accessibilityLabel="Ícone da Rádio da Promessa" />
+          <Image source={require("@/assets/images/radio-da-promessa-correta.jpg")} style={styles.radioIcon} accessibilityLabel="Ícone da Rádio da Promessa" />
           <View style={styles.radioCopy}>
             <Text style={[styles.radioTitle, { color: colors.foreground }]}>Rádio da Promessa</Text>
             <Text style={[styles.radioText, { color: colors.muted }]}>{radioBuffering ? "Conectando à transmissão..." : radioPlaying ? "Ao vivo agora" : "Toque para ouvir online"}</Text>
