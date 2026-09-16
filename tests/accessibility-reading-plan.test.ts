@@ -19,13 +19,13 @@ describe("accessibility and reading plan updates", () => {
   });
   it("includes KJA reference notes, deeper theology and commentator dialogue", () => {
     const source = read("shared/reading-plan.ts");
-    expect(source).toContain("Leitura na NAA");
+    expect(source).toContain("Leitura na BLivre");
     expect(source).toContain("Em diálogo com");
     expect(source).toContain("Craig Keener");
     expect(source).toContain("Gordon Fee");
     expect(read("app/plano-biblico.tsx")).toContain("EM DIÁLOGO COM COMENTARISTAS");
-    expect(read("app/plano-biblico.tsx")).toContain("TEXTO BÍBLICO — NAA");
-    expect(read("app/plano-biblico.tsx")).toContain("sbb.org.br/nova-almeida-atualizada");
+    expect(read("app/plano-biblico.tsx")).toContain("TEXTO BÍBLICO — BLIVRE");
+    expect(read("app/plano-biblico.tsx")).toContain("blivre.org");
     expect(read("app/(tabs)/chat.tsx")).toContain("maleHints");
   });
 });
