@@ -4,20 +4,28 @@ import path from "node:path";
 
 const read = (file: string) => fs.readFileSync(path.join(process.cwd(), file), "utf8");
 
-describe("hinário interno", () => {
-  it("mantém um índice local para busca por número e título", () => {
-    const source = read("shared/hymn-index.ts");
+describe("hinário HBJ interno", () => {
+  it("contém os 541 hinos extraídos do PDF", () => {
+    const source = read("shared/hbj-data.ts");
+    expect(source).toContain('"number": 541');
     expect(source).toContain("Santo, santo, Pai bondoso");
-    expect(source).toContain("number");
-    expect(source).toContain("title");
+    expect(source).toContain("lyrics");
   });
-  it("abre a letra em navegador compatível com celular e computador", () => {
+  it("oferece busca interna, favoritos e controles de leitura", () => {
     const source = read("app/hinario.tsx");
-    expect(source).toContain("Buscar por número ou título");
-    expect(source).toContain("Linking.openURL");
-    expect(source).not.toContain("WebView");
+    expect(source).toContain("palavra da letra");
+    expect(source).toContain("AsyncStorage");
+    expect(source).toContain("Favoritos");
+    expect(source).toContain("Fundo creme");
+    expect(source).toContain("A+");
+    expect(source).not.toContain("Linking.openURL");
   });
-  it("abre o hinário interno na tela inicial", () => {
-    expect(read("app/(tabs)/index.tsx")).toContain('router.push("/hinario")');
+  it("exibe índice temático e comparativo", () => {
+    const source = read("app/hinario.tsx");
+    expect(source).toContain("Índice temático");
+    expect(source).toContain("BJ antigo × HBJ");
+    const data = read("shared/hbj-data.ts");
+    expect(data).toContain("HBJ_THEMES");
+    expect(data).toContain("HBJ_COMPARISON");
   });
 });
