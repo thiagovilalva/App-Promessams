@@ -53,7 +53,9 @@ describe("requested product updates", () => {
     expect(fs.existsSync(path.join(process.cwd(), "assets/images/android-icon-foreground.png"))).toBe(true);
   });
   it("uses the supplied mission image on the offers page", () => {
-    expect(read("app/(tabs)/ofertas.tsx")).toContain("projeto-missional-sementes.png");
+    const offers = read("app/(tabs)/ofertas.tsx");
+    expect(offers).toContain("projeto-missional-horizontal.webp");
+    expect(offers).toContain("backgroundColor: colors.surface");
   });
   it("updates offers, chat and content library wording", () => {
     const offers = read("app/(tabs)/ofertas.tsx");
