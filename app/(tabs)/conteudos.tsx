@@ -17,7 +17,7 @@ export default function ConteudosScreen() {
   const [section, setSection] = useState<"filosofia" | "projeto">("filosofia");
   const [saved, setSaved] = useState(false);
   const materialsQuery = trpc.materials.list.useQuery();
-  const visibleModules = useMemo(() => CONTENT_MODULES.filter((item) => section === "filosofia" ? ["filosofia", "distincao", "principios", "lideranca", "documento-integral"].includes(item.id) : ["projeto-acolhimento", "jornada", "projeto-discipulados", "projeto-equipes", "igreja-viva", "projeto-documento-integral"].includes(item.id)), [section]);
+  const visibleModules = useMemo(() => CONTENT_MODULES.filter((item) => section === "filosofia" ? ["filosofia", "distincao", "principios", "lideranca", "filosofia-cristocentrismo", "filosofia-palavra", "filosofia-oracao", "filosofia-relacionamentos", "filosofia-todos-enviados", "filosofia-multiplicacao", "filosofia-contextualizacao", "documento-integral"].includes(item.id) : ["projeto-acolhimento", "jornada", "projeto-discipulados", "projeto-equipes", "igreja-viva", "projeto-cuidado", "projeto-integracao", "projeto-formacao", "projeto-avaliacao", "projeto-multiplicacao", "projeto-territorio", "projeto-documento-integral"].includes(item.id)), [section]);
 
   async function saveForOffline() {
     await AsyncStorage.setItem("sementes:conteudos", JSON.stringify(CONTENT_MODULES));

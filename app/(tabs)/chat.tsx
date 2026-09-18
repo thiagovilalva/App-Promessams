@@ -48,7 +48,7 @@ export default function ChatScreen() {
   useEffect(() => { AsyncStorage.getItem("sementes:chat").then((value) => { if (value) setMessages(JSON.parse(value)); }); }, []);
   useEffect(() => { if (messages.length) void AsyncStorage.setItem("sementes:chat", JSON.stringify(messages.slice(-30))); }, [messages]);
 
-  const visibleMessages = useMemo(() => messages.length ? messages : [{ role: "assistant" as const, content: "Olá! Eu sou o guia do Projeto Sementes. Posso ajudar você a compreender a filosofia, preparar uma conversa na igreja, encontrar um próximo passo ou refletir sobre uma situação de cuidado. Por onde começamos?" }], [messages]);
+  const visibleMessages = useMemo(() => messages.length ? messages : [{ role: "assistant" as const, content: "Olá! Posso te ajudar na compreensão da filosofia, encontrando os caminhos práticos para vivê-la. Por onde quer começar?" }], [messages]);
 
   async function pickAttachment() {
     try {

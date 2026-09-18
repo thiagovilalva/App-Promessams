@@ -28,12 +28,12 @@ export default function OfertasScreen() {
   return (
     <ScreenContainer className="px-5" edges={["top", "left", "right"]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        <Image source={require("@/assets/images/ofertas-missao.png")} style={styles.illustration} resizeMode="contain" accessibilityLabel="Símbolo de apoio à missão" />
+        <Image source={require("@/assets/images/projeto-missional-sementes.png")} style={styles.illustration} resizeMode="contain" accessibilityLabel="Projeto Missional Sementes" />
         <Text style={[styles.kicker, { color: "#A76418" }]}>APOIE A MISSÃO</Text>
         <Text style={[styles.title, { color: colors.foreground }]}>Toda semente pode alcançar mais vidas.</Text>
-        <Text style={[styles.subtitle, { color: colors.muted }]}>Sua oferta ajuda a Convenção Regional Sul-Mato-Grossense a manter, formar e investir no Projeto Sementes junto às igrejas locais.</Text>
+        <Text style={[styles.subtitle, { color: colors.muted }]}>Sua oferta ajuda a Convenção Regional Sul-Mato-Grossense a manter e investir no Projeto Sementes junto às igrejas locais.</Text>
         <View style={[styles.pixCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={styles.pixHeader}><View style={styles.pixBadge}><Text style={styles.pixBadgeText}>PIX</Text></View><Text style={[styles.pixLabel, { color: colors.muted }]}>Oferta voluntária · CNPJ</Text></View>
+          <View style={styles.pixHeader}><View style={styles.pixBadge}><Text style={styles.pixBadgeText}>PIX</Text></View><Text style={[styles.pixLabel, { color: colors.muted }]}>Oferta Missionária · CNPJ</Text></View>
           <Text style={[styles.key, { color: colors.foreground }]}>{PIX_KEY}</Text>
           <Text style={[styles.helper, { color: colors.muted }]}>Valor opcional para personalizar o QR Code</Text>
           <View style={[styles.amountBox, { borderColor: colors.border }]}><Text style={[styles.currency, { color: colors.muted }]}>R$</Text><TextInput value={displayedAmount} onChangeText={(value) => setAmountDigits(value.replace(/\D/g, "").replace(/^0+(?=\d)/, "").slice(0, 12))} keyboardType="number-pad" placeholder="0,00" placeholderTextColor={colors.muted} style={[styles.amountInput, { color: colors.foreground }]} accessibilityLabel="Valor da oferta em reais" /></View>
@@ -45,7 +45,6 @@ export default function OfertasScreen() {
         <View style={[styles.info, { backgroundColor: "#F8F7F4" }]}><IconSymbol name="info.circle.fill" size={18} color={colors.primary} /><Text style={[styles.infoText, { color: colors.muted }]}>Confira o nome do recebedor no seu banco antes de confirmar. O app não solicita senha, código de segurança ou dados do cartão.</Text></View>
         <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Transparência e segurança</Text>
         <Text style={[styles.body, { color: colors.muted }]}>O QR Code e o código Copia e Cola são gerados localmente a partir da chave PIX informada pela Convenção. A confirmação acontece somente no aplicativo do seu banco.</Text>
-        <View style={[styles.future, { borderColor: "#F3D9AF", backgroundColor: "#FFFDF8" }]}><IconSymbol name="sparkles" size={18} color="#A76418" /><Text style={[styles.futureText, { color: colors.foreground }]}>Próximo passo: integrar um provedor oficial para cobranças dinâmicas, conciliação e comprovantes.</Text></View>
       </ScrollView>
     </ScreenContainer>
   );

@@ -60,10 +60,6 @@ export default function HomeScreen() {
           </View>
         ))}
 
-        <Pressable onPress={() => router.push("/ofertas")} style={({ pressed }) => [styles.offerBanner, { backgroundColor: "#FFF7EA", borderColor: "#F3D9AF" }, pressed && styles.pressed]}>
-          <View style={[styles.offerIcon, { backgroundColor: "#F8E3BF" }]}><IconSymbol name="heart.fill" size={20} color="#A76418" /></View>
-          <View style={styles.offerCopy}><Text style={[styles.offerTitle, { color: colors.foreground }]}>Apoie o campo</Text><Text style={[styles.offerText, { color: colors.muted }]}>Conheça a chave PIX para apoiar a Convenção Regional Sul-Mato-Grossense.</Text></View><IconSymbol name="chevron.right" size={20} color="#A76418" />
-        </Pressable>
         <View style={[styles.radioCard, { backgroundColor: colors.surface, borderColor: colors.border }]} accessibilityLabel="Rádio da Promessa">
           <Image source={require("@/assets/images/radio-da-promessa-correta.jpg")} style={styles.radioIcon} accessibilityLabel="Ícone da Rádio da Promessa" />
           <View style={styles.radioCopy}>

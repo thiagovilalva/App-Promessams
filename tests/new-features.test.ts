@@ -53,7 +53,23 @@ describe("requested product updates", () => {
     expect(fs.existsSync(path.join(process.cwd(), "assets/images/android-icon-foreground.png"))).toBe(true);
   });
   it("uses the supplied mission image on the offers page", () => {
-    expect(read("app/(tabs)/ofertas.tsx")).toContain("ofertas-missao.png");
+    expect(read("app/(tabs)/ofertas.tsx")).toContain("projeto-missional-sementes.png");
+  });
+  it("updates offers, chat and content library wording", () => {
+    const offers = read("app/(tabs)/ofertas.tsx");
+    const chat = read("app/(tabs)/chat.tsx");
+    const home = read("app/(tabs)/index.tsx");
+    const contents = read("app/(tabs)/conteudos.tsx");
+    const knowledge = read("shared/knowledge.ts");
+    expect(offers).toContain("Oferta Missionária");
+    expect(offers).toContain("manter e investir no Projeto Sementes junto às igrejas locais");
+    expect(offers).not.toContain("Próximo passo: integrar");
+    expect(chat).toContain("caminhos práticos para vivê-la");
+    expect(home).not.toContain("Apoie o campo");
+    expect(knowledge).toContain("filosofia-contextualizacao");
+    expect(knowledge).toContain("projeto-territorio");
+    expect((knowledge.match(/id: \"filosofia-/g) ?? []).length).toBeGreaterThanOrEqual(7);
+    expect((knowledge.match(/id: \"projeto-/g) ?? []).length).toBeGreaterThanOrEqual(10);
   });
   it("supports account choices, speech pause/resume, reading plan and revised project document", () => {
     expect(read("app/conta.tsx")).toContain("Criar conta na Manus");
