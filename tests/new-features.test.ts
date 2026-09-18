@@ -9,13 +9,25 @@ describe("requested product updates", () => {
     const source = read("app/(tabs)/ofertas.tsx");
     expect(source).toContain("Number(amountDigits) / 100");
     expect(source).toContain("1000 = R$ 10,00");
+    expect(source).toContain("react-native-qrcode-svg");
+    expect(source).toContain("<QRCode value={payload}");
     expect(source).not.toContain("Junte-se ao Manus");
+  });
+  it("moves the chat composer with the Android keyboard", () => {
+    expect(read("app/(tabs)/chat.tsx")).toContain('behavior="padding"');
+    expect(read("app.config.ts")).toContain('softwareKeyboardLayoutMode: "resize"');
   });
   it("places WhatsApp and accessibility access on the home screen", () => {
     const source = read("app/(tabs)/index.tsx");
     expect(source).toContain("wa.me/5567999132610");
     expect(source).toContain("/acessibilidade");
     expect(source).toContain("accessibility");
+    expect(source).toContain("Tire suas dúvidas aqui");
+    expect(source).toContain(">Conteúdos</Text>");
+    expect(source).toContain("Filosofia da Semente e projeto.");
+    expect(source).not.toContain(">Perguntar</Text>");
+    expect(source).not.toContain("Conteúdo de trabalho da Convenção");
+    expect(source).not.toContain(">Ver tudo</Text>");
   });
   it("adds the Promessa radio player above the WhatsApp contact", () => {
     const source = read("app/(tabs)/index.tsx");
@@ -40,7 +52,12 @@ describe("requested product updates", () => {
     expect(read("app/conta.tsx")).toContain("Criar conta na Manus");
     expect(read("app/(tabs)/chat.tsx")).toContain("Speech.pause");
     expect(read("app/(tabs)/chat.tsx")).toContain("Speech.resume");
-    expect(read("app/plano-biblico.tsx")).toContain("LEITURA HERMENÊUTICA");
+    const home = read("app/(tabs)/index.tsx");
+    const plan = read("app/plano-biblico.tsx");
+    expect(plan).toContain("Bíblia & Devocionais");
+    expect(home).toContain("Devocionais na Palavra");
+    expect(plan).toContain("Abrir Bíblia Livre</Text>");
+    expect(plan).not.toContain("LEITURA {String(index + 1)");
     expect(read("shared/knowledge.ts")).toContain("Projeto Sementes — documento integral revisado");
   });
 });

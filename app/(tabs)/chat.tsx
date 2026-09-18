@@ -121,7 +121,7 @@ export default function ChatScreen() {
 
   return (
     <ScreenContainer className="px-4" edges={["top", "left", "right"]}>
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}>
+      <KeyboardAvoidingView style={styles.flex} behavior="padding" keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}>
         <View style={styles.header}><View><Text style={[styles.kicker, { color: colors.primary }]}>GUIA SEMENTES</Text><Text style={[styles.title, { color: colors.foreground }]}>Vamos conversar.</Text></View><View style={[styles.status, { backgroundColor: "#E9F7F0" }]}><View style={styles.dot} /><Text style={styles.statusText}>Online</Text></View></View>
         {!!messages.length && <Pressable onPress={() => setConfirmDelete(true)} style={styles.clearHistory} accessibilityRole="button" accessibilityLabel="Apagar conversa local"><Text style={[styles.clearHistoryText, { color: colors.primary }]}>Apagar conversa</Text></Pressable>}
         <ScrollView ref={messagesScrollRef} style={styles.messages} contentContainerStyle={styles.messageContent} showsVerticalScrollIndicator keyboardShouldPersistTaps="handled" onContentSizeChange={() => messagesScrollRef.current?.scrollToEnd({ animated: false })}>

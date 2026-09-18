@@ -1,6 +1,6 @@
-import QRCode from "qrcode";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Alert, Image, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import QRCode from "react-native-qrcode-svg";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -11,14 +11,9 @@ export default function OfertasScreen() {
   const colors = useColors();
   const [amountDigits, setAmountDigits] = useState("");
   const [copied, setCopied] = useState(false);
-  const [qrData, setQrData] = useState("");
   const numericAmount = amountDigits ? Number(amountDigits) / 100 : 0;
   const payload = buildPixPayload(Number.isFinite(numericAmount) && numericAmount > 0 ? numericAmount : undefined);
   const displayedAmount = amountDigits ? (Number(amountDigits) / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "";
-
-  useEffect(() => {
-    QRCode.toDataURL(payload, { margin: 1, width: 240, color: { dark: "#173D2C", light: "#FFFFFF" } }).then(setQrData).catch(() => setQrData(""));
-  }, [payload]);
 
   async function copy(value: string, label: string) {
     if (Platform.OS === "web" && globalThis.navigator?.clipboard) {
@@ -43,7 +38,7 @@ export default function OfertasScreen() {
           <Text style={[styles.helper, { color: colors.muted }]}>Valor opcional para personalizar o QR Code</Text>
           <View style={[styles.amountBox, { borderColor: colors.border }]}><Text style={[styles.currency, { color: colors.muted }]}>R$</Text><TextInput value={displayedAmount} onChangeText={(value) => setAmountDigits(value.replace(/\D/g, "").replace(/^0+(?=\d)/, "").slice(0, 12))} keyboardType="number-pad" placeholder="0,00" placeholderTextColor={colors.muted} style={[styles.amountInput, { color: colors.foreground }]} accessibilityLabel="Valor da oferta em reais" /></View>
           <Text style={[styles.amountHint, { color: colors.muted }]}>Digite somente números: 1000 = R$ 10,00 · 500 = R$ 5,00 · 12020 = R$ 120,20</Text>
-          {qrData ? <View style={styles.qrWrap}><Image source={{ uri: qrData }} style={styles.qr} accessibilityLabel="QR Code PIX para oferta" /><Text style={[styles.qrCaption, { color: colors.muted }]}>Aponte a câmera do banco para ofertar</Text></View> : null}
+          <View style={styles.qrWrap}><QRCode value={payload} size={190} color="#173D2C" backgroundColor="#FFFFFF" quietZone={8} /><Text style={[styles.qrCaption, { color: colors.muted }]}>Aponte a câmera do banco para ofertar</Text></View>
           <Pressable onPress={() => copy(payload, "PIX Copia e Cola")} style={({ pressed }) => [styles.copyButton, { backgroundColor: copied ? "#E9F7F0" : colors.primary }, pressed && styles.pressed]}><IconSymbol name={copied ? "checkmark" : "qrcode"} size={17} color={copied ? "#167C55" : "#FFFFFF"} /><Text style={[styles.copyText, { color: copied ? "#167C55" : "#FFFFFF" }]}>{copied ? "Código copiado" : "Copiar PIX Copia e Cola"}</Text></Pressable>
           <Pressable onPress={() => copy(PIX_KEY, "Chave PIX")} style={({ pressed }) => [styles.keyButton, { borderColor: colors.border }, pressed && styles.pressed]}><IconSymbol name="doc.on.doc.fill" size={16} color={colors.primary} /><Text style={[styles.keyButtonText, { color: colors.foreground }]}>Copiar somente a chave</Text></Pressable>
         </View>
