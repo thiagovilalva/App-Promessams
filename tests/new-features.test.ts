@@ -45,6 +45,13 @@ describe("requested product updates", () => {
     expect(source).toContain("projeto-sementes-logo.png");
     expect(fs.existsSync(path.join(process.cwd(), "assets/images/projeto-sementes-logo.png"))).toBe(true);
   });
+  it("uses the official symbol as the installed app icon", () => {
+    const config = read("app.config.ts");
+    expect(config).toContain('icon: "./assets/images/icon.png"');
+    expect(config).toContain('foregroundImage: "./assets/images/android-icon-foreground.png"');
+    expect(fs.existsSync(path.join(process.cwd(), "assets/images/icon.png"))).toBe(true);
+    expect(fs.existsSync(path.join(process.cwd(), "assets/images/android-icon-foreground.png"))).toBe(true);
+  });
   it("uses the supplied mission image on the offers page", () => {
     expect(read("app/(tabs)/ofertas.tsx")).toContain("ofertas-missao.png");
   });
