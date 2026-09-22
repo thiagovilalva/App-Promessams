@@ -47,17 +47,17 @@ export default function HomeScreen() {
           </Pressable>
           <Pressable onPress={() => router.push("/hinario")} style={({ pressed }) => [styles.quickCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Abrir Hinário Promessista">
             <View style={[styles.iconBox, { backgroundColor: "#EAF0FF" }]}><IconSymbol name="music-note" size={22} color="#4267A9" /></View>
-            <Text style={[styles.quickTitle, { color: colors.foreground }]}>Hinário</Text><Text style={[styles.quickText, { color: colors.muted }]}>Acesse o Brado de Júbilo online.</Text>
+            <Text style={[styles.quickTitle, { color: colors.foreground }]}>Hinário HBJ</Text><Text style={[styles.quickText, { color: colors.muted }]}>Brados de Júbilo.</Text>
           </Pressable>
         </View>
 
         <Text style={[styles.kicker, { color: colors.primary, marginTop: 26 }]}>O QUE NOS GUIA</Text>
         <Pressable onPress={() => router.push("/plano-biblico")} style={[styles.readingBanner, { backgroundColor: colors.surface, borderColor: colors.border }]}><View style={[styles.smallIcon, { backgroundColor: colors.primary + "18" }]}><IconSymbol name="book.closed.fill" size={20} color={colors.primary} /></View><View style={styles.principleBody}><Text style={[styles.principleTitle, { color: colors.foreground }]}>Bíblia & Devocionais</Text><Text style={[styles.principleText, { color: colors.muted }]}>Textos, contexto e aplicações para viver a missão.</Text></View><IconSymbol name="chevron.right" size={18} color={colors.primary} /></Pressable>
         {principles.map((item) => (
-          <View key={item.title} style={[styles.principle, { borderBottomColor: colors.border }]}>
+          <Pressable key={item.title} onPress={item.title === "Devocionais na Palavra" ? () => router.push("/pao-diario") : undefined} style={({ pressed }) => [styles.principle, { borderBottomColor: colors.border }, pressed && item.title === "Devocionais na Palavra" && styles.pressed]}>
             <View style={[styles.smallIcon, { backgroundColor: colors.primary + "18" }]}><IconSymbol name={item.icon as any} size={20} color={colors.primary} /></View>
             <View style={styles.principleBody}><Text style={[styles.principleTitle, { color: colors.foreground }]}>{item.title}</Text><Text style={[styles.principleText, { color: colors.muted }]}>{item.text}</Text></View>
-          </View>
+          </Pressable>
         ))}
 
         <View style={[styles.radioCard, { backgroundColor: colors.surface, borderColor: colors.border }]} accessibilityLabel="Rádio da Promessa">

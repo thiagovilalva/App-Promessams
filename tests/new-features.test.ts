@@ -73,6 +73,26 @@ describe("requested product updates", () => {
     expect((knowledge.match(/id: \"filosofia-/g) ?? []).length).toBeGreaterThanOrEqual(7);
     expect((knowledge.match(/id: \"projeto-/g) ?? []).length).toBeGreaterThanOrEqual(10);
   });
+  it("integrates the 365-day Pão Diário with navigation, progress and notes", () => {
+    const devotional = read("app/pao-diario.tsx");
+    const data = read("shared/pao-diario-data.ts");
+    const home = read("app/(tabs)/index.tsx");
+    const plan = read("app/plano-biblico.tsx");
+    expect(data).toContain('day": 1');
+    expect(data).toContain('day": 365');
+    expect(devotional).toContain("projeto-sementes.pao-diario.read");
+    expect(devotional).toContain("projeto-sementes.pao-diario.notes");
+    expect(devotional).toContain("progress");
+    expect(devotional).toContain("Escolher dia ou tema");
+    expect(home).toContain('router.push("/pao-diario")');
+    expect(plan).toContain('router.push("/pao-diario")');
+  });
+  it("groups the official HBJ thematic index into expandable topics", () => {
+    const hymnary = read("app/hinario.tsx");
+    expect(hymnary).toContain("groupedThemes");
+    expect(hymnary).toContain("themeTopic");
+    expect(hymnary).toContain("Hinário HBJ");
+  });
   it("supports account choices, speech pause/resume, reading plan and revised project document", () => {
     expect(read("app/conta.tsx")).toContain("Criar conta na Manus");
     expect(read("app/(tabs)/chat.tsx")).toContain("Speech.pause");
