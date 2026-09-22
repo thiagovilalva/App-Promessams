@@ -91,7 +91,28 @@ describe("requested product updates", () => {
     const hymnary = read("app/hinario.tsx");
     expect(hymnary).toContain("groupedThemes");
     expect(hymnary).toContain("themeTopic");
+    expect(hymnary).toContain("themeHeaderText");
+    expect(hymnary).toContain("Voltar para Início");
     expect(hymnary).toContain("Hinário HBJ");
+  });
+  it("keeps the selected devotional day visible on mobile and exposes themes", () => {
+    const devotional = read("app/pao-diario.tsx");
+    expect(devotional).toContain("key={`day-${day.day}`}");
+    expect(devotional).toContain("Aproveite Cada Dia!");
+    expect(devotional).toContain("Pão Diário</Text>");
+    expect(devotional).toContain("themeFor");
+    expect(devotional).toContain("‹ Início");
+  });
+  it("uses the PromessaMS identity and the revised project document", () => {
+    const config = read("app.config.ts");
+    expect(config).toContain('name: "PromessaMS"');
+    expect(config).toContain('slug: "promessams"');
+    expect(read("app/(tabs)/index.tsx")).toContain(">PromessaMS</Text>");
+    const document = read("shared/project-full-document.ts");
+    expect(document).toContain("PROJETO SEMENTES");
+    expect(document).toContain("Expressão prática e funcional da Filosofia da Semente");
+    expect(document).toContain("5.5. Co-pastorado pastoral integral");
+    expect(fs.existsSync(path.join(process.cwd(), "assets/documents/Projeto_Sementes_Revisado11092026.pdf"))).toBe(true);
   });
   it("supports account choices, speech pause/resume, reading plan and revised project document", () => {
     expect(read("app/conta.tsx")).toContain("Criar conta na Manus");

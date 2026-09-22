@@ -1,13 +1,13 @@
 import "./scripts/load-env.js";
 import type { ExpoConfig } from "expo/config";
 
-const rawBundleId = "projeto-sementes";
+const rawBundleId = "promessams";
 const bundleId = rawBundleId.replace(/[-_]/g, ".").replace(/[^a-zA-Z0-9.]/g, "").replace(/\.+/g, ".").replace(/^\.+|\.+$/g, "").toLowerCase().split(".").map((segment) => /^[a-zA-Z]/.test(segment) ? segment : `x${segment}`).join(".") || "space.manus.app";
 const scheme = "projetosementes";
 
 const config: ExpoConfig = {
-  name: "Projeto Sementes",
-  slug: "projeto-sementes",
+  name: "PromessaMS",
+  slug: "promessams",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/images/icon.png",
