@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Alert, Image, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import * as Clipboard from "expo-clipboard";
 import QRCode from "react-native-qrcode-svg";
 
 import { ScreenContainer } from "@/components/screen-container";
@@ -16,12 +17,17 @@ export default function OfertasScreen() {
   const displayedAmount = amountDigits ? (Number(amountDigits) / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "";
 
   async function copy(value: string, label: string) {
-    if (Platform.OS === "web" && globalThis.navigator?.clipboard) {
-      await globalThis.navigator.clipboard.writeText(value);
+    try {
+      if (Platform.OS === "web" && globalThis.navigator?.clipboard) {
+        await globalThis.navigator.clipboard.writeText(value);
+      } else {
+        await Clipboard.setStringAsync(value);
+      }
       setCopied(true);
       setTimeout(() => setCopied(false), 2200);
-    } else {
-      Alert.alert(label, value, [{ text: "Entendi" }]);
+      Alert.alert("Copiado", `${label} foi copiado. Abra o aplicativo do seu banco e cole no campo PIX.`, [{ text: "Entendi" }]);
+    } catch {
+      Alert.alert("Não foi possível copiar", "Tente novamente ou pressione e segure o código para selecioná-lo manualmente.", [{ text: "Entendi" }]);
     }
   }
 

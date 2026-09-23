@@ -13,6 +13,13 @@ describe("requested product updates", () => {
     expect(source).toContain("<QRCode value={payload}");
     expect(source).not.toContain("Junte-se ao Manus");
   });
+  it("copies PIX payloads through the native Android clipboard", () => {
+    const source = read("app/(tabs)/ofertas.tsx");
+    expect(source).toContain('import * as Clipboard from "expo-clipboard"');
+    expect(source).toContain("await Clipboard.setStringAsync(value)");
+    expect(source).toContain('Alert.alert("Copiado"');
+    expect(source).not.toContain("Alert.alert(label, value");
+  });
   it("moves the chat composer with the Android keyboard", () => {
     expect(read("app/(tabs)/chat.tsx")).toContain('behavior="padding"');
     expect(read("app.config.ts")).toContain('softwareKeyboardLayoutMode: "resize"');
