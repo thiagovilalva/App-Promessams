@@ -107,6 +107,8 @@ describe("requested product updates", () => {
     const config = read("app.config.ts");
     expect(config).toContain('name: "PromessaMS"');
     expect(config).toContain('slug: "promessams"');
+    const projectConfig = JSON.parse(read(".project-config.json"));
+    expect(projectConfig.secrets.VITE_APP_TITLE).toBe("PromessaMS");
     expect(read("app/(tabs)/index.tsx")).toContain(">PromessaMS</Text>");
     const document = read("shared/project-full-document.ts");
     expect(document).toContain("PROJETO SEMENTES");
