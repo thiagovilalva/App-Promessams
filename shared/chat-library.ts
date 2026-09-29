@@ -4,6 +4,7 @@ import { READING_PLAN } from "./reading-plan";
 import { FULL_DOCUMENT_TEXT } from "./full-document";
 import { PROJECT_FULL_DOCUMENT } from "./project-full-document";
 import { REGIONAL_MINISTRIES_DOCUMENT } from "./regional-ministries-document";
+import { REGIONAL_MINISTRIES_SLIDES } from "./regional-ministries-slides";
 
 type SearchItem = { source: string; title: string; text: string };
 
@@ -36,6 +37,7 @@ const localItems: SearchItem[] = [
   { source: "Filosofia da Semente — documento integral", title: "Filosofia da Semente", text: FULL_DOCUMENT_TEXT },
   { source: "Projeto Sementes — documento integral", title: "Projeto Sementes", text: PROJECT_FULL_DOCUMENT },
   ...apostilaSections,
+  { source: "Ministérios Regionais — apresentação de 88 slides", title: "Apresentação completa dos Ministérios Regionais", text: REGIONAL_MINISTRIES_SLIDES },
   ...READING_PLAN.map((item) => ({ source: "Bíblia Livre — Plano Bíblia & Devocionais", title: `${item.reference} — ${item.title}`, text: `${item.readingText}\n${item.hermeneutics}\n${item.dialogue}\n${item.application}` })),
   ...PAO_DIARIO_DAYS.map((item) => ({ source: "Pão Diário na Missão", title: `Dia ${item.day} — ${item.title}`, text: `${item.reading}\n${item.reflection}\n${item.prayer}\n${item.action}` })),
   ...HBJ_HYMNS.map((item) => ({ source: "Hinário HBJ — Brados de Júbilo", title: `Hino ${item.number} — ${item.title}`, text: item.lyrics })),

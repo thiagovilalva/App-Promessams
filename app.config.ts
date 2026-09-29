@@ -3,7 +3,7 @@ import type { ExpoConfig } from "expo/config";
 
 const rawBundleId = "promessams";
 const bundleId = rawBundleId.replace(/[-_]/g, ".").replace(/[^a-zA-Z0-9.]/g, "").replace(/\.+/g, ".").replace(/^\.+|\.+$/g, "").toLowerCase().split(".").map((segment) => /^[a-zA-Z]/.test(segment) ? segment : `x${segment}`).join(".") || "space.manus.app";
-const scheme = "projetosementes";
+const scheme = "promessams";
 
 const config: ExpoConfig = {
   name: "PromessaMS",

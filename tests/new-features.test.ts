@@ -32,6 +32,18 @@ describe("requested product updates", () => {
     expect(library).toContain("https://bible.helloao.org/api/por_blj");
     expect(fs.existsSync(path.join(process.cwd(), "shared/regional-ministries-document.ts"))).toBe(true);
   });
+  it("adds twelve Ministries Regionais content items and the complete slide presentation", () => {
+    const contents = read("app/(tabs)/conteudos.tsx");
+    const knowledge = read("shared/knowledge.ts");
+    const library = read("shared/chat-library.ts");
+    expect(contents).toContain('setSection("ministerios")');
+    expect(contents).toContain("Ministérios Regionais");
+    expect((knowledge.match(/id: \"ministerios-/g) ?? []).length).toBe(12);
+    expect(knowledge).toContain("ministerios-apresentacao-integral");
+    expect(knowledge).toContain("ministerios-documento-integral");
+    expect(library).toContain("REGIONAL_MINISTRIES_SLIDES");
+    expect(fs.existsSync(path.join(process.cwd(), "assets/documents/Ministerios_Regionais_Apresentacao_Completa_88_slides.pptx"))).toBe(true);
+  });
   it("moves the chat composer with the Android keyboard", () => {
     expect(read("app/(tabs)/chat.tsx")).toContain('behavior="padding"');
     expect(read("app.config.ts")).toContain('softwareKeyboardLayoutMode: "resize"');
@@ -126,6 +138,7 @@ describe("requested product updates", () => {
     const config = read("app.config.ts");
     expect(config).toContain('name: "PromessaMS"');
     expect(config).toContain('slug: "promessams"');
+    expect(config).toContain('const scheme = "promessams"');
     const projectConfig = JSON.parse(read(".project-config.json"));
     expect(projectConfig.secrets.VITE_APP_TITLE).toBe("PromessaMS");
     expect(read("app/(tabs)/index.tsx")).toContain(">PromessaMS</Text>");
