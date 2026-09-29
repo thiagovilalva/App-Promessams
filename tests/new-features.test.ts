@@ -20,6 +20,18 @@ describe("requested product updates", () => {
     expect(source).toContain('Alert.alert("Copiado"');
     expect(source).not.toContain("Alert.alert(label, value");
   });
+  it("makes the devotional, Bible, hymnal and regional ministries libraries available to chat", () => {
+    const router = read("server/routers.ts");
+    const library = read("shared/chat-library.ts");
+    expect(router).toContain("buildLibraryContext");
+    expect(router).toContain("buildBibleReferenceContext");
+    expect(library).toContain("PAO_DIARIO_DAYS");
+    expect(library).toContain("HBJ_HYMNS");
+    expect(library).toContain("READING_PLAN");
+    expect(library).toContain("REGIONAL_MINISTRIES_DOCUMENT");
+    expect(library).toContain("https://bible.helloao.org/api/por_blj");
+    expect(fs.existsSync(path.join(process.cwd(), "shared/regional-ministries-document.ts"))).toBe(true);
+  });
   it("moves the chat composer with the Android keyboard", () => {
     expect(read("app/(tabs)/chat.tsx")).toContain('behavior="padding"');
     expect(read("app.config.ts")).toContain('softwareKeyboardLayoutMode: "resize"');

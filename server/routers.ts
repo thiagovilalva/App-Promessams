@@ -2,6 +2,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
 import { SEMENTES_KNOWLEDGE } from "../shared/knowledge";
+import { buildBibleReferenceContext, buildLibraryContext } from "../shared/chat-library";
 import { fallbackAnswer, needsOnlineResearch } from "../shared/chat-fallback";
 import { COOKIE_NAME } from "../shared/const";
 import { createMaterial, getAllMaterials, getPublishedMaterials, getUserConversations, publishMaterial, saveConversation } from "./db";
@@ -77,8 +78,11 @@ export const appRouter = router({
       try {
         const databaseMaterials = await getPublishedMaterials();
         const databaseKnowledge = databaseMaterials.length ? `\n\nMATERIAIS ADICIONAIS PUBLICADOS PELA EQUIPE:\n${databaseMaterials.map((item) => `\n## ${item.title}\n${item.summary ?? ""}\n${item.content.slice(0, 18000)}\nFonte: ${item.source ?? "não informada"}`).join("\n")}` : "";
+        const latestUserQuery = [...input.messages].reverse().find((message) => message.role === "user")?.content ?? "";
+        const libraryKnowledge = buildLibraryContext(latestUserQuery);
+        const bibleReferenceKnowledge = await buildBibleReferenceContext(latestUserQuery);
         const messages = [
-        { role: "system" as const, content: `Você é o agente de orientação do aplicativo Projeto Sementes. Responda em português do Brasil, com tom humano, acolhedor, sereno e prático. Não diga que é uma IA de forma repetitiva. Use a base de conhecimento abaixo como prioridade. Cite referências bíblicas quando forem relevantes, sem inventar citações. Ajude o usuário a compreender, vivenciar, ensinar e desenvolver a Filosofia da Semente e o Projeto Sementes na igreja local. Faça perguntas de acompanhamento quando isso ajudar a transformar a reflexão em um próximo passo. Não substitua o pastor ou a liderança local em decisões sensíveis. Se recorrer à pesquisa online, diferencie claramente o que veio da base, o que é pesquisa e o que é sugestão. Entregue respostas completas: não interrompa frases, listas ou etapas. Ao terminar todos os tópicos, acrescente exatamente o marcador [FIM].\n\n${SEMENTES_KNOWLEDGE}${databaseKnowledge}` },
+        { role: "system" as const, content: `Você é o agente de orientação do aplicativo PromessaMS. Responda em português do Brasil, com tom humano, acolhedor, sereno e prático. Não diga que é uma IA de forma repetitiva. Use a base de conhecimento abaixo como prioridade. Cite referências bíblicas quando forem relevantes, sem inventar citações. Ajude o usuário a compreender, vivenciar, ensinar e desenvolver a Filosofia da Semente e o Projeto Sementes na igreja local. O Pão Diário na Missão, a Bíblia Livre (BLivre), o Hinário HBJ — Brados de Júbilo e a Apostila de Ministérios Regionais são fontes relacionadas e podem ser conectadas à aplicação da Filosofia e do Projeto. Quando usar um trecho, informe sua fonte. Faça perguntas de acompanhamento quando isso ajudar a transformar a reflexão em um próximo passo. Não substitua o pastor ou a liderança local em decisões sensíveis. Se recorrer à pesquisa online, diferencie claramente o que veio da base, o que é pesquisa e o que é sugestão. Entregue respostas completas: não interrompa frases, listas ou etapas. Ao terminar todos os tópicos, acrescente exatamente o marcador [FIM].\n\n${SEMENTES_KNOWLEDGE}${databaseKnowledge}${libraryKnowledge}${bibleReferenceKnowledge}` },
         ...input.messages.map((message) => {
           const attachments = message.attachments ?? [];
           const attachmentText = attachments.filter((item) => item.text).map((item) => `\n\nArquivo ${item.name}:\n${item.text}`).join("");
