@@ -7,10 +7,10 @@ import { useColors } from "@/hooks/use-colors";
 import { useThemeContext } from "@/lib/theme-provider";
 import { useRadio } from "@/lib/radio-provider";
 
+// Itens atualizados conforme o direcionamento da Igreja
 const principles = [
-  { icon: "auto-stories", title: "Devocionais na Palavra", text: "Quando mais próximos da Palavra ficamos, mais forte a prática missionária se torna." },
-  { icon: "groups", title: "Todos são enviados", text: "Cada discípulo pode orar, acolher, testemunhar, servir e discipular." },
-  { icon: "spa", title: "Cuidado contínuo", text: "Acompanhamos pessoas até a maturidade, sem reduzir missão a números." },
+  { id: "quem-nao-e-jesus", icon: "auto-stories", title: "Quem não é Jesus", text: "Estudo sobre as percepções erradas que as pessoas têm de Jesus.", route: "/quem-nao-e-jesus" },
+  { id: "comunhao-e-cultos", icon: "groups", title: "Comunhão e Cultos", text: "Nossos encontros para adorar e caminhar juntos.", route: "/comunhao-e-cultos" },
 ];
 
 export default function HomeScreen() {
@@ -22,41 +22,42 @@ export default function HomeScreen() {
   return (
     <ScreenContainer className="px-5" edges={["top", "left", "right"]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+        
+        {/* Cabeçalho - Mantido o original como solicitado */}
         <View style={styles.topline}>
-          <Image source={require("@/assets/images/projeto-sementes-logo.png")} style={styles.brandMark} resizeMode="contain" accessibilityLabel="Símbolo do Projeto Sementes" />
+          <Image source={require("@/assets/images/projeto-sementes-logo.png")} style={styles.brandMark} resizeMode="contain" accessibilityLabel="Símbolo da Igreja" />
           <View><Text style={[styles.brandName, { color: colors.foreground }]}>PromessaMS</Text><Text style={[styles.brandCaption, { color: colors.muted }]}>Igreja viva no Modo Missão</Text></View>
           <View style={styles.topActions}><Pressable onPress={() => setColorScheme(colorScheme === "light" ? "dark" : "light")} style={[styles.themeButton, { borderColor: colors.border, backgroundColor: colors.surface }]} accessibilityLabel="Alternar modo claro e escuro"><Text style={[styles.themeButtonText, { color: colors.foreground }]}>{colorScheme === "light" ? "Escuro" : "Claro"}</Text></Pressable><Pressable onPress={() => router.push("/acessibilidade")} style={[styles.accessibilityButton, { borderColor: colors.border, backgroundColor: colors.surface }]} accessibilityRole="button" accessibilityLabel="Abrir acessibilidade"><IconSymbol name="accessibility" size={16} color={colors.foreground} /></Pressable></View>
         </View>
 
+        {/* Hero Section - Único local de destaque para o Projeto Sementes */}
         <View style={[styles.hero, { backgroundColor: colors.primary }]}>
           <View style={styles.heroGlow} />
-          <Text style={styles.heroEyebrow}>MULTIPLICANDO VIDAS</Text>
-          <Text style={styles.heroTitle}>Uma fé que cria raízes e dá fruto.</Text>
-          <Text style={styles.heroText}>Aprenda, reflita e encontre próximos passos para viver a missão de Jesus na igreja local.</Text>
-          <Pressable onPress={() => router.push("/chat")} style={({ pressed }) => [styles.heroButton, pressed && styles.pressed]}>
-            <Text style={[styles.heroButtonText, { color: colors.primary }]}>Tire suas dúvidas aqui</Text>
+          <Text style={styles.heroEyebrow}>BEM-VINDO À SUA IGREJA</Text>
+          <Text style={styles.heroTitle}>Uma igreja viva e no Modo Missão.</Text>
+          <Text style={styles.heroText}>Acompanhe nossos conteúdos, participe dos ministérios e conecte-se com a família promessista no Mato Grosso do Sul.</Text>
+          <Pressable onPress={() => router.push("/projeto-sementes")} style={({ pressed }) => [styles.heroButton, pressed && styles.pressed]}>
+            <Text style={[styles.heroButtonText, { color: colors.primary }]}>Conheça o Projeto Sementes</Text>
             <IconSymbol name="arrow.forward" size={18} color={colors.primary} />
           </Pressable>
         </View>
 
-        <View style={styles.sectionHeader}><View><Text style={[styles.kicker, { color: colors.primary }]}>COMECE POR AQUI</Text><Text style={[styles.sectionTitle, { color: colors.foreground }]}>Uma jornada simples</Text></View></View>
+        {/* Acesso Rápido - Apenas Bíblia */}
+        <View style={styles.sectionHeader}><View><Text style={[styles.kicker, { color: colors.primary }]}>ACESSO RÁPIDO</Text><Text style={[styles.sectionTitle, { color: colors.foreground }]}>Nossos Recursos</Text></View></View>
         <View style={styles.quickGrid}>
           <Pressable onPress={() => router.push("/conteudos")} style={({ pressed }) => [styles.quickCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]}>
             <View style={[styles.iconBox, { backgroundColor: "#E9F7F0" }]}><IconSymbol name="book.closed.fill" size={22} color="#167C55" /></View>
-            <Text style={[styles.quickTitle, { color: colors.foreground }]}>Conteúdos</Text><Text style={[styles.quickText, { color: colors.muted }]}>Filosofia da Semente e projeto.</Text>
-          </Pressable>
-          <Pressable onPress={() => router.push("/hinario")} style={({ pressed }) => [styles.quickCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Abrir Hinário Promessista">
-            <View style={[styles.iconBox, { backgroundColor: "#EAF0FF" }]}><IconSymbol name="music-note" size={22} color="#4267A9" /></View>
-            <Text style={[styles.quickTitle, { color: colors.foreground }]}>Hinário HBJ</Text><Text style={[styles.quickText, { color: colors.muted }]}>Brados de Júbilo.</Text>
+            <Text style={[styles.quickTitle, { color: colors.foreground }]}>Bíblia</Text><Text style={[styles.quickText, { color: colors.muted }]}>Leitura e devocionais.</Text>
           </Pressable>
         </View>
 
+        {/* O Que Nos Guia - Links para os estudos e comunhão */}
         <Text style={[styles.kicker, { color: colors.primary, marginTop: 26 }]}>O QUE NOS GUIA</Text>
-        <Pressable onPress={() => router.push("/plano-biblico")} style={[styles.readingBanner, { backgroundColor: colors.surface, borderColor: colors.border }]}><View style={[styles.smallIcon, { backgroundColor: colors.primary + "18" }]}><IconSymbol name="book.closed.fill" size={20} color={colors.primary} /></View><View style={styles.principleBody}><Text style={[styles.principleTitle, { color: colors.foreground }]}>Bíblia & Devocionais</Text><Text style={[styles.principleText, { color: colors.muted }]}>Textos, contexto e aplicações para viver a missão.</Text></View><IconSymbol name="chevron.right" size={18} color={colors.primary} /></Pressable>
         {principles.map((item) => (
-          <Pressable key={item.title} onPress={item.title === "Devocionais na Palavra" ? () => router.push("/pao-diario") : undefined} style={({ pressed }) => [styles.principle, { borderBottomColor: colors.border }, pressed && item.title === "Devocionais na Palavra" && styles.pressed]}>
+          <Pressable key={item.id} onPress={() => router.push(item.route as any)} style={({ pressed }) => [styles.principle, { borderBottomColor: colors.border }, pressed && styles.pressed]}>
             <View style={[styles.smallIcon, { backgroundColor: colors.primary + "18" }]}><IconSymbol name={item.icon as any} size={20} color={colors.primary} /></View>
             <View style={styles.principleBody}><Text style={[styles.principleTitle, { color: colors.foreground }]}>{item.title}</Text><Text style={[styles.principleText, { color: colors.muted }]}>{item.text}</Text></View>
+            <IconSymbol name="chevron.right" size={18} color={colors.primary} />
           </Pressable>
         ))}
 
@@ -70,8 +71,12 @@ export default function HomeScreen() {
             <IconSymbol name={radioPlaying ? "stop.fill" : "play.fill"} size={18} color="#FFFFFF" />
           </Pressable>
         </View>
-        <Pressable onPress={() => router.push("/conta")} style={[styles.accountLink, { borderColor: colors.border, backgroundColor: colors.surface }]}><Text style={[styles.accountLinkText, { color: colors.primary }]}>Entrar ou criar conta Manus</Text><Text style={[styles.accountLinkHint, { color: colors.muted }]}>Guardar sua jornada e histórico</Text></Pressable>
-        <Pressable onPress={() => void Linking.openURL("https://wa.me/5567999132610?text=Ol%C3%A1%2C%20quero%20saber%20mais%20sobre%20o%20Projeto%20Sementes.")} style={[styles.whatsappButton, { borderColor: "#25D366" }]} accessibilityRole="link" accessibilityLabel="Fale conosco pelo WhatsApp"><IconSymbol name="whatsapp" size={19} color="#128C49" /><Text style={[styles.whatsappText, { color: colors.foreground }]}>Fale conosco pelo WhatsApp</Text></Pressable>
+
+        <Pressable onPress={() => router.push("/conta")} style={[styles.accountLink, { borderColor: colors.border, backgroundColor: colors.surface }]}><Text style={[styles.accountLinkText, { color: colors.primary }]}>Entrar na sua Conta</Text><Text style={[styles.accountLinkHint, { color: colors.muted }]}>Guarde seu histórico e anotações</Text></Pressable>
+        
+        {/* Contato Atualizado */}
+        <Pressable onPress={() => void Linking.openURL("https://wa.me/5567999132610?text=Ol%C3%A1%2C%20gostaria%20de%20falar%20com%20a%20Promessa%20MS.")} style={[styles.whatsappButton, { borderColor: "#25D366" }]} accessibilityRole="link" accessibilityLabel="Fale conosco pelo WhatsApp"><IconSymbol name="whatsapp" size={19} color="#128C49" /><Text style={[styles.whatsappText, { color: colors.foreground }]}>Contato Promessa MS</Text></Pressable>
+        
         <Pressable onPress={() => router.push("/politica-privacidade")} style={styles.privacyLink} accessibilityRole="link" accessibilityLabel="Ler Política de Privacidade"><Text style={[styles.privacyText, { color: colors.primary }]}>Política de Privacidade</Text><Text style={[styles.privacyHint, { color: colors.muted }]}>Como cuidamos dos seus dados</Text></Pressable>
       </ScrollView>
     </ScreenContainer>
