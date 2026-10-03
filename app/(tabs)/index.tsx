@@ -7,7 +7,6 @@ import { useColors } from "@/hooks/use-colors";
 import { useThemeContext } from "@/lib/theme-provider";
 import { useRadio } from "@/lib/radio-provider";
 
-// Itens atualizados conforme o direcionamento da Igreja
 const principles = [
   { id: "quem-nao-e-jesus", icon: "auto-stories", title: "Quem não é Jesus", text: "Estudo sobre as percepções erradas que as pessoas têm de Jesus.", route: "/quem-nao-e-jesus" },
   { id: "comunhao-e-cultos", icon: "groups", title: "Comunhão e Cultos", text: "Nossos encontros para adorar e caminhar juntos.", route: "/comunhao-e-cultos" },
@@ -22,15 +21,15 @@ export default function HomeScreen() {
   return (
     <ScreenContainer className="px-5" edges={["top", "left", "right"]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        
-        {/* Cabeçalho - Mantido o original como solicitado */}
+
+        {/* Cabeçalho */}
         <View style={styles.topline}>
           <Image source={require("@/assets/images/projeto-sementes-logo.png")} style={styles.brandMark} resizeMode="contain" accessibilityLabel="Símbolo da Igreja" />
           <View><Text style={[styles.brandName, { color: colors.foreground }]}>PromessaMS</Text><Text style={[styles.brandCaption, { color: colors.muted }]}>Igreja viva no Modo Missão</Text></View>
           <View style={styles.topActions}><Pressable onPress={() => setColorScheme(colorScheme === "light" ? "dark" : "light")} style={[styles.themeButton, { borderColor: colors.border, backgroundColor: colors.surface }]} accessibilityLabel="Alternar modo claro e escuro"><Text style={[styles.themeButtonText, { color: colors.foreground }]}>{colorScheme === "light" ? "Escuro" : "Claro"}</Text></Pressable><Pressable onPress={() => router.push("/acessibilidade")} style={[styles.accessibilityButton, { borderColor: colors.border, backgroundColor: colors.surface }]} accessibilityRole="button" accessibilityLabel="Abrir acessibilidade"><IconSymbol name="accessibility" size={16} color={colors.foreground} /></Pressable></View>
         </View>
 
-        {/* Hero Section - Único local de destaque para o Projeto Sementes */}
+        {/* Hero Section */}
         <View style={[styles.hero, { backgroundColor: colors.primary }]}>
           <View style={styles.heroGlow} />
           <Text style={styles.heroEyebrow}>BEM-VINDO À SUA IGREJA</Text>
@@ -42,7 +41,7 @@ export default function HomeScreen() {
           </Pressable>
         </View>
 
-        {/* Acesso Rápido - Apenas Bíblia */}
+        {/* Acesso Rápido */}
         <View style={styles.sectionHeader}><View><Text style={[styles.kicker, { color: colors.primary }]}>ACESSO RÁPIDO</Text><Text style={[styles.sectionTitle, { color: colors.foreground }]}>Nossos Recursos</Text></View></View>
         <View style={styles.quickGrid}>
           <Pressable onPress={() => router.push("/conteudos")} style={({ pressed }) => [styles.quickCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]}>
@@ -51,7 +50,7 @@ export default function HomeScreen() {
           </Pressable>
         </View>
 
-        {/* O Que Nos Guia - Links para os estudos e comunhão */}
+        {/* O Que Nos Guia */}
         <Text style={[styles.kicker, { color: colors.primary, marginTop: 26 }]}>O QUE NOS GUIA</Text>
         {principles.map((item) => (
           <Pressable key={item.id} onPress={() => router.push(item.route as any)} style={({ pressed }) => [styles.principle, { borderBottomColor: colors.border }, pressed && styles.pressed]}>
@@ -61,6 +60,7 @@ export default function HomeScreen() {
           </Pressable>
         ))}
 
+        {/* Rádio da Promessa */}
         <View style={[styles.radioCard, { backgroundColor: colors.surface, borderColor: colors.border }]} accessibilityLabel="Rádio da Promessa">
           <Image source={require("@/assets/images/radio-da-promessa-correta.jpg")} style={styles.radioIcon} accessibilityLabel="Ícone da Rádio da Promessa" />
           <View style={styles.radioCopy}>
@@ -72,12 +72,9 @@ export default function HomeScreen() {
           </Pressable>
         </View>
 
-        <Pressable onPress={() => router.push("/conta")} style={[styles.accountLink, { borderColor: colors.border, backgroundColor: colors.surface }]}><Text style={[styles.accountLinkText, { color: colors.primary }]}>Entrar na sua Conta</Text><Text style={[styles.accountLinkHint, { color: colors.muted }]}>Guarde seu histórico e anotações</Text></Pressable>
-        
-        {/* Contato Atualizado */}
+        {/* Contato (Mantido para facilitar a comunicação) */}
         <Pressable onPress={() => void Linking.openURL("https://wa.me/5567999132610?text=Ol%C3%A1%2C%20gostaria%20de%20falar%20com%20a%20Promessa%20MS.")} style={[styles.whatsappButton, { borderColor: "#25D366" }]} accessibilityRole="link" accessibilityLabel="Fale conosco pelo WhatsApp"><IconSymbol name="whatsapp" size={19} color="#128C49" /><Text style={[styles.whatsappText, { color: colors.foreground }]}>Contato Promessa MS</Text></Pressable>
-        
-        <Pressable onPress={() => router.push("/politica-privacidade")} style={styles.privacyLink} accessibilityRole="link" accessibilityLabel="Ler Política de Privacidade"><Text style={[styles.privacyText, { color: colors.primary }]}>Política de Privacidade</Text><Text style={[styles.privacyHint, { color: colors.muted }]}>Como cuidamos dos seus dados</Text></Pressable>
+
       </ScrollView>
     </ScreenContainer>
   );
@@ -103,7 +100,6 @@ const styles = StyleSheet.create({
   sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 12 },
   kicker: { fontSize: 10, fontWeight: "800", letterSpacing: 1.3, marginBottom: 5 },
   sectionTitle: { fontSize: 22, fontWeight: "800", letterSpacing: -0.4 },
-  seeAll: { fontSize: 13, fontWeight: "700", marginBottom: 3 },
   quickGrid: { flexDirection: "row", gap: 12 },
   quickCard: { flex: 1, borderRadius: 18, borderWidth: 1, padding: 14, minHeight: 146 },
   iconBox: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center", marginBottom: 13 },
@@ -114,19 +110,7 @@ const styles = StyleSheet.create({
   principleBody: { flex: 1 },
   principleTitle: { fontSize: 14, fontWeight: "800", marginBottom: 4 },
   principleText: { fontSize: 12, lineHeight: 18 },
-  readingBanner: { flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1, borderRadius: 16, padding: 13, marginBottom: 4 },
-  offerBanner: { flexDirection: "row", alignItems: "center", gap: 10, borderWidth: 1, borderRadius: 18, padding: 14, marginTop: 22 },
-  offerIcon: { width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center" },
-  offerCopy: { flex: 1 },
-  offerTitle: { fontSize: 14, fontWeight: "800", marginBottom: 3 },
-  offerText: { fontSize: 11, lineHeight: 16 },
-  footer: { textAlign: "center", fontSize: 10, marginTop: 26, lineHeight: 15 },
-  accountLink: { borderWidth: 1, borderRadius: 16, padding: 13, marginTop: 14, alignItems: "center" },
-  accountLinkText: { fontSize: 13, fontWeight: "800" },
-  accountLinkHint: { fontSize: 11, marginTop: 3 },
-  teamLink: { alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 5, marginTop: 12, padding: 5 },
-  teamLinkText: { fontSize: 10, fontWeight: "700" },
-  whatsappButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderWidth: 1, borderRadius: 15, paddingVertical: 13, paddingHorizontal: 14, marginTop: 10 },
+  whatsappButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderWidth: 1, borderRadius: 15, paddingVertical: 13, paddingHorizontal: 14, marginTop: 16 },
   whatsappText: { fontSize: 14, fontWeight: "800" },
   radioCard: { flexDirection: "row", alignItems: "center", gap: 11, borderWidth: 1, borderRadius: 18, padding: 13, marginTop: 16 },
   radioIcon: { width: 42, height: 42, borderRadius: 12 },
@@ -134,8 +118,5 @@ const styles = StyleSheet.create({
   radioTitle: { fontSize: 14, fontWeight: "800", marginBottom: 3 },
   radioText: { fontSize: 11, lineHeight: 16 },
   radioButton: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
-  privacyLink: { alignItems: "center", marginTop: 16, padding: 6 },
-  privacyText: { fontSize: 12, fontWeight: "800" },
-  privacyHint: { fontSize: 10, marginTop: 3 },
   pressed: { opacity: 0.78, transform: [{ scale: 0.985 }] },
 });
