@@ -6,7 +6,7 @@ import { PRIVACY_POLICY_URL } from "../shared/privacy";
 
 describe("Política de Privacidade", () => {
   it("usa uma URL pública HTTPS do domínio do app", () => {
-    expect(PRIVACY_POLICY_URL).toBe("https://sementesapp-8jp8nwu7.manus.space/politica-privacidade");
+    expect(PRIVACY_POLICY_URL).toBe("https://sementesapp-8jp8nwu7.manus.space/politica-privacidade.html");
     expect(PRIVACY_POLICY_URL).toMatch(/^https:\/\//);
   });
 
