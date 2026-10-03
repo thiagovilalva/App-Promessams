@@ -72,6 +72,7 @@ export default function HomeScreen() {
         </View>
         <Pressable onPress={() => router.push("/conta")} style={[styles.accountLink, { borderColor: colors.border, backgroundColor: colors.surface }]}><Text style={[styles.accountLinkText, { color: colors.primary }]}>Entrar ou criar conta Manus</Text><Text style={[styles.accountLinkHint, { color: colors.muted }]}>Guardar sua jornada e histórico</Text></Pressable>
         <Pressable onPress={() => void Linking.openURL("https://wa.me/5567999132610?text=Ol%C3%A1%2C%20quero%20saber%20mais%20sobre%20o%20Projeto%20Sementes.")} style={[styles.whatsappButton, { borderColor: "#25D366" }]} accessibilityRole="link" accessibilityLabel="Fale conosco pelo WhatsApp"><IconSymbol name="whatsapp" size={19} color="#128C49" /><Text style={[styles.whatsappText, { color: colors.foreground }]}>Fale conosco pelo WhatsApp</Text></Pressable>
+        <Pressable onPress={() => router.push("/politica-privacidade")} style={styles.privacyLink} accessibilityRole="link" accessibilityLabel="Ler Política de Privacidade"><Text style={[styles.privacyText, { color: colors.primary }]}>Política de Privacidade</Text><Text style={[styles.privacyHint, { color: colors.muted }]}>Como cuidamos dos seus dados</Text></Pressable>
       </ScrollView>
     </ScreenContainer>
   );
@@ -128,5 +129,8 @@ const styles = StyleSheet.create({
   radioTitle: { fontSize: 14, fontWeight: "800", marginBottom: 3 },
   radioText: { fontSize: 11, lineHeight: 16 },
   radioButton: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  privacyLink: { alignItems: "center", marginTop: 16, padding: 6 },
+  privacyText: { fontSize: 12, fontWeight: "800" },
+  privacyHint: { fontSize: 10, marginTop: 3 },
   pressed: { opacity: 0.78, transform: [{ scale: 0.985 }] },
 });
