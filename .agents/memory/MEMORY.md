@@ -1,0 +1,1 @@
+- [Expo web hydration](expo-web-hydration.md) — This app's Expo Router static export produced an empty Suspense boundary and React #419; single-page output avoids hydration and retains Express route fallback.
