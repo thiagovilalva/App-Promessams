@@ -71,7 +71,6 @@ async function startServer() {
     try {
       const upstream = await fetch("https://stm17.srvstm.com:30368", {
         headers: { "Icy-MetaData": "0" },
-        signal: AbortSignal.timeout(15_000),
       });
       if (!upstream.ok || !upstream.body) {
         res.status(502).send("Radio stream unavailable");
@@ -81,7 +80,15 @@ async function startServer() {
       res.setHeader("Content-Type", "audio/mpeg");
       res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
       res.setHeader("Accept-Ranges", "none");
-      Readable.fromWeb(upstream.body as import("stream/web").ReadableStream).pipe(res);
+      const stream = Readable.fromWeb(upstream.body as import("stream/web").ReadableStream);
+      stream.on("error", () => {
+        if (!res.headersSent) res.status(502).send("Radio stream unavailable");
+        else res.destroy();
+      });
+      res.on("close", () => {
+        if (!res.writableEnded) stream.destroy();
+      });
+      stream.pipe(res);
     } catch {
       if (!res.headersSent) res.status(502).send("Radio stream unavailable");
     }

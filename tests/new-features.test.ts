@@ -71,6 +71,14 @@ describe("requested product updates", () => {
     expect(provider).toContain("shouldPlayInBackground: true");
     expect(provider).toContain("keepAudioSessionActive: true");
   });
+  it("relays the live radio as an uninterrupted browser MP3 stream", () => {
+    const server = read("server/_core/index.ts");
+    const provider = read("lib/radio-provider.tsx");
+    expect(server).toContain('app.get("/api/radio-stream"');
+    expect(server).toContain('res.setHeader("Content-Type", "audio/mpeg")');
+    expect(server).not.toContain("AbortSignal.timeout(15_000)");
+    expect(provider).toContain("/api/radio-stream");
+  });
   it("uses the official Projeto Sementes symbol in the home header", () => {
     const source = read("app/(tabs)/index.tsx");
     expect(source).toContain("projeto-sementes-logo.png");
