@@ -21,7 +21,7 @@ export default function HomeScreen() {
   return (
     <ScreenContainer className="px-5" edges={["top", "left", "right"]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-
+        
         {/* Cabeçalho */}
         <View style={styles.topline}>
           <Image source={require("@/assets/images/projeto-sementes-logo.png")} style={styles.brandMark} resizeMode="contain" accessibilityLabel="Símbolo da Igreja" />
@@ -32,7 +32,7 @@ export default function HomeScreen() {
         {/* Hero Section */}
         <View style={[styles.hero, { backgroundColor: colors.primary }]}>
           <View style={styles.heroGlow} />
-          <Text style={styles.heroEyebrow}>BEM-VINDO À SUA IGREJA</Text>
+          <Text style={styles.heroEyebrow}>BEM-VINDO À IGREJA ADVENTISTA DA PROMESSA</Text>
           <Text style={styles.heroTitle}>Uma igreja viva e no Modo Missão.</Text>
           <Text style={styles.heroText}>Acompanhe nossos conteúdos, participe dos ministérios e conecte-se com a família promessista no Mato Grosso do Sul.</Text>
           <Pressable onPress={() => router.push("/projeto-sementes")} style={({ pressed }) => [styles.heroButton, pressed && styles.pressed]}>
@@ -41,13 +41,31 @@ export default function HomeScreen() {
           </Pressable>
         </View>
 
-        {/* Acesso Rápido */}
+        {/* Acesso Rápido - 2 Colunas Proporcionais */}
         <View style={styles.sectionHeader}><View><Text style={[styles.kicker, { color: colors.primary }]}>ACESSO RÁPIDO</Text><Text style={[styles.sectionTitle, { color: colors.foreground }]}>Nossos Recursos</Text></View></View>
         <View style={styles.quickGrid}>
-          <Pressable onPress={() => router.push("/conteudos")} style={({ pressed }) => [styles.quickCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]}>
+          
+          {/* Card da Bíblia */}
+          <Pressable onPress={() => router.push("/biblia")} style={({ pressed }) => [styles.quickCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]}>
             <View style={[styles.iconBox, { backgroundColor: "#E9F7F0" }]}><IconSymbol name="book.closed.fill" size={22} color="#167C55" /></View>
-            <Text style={[styles.quickTitle, { color: colors.foreground }]}>Bíblia</Text><Text style={[styles.quickText, { color: colors.muted }]}>Leitura e devocionais.</Text>
+            <Text style={[styles.quickTitle, { color: colors.foreground }]}>Bíblia</Text>
+            <Text style={[styles.quickText, { color: colors.muted }]}>Leitura e devocionais.</Text>
           </Pressable>
+
+          {/* Card da Rádio (Ajustado para formato vertical proporcional) */}
+          <Pressable onPress={toggleRadio} style={({ pressed }) => [styles.quickCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Ouvir Rádio da Promessa">
+            <View style={styles.radioCardHeader}>
+              <Image source={require("@/assets/images/radio-da-promessa-correta.jpg")} style={styles.radioIconVertical} accessibilityLabel="Rádio" />
+              <View style={[styles.miniPlayBadge, { backgroundColor: colors.primary }]}>
+                <IconSymbol name={radioPlaying ? "stop.fill" : "play.fill"} size={12} color="#FFFFFF" />
+              </View>
+            </View>
+            <Text style={[styles.quickTitle, { color: colors.foreground }]}>Rádio da Promessa</Text>
+            <Text style={[styles.quickText, { color: colors.muted }]} numberOfLines={2}>
+              {radioBuffering ? "Conectando..." : radioPlaying ? "Ao vivo agora" : "Toque para ouvir"}
+            </Text>
+          </Pressable>
+
         </View>
 
         {/* O Que Nos Guia */}
@@ -59,21 +77,6 @@ export default function HomeScreen() {
             <IconSymbol name="chevron.right" size={18} color={colors.primary} />
           </Pressable>
         ))}
-
-        {/* Rádio da Promessa */}
-        <View style={[styles.radioCard, { backgroundColor: colors.surface, borderColor: colors.border }]} accessibilityLabel="Rádio da Promessa">
-          <Image source={require("@/assets/images/radio-da-promessa-correta.jpg")} style={styles.radioIcon} accessibilityLabel="Ícone da Rádio da Promessa" />
-          <View style={styles.radioCopy}>
-            <Text style={[styles.radioTitle, { color: colors.foreground }]}>Rádio da Promessa</Text>
-            <Text style={[styles.radioText, { color: colors.muted }]}>{radioBuffering ? "Conectando à transmissão..." : radioPlaying ? "Ao vivo agora" : "Toque para ouvir online"}</Text>
-          </View>
-          <Pressable onPress={toggleRadio} style={({ pressed }) => [styles.radioButton, { backgroundColor: colors.primary }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel={radioPlaying ? "Parar Rádio da Promessa" : "Ouvir Rádio da Promessa"}>
-            <IconSymbol name={radioPlaying ? "stop.fill" : "play.fill"} size={18} color="#FFFFFF" />
-          </Pressable>
-        </View>
-
-        {/* Contato (Mantido para facilitar a comunicação) */}
-        <Pressable onPress={() => void Linking.openURL("https://wa.me/5567999132610?text=Ol%C3%A1%2C%20gostaria%20de%20falar%20com%20a%20Promessa%20MS.")} style={[styles.whatsappButton, { borderColor: "#25D366" }]} accessibilityRole="link" accessibilityLabel="Fale conosco pelo WhatsApp"><IconSymbol name="whatsapp" size={19} color="#128C49" /><Text style={[styles.whatsappText, { color: colors.foreground }]}>Contato Promessa MS</Text></Pressable>
 
       </ScrollView>
     </ScreenContainer>
@@ -101,22 +104,17 @@ const styles = StyleSheet.create({
   kicker: { fontSize: 10, fontWeight: "800", letterSpacing: 1.3, marginBottom: 5 },
   sectionTitle: { fontSize: 22, fontWeight: "800", letterSpacing: -0.4 },
   quickGrid: { flexDirection: "row", gap: 12 },
-  quickCard: { flex: 1, borderRadius: 18, borderWidth: 1, padding: 14, minHeight: 146 },
+  quickCard: { flex: 1, borderRadius: 18, borderWidth: 1, padding: 14, minHeight: 146, justifyContent: "space-between" },
   iconBox: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center", marginBottom: 13 },
-  quickTitle: { fontSize: 15, fontWeight: "800", marginBottom: 5 },
+  quickTitle: { fontSize: 15, fontWeight: "800", marginBottom: 3 },
   quickText: { fontSize: 12, lineHeight: 17 },
+  radioCardHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 13 },
+  radioIconVertical: { width: 42, height: 42, borderRadius: 12 },
+  miniPlayBadge: { width: 28, height: 28, borderRadius: 9, alignItems: "center", justifyContent: "center" },
   principle: { flexDirection: "row", alignItems: "flex-start", gap: 12, paddingVertical: 14, borderBottomWidth: 1 },
   smallIcon: { width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center" },
   principleBody: { flex: 1 },
   principleTitle: { fontSize: 14, fontWeight: "800", marginBottom: 4 },
   principleText: { fontSize: 12, lineHeight: 18 },
-  whatsappButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderWidth: 1, borderRadius: 15, paddingVertical: 13, paddingHorizontal: 14, marginTop: 16 },
-  whatsappText: { fontSize: 14, fontWeight: "800" },
-  radioCard: { flexDirection: "row", alignItems: "center", gap: 11, borderWidth: 1, borderRadius: 18, padding: 13, marginTop: 16 },
-  radioIcon: { width: 42, height: 42, borderRadius: 12 },
-  radioCopy: { flex: 1 },
-  radioTitle: { fontSize: 14, fontWeight: "800", marginBottom: 3 },
-  radioText: { fontSize: 11, lineHeight: 16 },
-  radioButton: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   pressed: { opacity: 0.78, transform: [{ scale: 0.985 }] },
 });

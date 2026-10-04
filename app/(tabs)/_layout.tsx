@@ -15,7 +15,7 @@ export default function TabLayout() {
   return (
     <Tabs screenOptions={{ headerShown: false, tabBarActiveTintColor: colors.primary, tabBarInactiveTintColor: colors.muted, tabBarButton: HapticTab, tabBarStyle: { paddingTop: 7, paddingBottom: bottomPadding, height: tabBarHeight + 3, backgroundColor: colors.background, borderTopColor: colors.border, borderTopWidth: 0.5 }, tabBarLabelStyle: { fontSize: 12, fontWeight: "700" } }}>
       <Tabs.Screen name="index" options={{ title: "Início", tabBarIcon: ({ color }) => <IconSymbol size={23} name="house.fill" color={color} /> }} />
-      <Tabs.Screen name="conteudos" options={{ title: "Bíblia", tabBarIcon: ({ color }) => <IconSymbol size={23} name="book.closed.fill" color={color} /> }} />
+      <Tabs.Screen name="biblia" options={{ title: "Bíblia", tabBarIcon: ({ color }) => <IconSymbol size={23} name="book.closed.fill" color={color} /> }} />
       <Tabs.Screen name="hinario" options={{ title: "HBJ", tabBarIcon: ({ color }) => <IconSymbol size={23} name="music-note" color={color} /> }} />
       <Tabs.Screen name="ofertas" options={{ title: "Ofertas", tabBarIcon: ({ color }) => <IconSymbol size={23} name="heart.fill" color={color} /> }} />
       <Tabs.Screen name="menu" options={{ title: "Menu", tabBarIcon: ({ color }) => <IconSymbol size={23} name="line.3.horizontal" color={color} /> }} />
