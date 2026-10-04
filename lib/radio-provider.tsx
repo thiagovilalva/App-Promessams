@@ -1,7 +1,9 @@
-import { createContext, useContext, useEffect, type PropsWithChildren } from "react";
+import { createContext, useContext, useEffect, useRef, type PropsWithChildren } from "react";
+import { Platform } from "react-native";
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 
-const RADIO_URL = "https://player.srvstm.com/proxy/30368";
+const RADIO_URL = "https://stm17.srvstm.com:30368";
+const RECONNECT_INTERVAL_MS = 5_000;
 
 type RadioContextValue = {
   playing: boolean;
@@ -14,19 +16,68 @@ const RadioContext = createContext<RadioContextValue | null>(null);
 export function RadioProvider({ children }: PropsWithChildren) {
   const player = useAudioPlayer(RADIO_URL, { keepAudioSessionActive: true });
   const status = useAudioPlayerStatus(player);
+  const pausedByUser = useRef(false);
+  const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    let mounted = true;
+
     void setAudioModeAsync({
       playsInSilentMode: true,
       shouldPlayInBackground: true,
       interruptionModeAndroid: "duckOthers",
       interruptionMode: "mixWithOthers",
+    }).then(() => {
+      // Try autoplay on every platform. Native apps allow it; browsers may
+      // reject audible autoplay until the user interacts with the page.
+      if (mounted && !pausedByUser.current) {
+        try {
+          player.play();
+        } catch {
+          // The reconnect effect below retries transient stream start failures.
+        }
+      }
     });
-  }, []);
+
+    return () => {
+      mounted = false;
+      if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
+    };
+  }, [player]);
+
+  useEffect(() => {
+    if (pausedByUser.current || status.playing || status.isBuffering) return;
+    // A browser may block the first audible autoplay attempt. Avoid repeated
+    // attempts until the user presses the radio button, while native builds
+    // continue reconnecting automatically in the background.
+    if (Platform.OS === "web") return;
+
+    // A live stream has no natural end. If the provider drops the connection,
+    // reconnect automatically while the user has not pressed pause.
+    reconnectTimer.current = setTimeout(() => {
+      if (!pausedByUser.current) {
+        try {
+          player.play();
+        } catch {
+          // The next status update schedules another attempt.
+        }
+      }
+    }, RECONNECT_INTERVAL_MS);
+
+    return () => {
+      if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
+    };
+  }, [player, status.playing, status.isBuffering, status.isLoaded, status.playbackState]);
 
   const toggle = () => {
-    if (status.playing) player.pause();
-    else player.play();
+    if (status.playing) {
+      pausedByUser.current = true;
+      player.pause();
+      return;
+    }
+
+    pausedByUser.current = false;
+    player.play();
   };
 
   return (

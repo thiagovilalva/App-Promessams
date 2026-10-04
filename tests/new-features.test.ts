@@ -67,7 +67,7 @@ describe("requested product updates", () => {
     expect(source).toContain("stop.fill");
     expect(source).toContain("radio-da-promessa-correta.jpg");
     const provider = read("lib/radio-provider.tsx");
-    expect(provider).toContain("https://player.srvstm.com/proxy/30368");
+    expect(provider).toContain("https://stm17.srvstm.com:30368");
     expect(provider).toContain("shouldPlayInBackground: true");
     expect(provider).toContain("keepAudioSessionActive: true");
   });
