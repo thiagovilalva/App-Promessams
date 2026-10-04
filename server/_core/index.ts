@@ -3,6 +3,7 @@ import express from "express";
 import { createServer } from "http";
 import net from "net";
 import path from "path";
+import { Readable } from "stream";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
@@ -62,6 +63,28 @@ async function startServer() {
 
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true, timestamp: Date.now() });
+  });
+
+  // Browser-compatible relay for the Shoutcast stream. Native builds use the
+  // source directly; web browsers receive a same-origin audio/mpeg response.
+  app.get("/api/radio-stream", async (_req, res) => {
+    try {
+      const upstream = await fetch("https://stm17.srvstm.com:30368", {
+        headers: { "Icy-MetaData": "0" },
+        signal: AbortSignal.timeout(15_000),
+      });
+      if (!upstream.ok || !upstream.body) {
+        res.status(502).send("Radio stream unavailable");
+        return;
+      }
+      res.status(200);
+      res.setHeader("Content-Type", "audio/mpeg");
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+      res.setHeader("Accept-Ranges", "none");
+      Readable.fromWeb(upstream.body as import("stream/web").ReadableStream).pipe(res);
+    } catch {
+      if (!res.headersSent) res.status(502).send("Radio stream unavailable");
+    }
   });
 
   app.use(

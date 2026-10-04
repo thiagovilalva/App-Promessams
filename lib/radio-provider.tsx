@@ -1,8 +1,10 @@
 import { createContext, useContext, useEffect, useRef, type PropsWithChildren } from "react";
 import { Platform } from "react-native";
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
+import { getApiBaseUrl } from "@/constants/oauth";
 
 const RADIO_URL = "https://stm17.srvstm.com:30368";
+const WEB_RADIO_URL = `${getApiBaseUrl()}/api/radio-stream`;
 const RECONNECT_INTERVAL_MS = 5_000;
 
 type RadioContextValue = {
@@ -14,7 +16,7 @@ type RadioContextValue = {
 const RadioContext = createContext<RadioContextValue | null>(null);
 
 export function RadioProvider({ children }: PropsWithChildren) {
-  const player = useAudioPlayer(RADIO_URL, { keepAudioSessionActive: true });
+  const player = useAudioPlayer(Platform.OS === "web" ? WEB_RADIO_URL : RADIO_URL, { keepAudioSessionActive: true });
   const status = useAudioPlayerStatus(player);
   const pausedByUser = useRef(false);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
