@@ -37,6 +37,7 @@ const MAPPING: Record<string, MaterialIconName> = {
   "groups": "groups",
   "spa": "spa",
   "paperplane.fill": "send",
+  "line.3.horizontal": "menu",
   "chevron.left.forwardslash.chevron.right": "code",
 };
 

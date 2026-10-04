@@ -18,7 +18,6 @@ export default function TabLayout() {
       <Tabs.Screen name="conteudos" options={{ title: "Bíblia", tabBarIcon: ({ color }) => <IconSymbol size={23} name="book.closed.fill" color={color} /> }} />
       <Tabs.Screen name="hinario" options={{ title: "HBJ", tabBarIcon: ({ color }) => <IconSymbol size={23} name="music-note" color={color} /> }} />
       <Tabs.Screen name="ofertas" options={{ title: "Ofertas", tabBarIcon: ({ color }) => <IconSymbol size={23} name="heart.fill" color={color} /> }} />
-      {/* Nova aba de Menu Sanduíche */}
       <Tabs.Screen name="menu" options={{ title: "Menu", tabBarIcon: ({ color }) => <IconSymbol size={23} name="line.3.horizontal" color={color} /> }} />
     </Tabs>
   );
