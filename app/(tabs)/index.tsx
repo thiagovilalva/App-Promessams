@@ -24,7 +24,7 @@ export default function HomeScreen() {
         
         {/* Cabeçalho */}
         <View style={styles.topline}>
-          <Image source={require("@/assets/images/projeto-sementes-logo.png")} style={styles.brandMark} resizeMode="contain" accessibilityLabel="Símbolo da Igreja" />
+          <Image source={require("@/assets/images/icon.png")} style={styles.brandMark} resizeMode="contain" accessibilityLabel="Símbolo da Igreja" />
           <View><Text style={[styles.brandName, { color: colors.foreground }]}>PromessaMS</Text><Text style={[styles.brandCaption, { color: colors.muted }]}>Igreja viva no Modo Missão</Text></View>
           <View style={styles.topActions}><Pressable onPress={() => setColorScheme(colorScheme === "light" ? "dark" : "light")} style={[styles.themeButton, { borderColor: colors.border, backgroundColor: colors.surface }]} accessibilityLabel="Alternar modo claro e escuro"><Text style={[styles.themeButtonText, { color: colors.foreground }]}>{colorScheme === "light" ? "Escuro" : "Claro"}</Text></Pressable><Pressable onPress={() => router.push("/acessibilidade")} style={[styles.accessibilityButton, { borderColor: colors.border, backgroundColor: colors.surface }]} accessibilityRole="button" accessibilityLabel="Abrir acessibilidade"><IconSymbol name="accessibility" size={16} color={colors.foreground} /></Pressable></View>
         </View>
@@ -36,26 +36,21 @@ export default function HomeScreen() {
           <Text style={styles.heroTitle}>Uma igreja viva e no Modo Missão.</Text>
           <Text style={styles.heroText}>Acompanhe nossos conteúdos, participe dos ministérios e conecte-se com a família promessista no Mato Grosso do Sul.</Text>
           <Pressable onPress={() => router.push("/projeto-sementes")} style={({ pressed }) => [styles.heroButton, pressed && styles.pressed]}>
-            <Text style={[styles.heroButtonText, { color: colors.primary }]}>Conheça o Projeto Sementes</Text>
+            <Text style={[styles.heroButtonText, { color: colors.primary }]}>Conheça o Projeto Sementes e Mais!</Text>
             <IconSymbol name="arrow.forward" size={18} color={colors.primary} />
           </Pressable>
         </View>
 
-        {/* Acesso Rápido - 2 Colunas Proporcionais */}
+        {/* Acesso Rápido (Rádio e Live do Pôr do Sol) */}
         <View style={styles.sectionHeader}><View><Text style={[styles.kicker, { color: colors.primary }]}>ACESSO RÁPIDO</Text><Text style={[styles.sectionTitle, { color: colors.foreground }]}>Nossos Recursos</Text></View></View>
         <View style={styles.quickGrid}>
           
-          {/* Card da Bíblia */}
-          <Pressable onPress={() => router.push("/biblia")} style={({ pressed }) => [styles.quickCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]}>
-            <View style={[styles.iconBox, { backgroundColor: "#E9F7F0" }]}><IconSymbol name="book.closed.fill" size={22} color="#167C55" /></View>
-            <Text style={[styles.quickTitle, { color: colors.foreground }]}>Bíblia</Text>
-            <Text style={[styles.quickText, { color: colors.muted }]}>Leitura e devocionais.</Text>
-          </Pressable>
-
-          {/* Card da Rádio (Ajustado para formato vertical proporcional) */}
+          {/* Card da Rádio */}
           <Pressable onPress={toggleRadio} style={({ pressed }) => [styles.quickCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Ouvir Rádio da Promessa">
             <View style={styles.radioCardHeader}>
-              <Image source={require("@/assets/images/radio-da-promessa-correta.jpg")} style={styles.radioIconVertical} accessibilityLabel="Rádio" />
+              <View style={[styles.iconBox, { backgroundColor: colors.primary + "18" }]}>
+                <IconSymbol name="volume.up" size={20} color={colors.primary} />
+              </View>
               <View style={[styles.miniPlayBadge, { backgroundColor: colors.primary }]}>
                 <IconSymbol name={radioPlaying ? "stop.fill" : "play.fill"} size={12} color="#FFFFFF" />
               </View>
@@ -63,6 +58,22 @@ export default function HomeScreen() {
             <Text style={[styles.quickTitle, { color: colors.foreground }]}>Rádio da Promessa</Text>
             <Text style={[styles.quickText, { color: colors.muted }]} numberOfLines={2}>
               {radioBuffering ? "Conectando..." : radioPlaying ? "Ao vivo agora" : "Toque para ouvir"}
+            </Text>
+          </Pressable>
+
+          {/* Card da Live do Pôr do Sol */}
+          <Pressable onPress={() => void Linking.openURL("https://www.youtube.com")} style={({ pressed }) => [styles.quickCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]} accessibilityRole="link" accessibilityLabel="Assistir Live do Pôr do Sol no YouTube">
+            <View style={styles.radioCardHeader}>
+              <View style={[styles.iconBox, { backgroundColor: "#FFE5E5" }]}>
+                <IconSymbol name="play.fill" size={20} color="#E53935" />
+              </View>
+              <View style={[styles.miniPlayBadge, { backgroundColor: "#E53935" }]}>
+                <IconSymbol name="arrow.forward" size={12} color="#FFFFFF" />
+              </View>
+            </View>
+            <Text style={[styles.quickTitle, { color: colors.foreground }]}>Pôr do Sol</Text>
+            <Text style={[styles.quickText, { color: colors.muted }]} numberOfLines={2}>
+              Sextas-feiras • YouTube
             </Text>
           </Pressable>
 
@@ -105,12 +116,11 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 22, fontWeight: "800", letterSpacing: -0.4 },
   quickGrid: { flexDirection: "row", gap: 12 },
   quickCard: { flex: 1, borderRadius: 18, borderWidth: 1, padding: 14, minHeight: 146, justifyContent: "space-between" },
-  iconBox: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center", marginBottom: 13 },
+  iconBox: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  radioCardHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 13 },
+  miniPlayBadge: { width: 28, height: 28, borderRadius: 9, alignItems: "center", justifyContent: "center" },
   quickTitle: { fontSize: 15, fontWeight: "800", marginBottom: 3 },
   quickText: { fontSize: 12, lineHeight: 17 },
-  radioCardHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 13 },
-  radioIconVertical: { width: 42, height: 42, borderRadius: 12 },
-  miniPlayBadge: { width: 28, height: 28, borderRadius: 9, alignItems: "center", justifyContent: "center" },
   principle: { flexDirection: "row", alignItems: "flex-start", gap: 12, paddingVertical: 14, borderBottomWidth: 1 },
   smallIcon: { width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center" },
   principleBody: { flex: 1 },
