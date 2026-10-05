@@ -87,6 +87,13 @@ describe("requested product updates", () => {
     expect(provider).toContain("player.setActiveForLockScreen(true");
     expect(provider).toContain("shouldPlayInBackground: true");
   });
+  it("routes Manus OAuth back to the PromessaMS app scheme", () => {
+    const oauth = read("constants/oauth.ts");
+    const config = read("app.config.ts");
+    expect(oauth).toContain('schemeFromBundleId = "promessams"');
+    expect(config).toContain('const scheme = "promessams"');
+    expect(oauth).not.toContain("com.app.projetosementes");
+  });
   it("uses the official Projeto Sementes symbol in the home header", () => {
     const source = read("app/(tabs)/index.tsx");
     expect(source).toContain("projeto-sementes-logo.png");
