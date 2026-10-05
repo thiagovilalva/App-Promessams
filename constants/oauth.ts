@@ -17,6 +17,10 @@ const env = {
   deepLinkScheme: schemeFromBundleId,
 };
 
+// The native release cannot rely on the temporary 3000-sandbox host injected
+// during development. The deployed API and web app share this public origin.
+const PUBLIC_API_BASE_URL = "https://sementesapp-8jp8nwu7.manus.space";
+
 export const OAUTH_PORTAL_URL = env.portal;
 export const OAUTH_SERVER_URL = env.server;
 export const APP_ID = env.appId;
@@ -30,14 +34,13 @@ export const API_BASE_URL = env.apiBaseUrl;
  * URL pattern: https://PORT-sandboxid.region.domain
  */
 export function getApiBaseUrl(): string {
-  // If API_BASE_URL is set, use it
-  if (API_BASE_URL) {
-    return API_BASE_URL.replace(/\/$/, "");
-  }
+  // Native production builds must use a stable public HTTPS origin.
+  if (ReactNative.Platform.OS !== "web") return PUBLIC_API_BASE_URL;
 
-  // On web, derive from current hostname by replacing port 8081 with 3000
-  if (ReactNative.Platform.OS === "web" && typeof window !== "undefined" && window.location) {
+  // On web, prefer the current deployed origin or derive the API host in dev.
+  if (typeof window !== "undefined" && window.location) {
     const { protocol, hostname } = window.location;
+    if (hostname.endsWith(".manus.space")) return `${protocol}//${hostname}`;
     // Pattern: 8081-sandboxid.region.domain -> 3000-sandboxid.region.domain
     const apiHostname = hostname.replace(/^8081-/, "3000-");
     if (apiHostname !== hostname) {
@@ -45,8 +48,7 @@ export function getApiBaseUrl(): string {
     }
   }
 
-  // Fallback to empty (will use relative URL)
-  return "";
+  return API_BASE_URL.replace(/\/$/, "") || PUBLIC_API_BASE_URL;
 }
 
 export const SESSION_TOKEN_KEY = "app_session_token";

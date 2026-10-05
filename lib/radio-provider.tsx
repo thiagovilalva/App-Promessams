@@ -30,6 +30,15 @@ export function RadioProvider({ children }: PropsWithChildren) {
       interruptionModeAndroid: "duckOthers",
       interruptionMode: "mixWithOthers",
     }).then(() => {
+      if (Platform.OS === "android") {
+        // Register the live stream with Android MediaSession. This causes
+        // expo-audio to keep its mediaPlayback foreground service alive when
+        // the screen is locked or the app is backgrounded.
+        player.setActiveForLockScreen(true, {
+          title: "Rádio da Promessa",
+          artist: "PromessaMS",
+        });
+      }
       // Try autoplay on every platform. Native apps allow it; browsers may
       // reject audible autoplay until the user interacts with the page.
       if (mounted && !pausedByUser.current) {
@@ -44,6 +53,7 @@ export function RadioProvider({ children }: PropsWithChildren) {
     return () => {
       mounted = false;
       if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
+      if (Platform.OS === "android") player.clearLockScreenControls();
     };
   }, [player]);
 
