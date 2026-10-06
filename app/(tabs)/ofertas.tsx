@@ -34,7 +34,7 @@ export default function OfertasScreen() {
   return (
     <ScreenContainer className="px-5" edges={["top", "left", "right"]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        <View style={[styles.illustration, { backgroundColor: colors.surface }]}><Image source={require("@/assets/images/projeto-missional-horizontal.webp")} style={styles.illustrationImage} resizeMode="contain" accessibilityLabel="Projeto Missional Sementes" /></View>
+        <View style={styles.illustration}><Image source={require("@/assets/images/ofertas-missao.png")} style={styles.illustrationImage} resizeMode="contain" accessibilityLabel="Projeto Missional Sementes" /></View>
         <Text style={[styles.kicker, { color: "#A76418" }]}>APOIE A MISSÃO</Text>
         <Text style={[styles.title, { color: colors.foreground }]}>Toda semente pode alcançar mais vidas.</Text>
         <Text style={[styles.subtitle, { color: colors.muted }]}>Sua oferta ajuda a Convenção Regional Sul-Mato-Grossense a manter e investir no Projeto Sementes junto às igrejas locais.</Text>
@@ -58,7 +58,7 @@ export default function OfertasScreen() {
 
 const styles = StyleSheet.create({
   scroll: { paddingTop: 16, paddingBottom: 36 },
-  illustration: { width: "100%", height: 150, borderRadius: 26, marginBottom: 23, overflow: "hidden", alignItems: "center", justifyContent: "center" },
+  illustration: { width: "100%", height: 150, borderRadius: 26, marginBottom: 23, overflow: "hidden", alignItems: "center", justifyContent: "center", backgroundColor: "#10271B" },
   illustrationImage: { width: "100%", height: "100%" },
   sun: { width: 72, height: 72, borderRadius: 40, backgroundColor: "#F8D59D", position: "absolute", top: 23, right: 45 },
   field: { width: 240, height: 60, backgroundColor: "#D9EDD6", position: "absolute", bottom: -20, borderRadius: 120, alignItems: "center" },

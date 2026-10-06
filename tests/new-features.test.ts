@@ -94,6 +94,11 @@ describe("requested product updates", () => {
     expect(config).toContain('const scheme = "promessams"');
     expect(oauth).not.toContain("com.app.projetosementes");
   });
+  it("opens the Manus login URL directly on native platforms", () => {
+    const oauth = read("constants/oauth.ts");
+    expect(oauth).toContain("Linking.openURL(loginUrl)");
+    expect(oauth).not.toContain("const supported = await Linking.canOpenURL(loginUrl)");
+  });
   it("uses the official Projeto Sementes symbol in the home header", () => {
     const source = read("app/(tabs)/index.tsx");
     expect(source).toContain("projeto-sementes-logo.png");
@@ -108,8 +113,8 @@ describe("requested product updates", () => {
   });
   it("uses the supplied mission image on the offers page", () => {
     const offers = read("app/(tabs)/ofertas.tsx");
-    expect(offers).toContain("projeto-missional-horizontal.webp");
-    expect(offers).toContain("backgroundColor: colors.surface");
+    expect(offers).toContain("ofertas-missao.png");
+    expect(offers).toContain('backgroundColor: "#10271B"');
   });
   it("updates offers, chat and content library wording", () => {
     const offers = read("app/(tabs)/ofertas.tsx");

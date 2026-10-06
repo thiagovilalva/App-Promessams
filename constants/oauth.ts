@@ -113,14 +113,11 @@ export async function startOAuthLogin(): Promise<string | null> {
     return null;
   }
 
-  const supported = await Linking.canOpenURL(loginUrl);
-  if (!supported) {
-    console.warn("[OAuth] Cannot open login URL: URL scheme not supported");
-    // 可考虑抛出错误或返回错误状态，让调用方处理
-    return null;
-  }
-
   try {
+    // canOpenURL is unreliable for HTTPS URLs on some Android releases and
+    // was causing the login button to do nothing. openURL is the correct
+    // operation here: the system browser handles the Manus HTTPS page and
+    // the final promessams:// callback returns to the app.
     await Linking.openURL(loginUrl);
   } catch (error) {
     console.error("[OAuth] Failed to open login URL:", error);
