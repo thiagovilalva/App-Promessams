@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Clipboard from "expo-clipboard";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
@@ -9,6 +9,7 @@ import { useColors } from "@/hooks/use-colors";
 import { useAccessibility } from "@/lib/accessibility-provider";
 import { trpc } from "@/lib/trpc";
 import { CONTENT_MODULES, type ContentModule } from "@/shared/knowledge";
+import { mergeRemoteMaterials, REMOTE_MATERIALS_CACHE_KEY, REMOTE_MATERIALS_SYNC_KEY, type RemoteMaterial } from "@/shared/remote-content";
 
 export default function ConteudosScreen() {
   const colors = useColors();
@@ -16,7 +17,28 @@ export default function ConteudosScreen() {
   const [selected, setSelected] = useState<ContentModule | null>(null);
   const [section, setSection] = useState<"filosofia" | "projeto" | "ministerios">("filosofia");
   const [saved, setSaved] = useState(false);
+  const [cachedMaterials, setCachedMaterials] = useState<RemoteMaterial[]>([]);
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
   const materialsQuery = trpc.materials.list.useQuery();
+  const manifestQuery = trpc.materials.manifest.useQuery(undefined, { retry: false });
+  const remoteMaterials = useMemo(() => mergeRemoteMaterials(materialsQuery.data as RemoteMaterial[] | undefined, cachedMaterials), [materialsQuery.data, cachedMaterials]);
+
+  useEffect(() => {
+    AsyncStorage.multiGet([REMOTE_MATERIALS_CACHE_KEY, REMOTE_MATERIALS_SYNC_KEY]).then(([materialsEntry, syncEntry]) => {
+      try {
+        if (materialsEntry[1]) setCachedMaterials(JSON.parse(materialsEntry[1]) as RemoteMaterial[]);
+      } catch { /* cache corrompido: o catálogo local continua disponível */ }
+      if (syncEntry[1]) setLastSyncedAt(syncEntry[1]);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!materialsQuery.data) return;
+    const now = new Date().toISOString();
+    setCachedMaterials(materialsQuery.data as RemoteMaterial[]);
+    setLastSyncedAt(now);
+    void AsyncStorage.multiSet([[REMOTE_MATERIALS_CACHE_KEY, JSON.stringify(materialsQuery.data)], [REMOTE_MATERIALS_SYNC_KEY, now]]);
+  }, [materialsQuery.data]);
   const visibleModules = useMemo(() => CONTENT_MODULES.filter((item) => section === "filosofia" ? ["filosofia", "distincao", "principios", "lideranca", "filosofia-cristocentrismo", "filosofia-palavra", "filosofia-oracao", "filosofia-relacionamentos", "filosofia-todos-enviados", "filosofia-multiplicacao", "filosofia-contextualizacao", "documento-integral"].includes(item.id) : section === "projeto" ? ["projeto-acolhimento", "jornada", "projeto-discipulados", "projeto-equipes", "igreja-viva", "projeto-cuidado", "projeto-integracao", "projeto-formacao", "projeto-avaliacao", "projeto-multiplicacao", "projeto-territorio", "projeto-documento-integral"].includes(item.id) : ["ministerios-fundamento", "ministerios-alinhamento", "ministerios-principios", "ministerios-governanca", "ministerios-ciclo", "ministerios-areas", "ministerios-capacitacao", "ministerios-mentoria", "ministerios-seguranca", "ministerios-indicadores", "ministerios-apresentacao-integral", "ministerios-documento-integral"].includes(item.id)), [section]);
 
   async function saveForOffline() {
@@ -41,10 +63,10 @@ export default function ConteudosScreen() {
         <Text style={[styles.title, { color: colors.foreground, fontSize: 29 * textScale, lineHeight: 35 * textScale }]}>Aprenda no seu ritmo.</Text>
         <Text style={[styles.subtitle, { color: colors.muted, fontSize: 14 * textScale, lineHeight: 21 * textScale }]}>Conteúdos essenciais para compreender a visão, praticar o cuidado e formar discípulos.</Text>
         <View style={[styles.sectionChooser, { borderColor: colors.border, backgroundColor: colors.surface }]}><Pressable onPress={() => { setSection("filosofia"); setSelected(null); }} style={[styles.sectionTab, section === "filosofia" && { backgroundColor: colors.primary }]} accessibilityRole="tab" accessibilityState={{ selected: section === "filosofia" }}><Text style={[styles.sectionTabText, { color: section === "filosofia" ? "#FFFFFF" : colors.foreground, fontSize: 13 * textScale }]}>Filosofia da Semente</Text></Pressable><Pressable onPress={() => { setSection("projeto"); setSelected(null); }} style={[styles.sectionTab, section === "projeto" && { backgroundColor: colors.primary }]} accessibilityRole="tab" accessibilityState={{ selected: section === "projeto" }}><Text style={[styles.sectionTabText, { color: section === "projeto" ? "#FFFFFF" : colors.foreground, fontSize: 13 * textScale }]}>Projeto Sementes</Text></Pressable><Pressable onPress={() => { setSection("ministerios"); setSelected(null); }} style={[styles.sectionTab, section === "ministerios" && { backgroundColor: colors.primary }]} accessibilityRole="tab" accessibilityState={{ selected: section === "ministerios" }}><Text style={[styles.sectionTabText, { color: section === "ministerios" ? "#FFFFFF" : colors.foreground, fontSize: 13 * textScale }]}>Ministérios Regionais</Text></Pressable></View>
-        <Pressable onPress={saveForOffline} style={({ pressed }) => [styles.offlineButton, { backgroundColor: saved ? "#E9F7F0" : colors.surface, borderColor: saved ? "#B6E6CF" : colors.border }, pressed && styles.pressed]}>
+        <View style={styles.syncRow}><Pressable onPress={saveForOffline} style={({ pressed }) => [styles.offlineButton, { backgroundColor: saved ? "#E9F7F0" : colors.surface, borderColor: saved ? "#B6E6CF" : colors.border }, pressed && styles.pressed]}>
           <IconSymbol name={saved ? "checkmark.circle.fill" : "arrow.down.circle.fill"} size={19} color={saved ? "#167C55" : colors.primary} />
           <Text style={[styles.offlineText, { color: saved ? "#167C55" : colors.foreground }]}>{saved ? "Salvo para leitura offline" : "Salvar biblioteca no dispositivo"}</Text>
-        </Pressable>
+        </Pressable><Text style={[styles.syncText, { color: colors.muted }]}>{materialsQuery.isFetching ? "Atualizando conteúdo online…" : lastSyncedAt ? `Última atualização: ${new Date(lastSyncedAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}` : "Conteúdo local disponível"}</Text></View>
         <View style={styles.list}>
           {visibleModules.map((item, index) => {
             const isOpen = selected?.id === item.id;
@@ -58,9 +80,9 @@ export default function ConteudosScreen() {
             );
           })}
         </View>
-        {!!materialsQuery.data?.length && <>
+        {!!remoteMaterials.length && <>
           <Text style={[styles.extraKicker, { color: colors.primary }]}>ADICIONADOS PELA EQUIPE</Text>
-          {materialsQuery.data.map((material) => <View key={material.id} style={[styles.material, { backgroundColor: colors.surface, borderColor: colors.border }]}><View style={styles.materialTop}><IconSymbol name="doc.on.doc.fill" size={17} color={colors.primary} /><Text style={[styles.materialSource, { color: colors.primary }]}>{material.source || "Material publicado"}</Text></View><Text style={[styles.materialTitle, { color: colors.foreground }]}>{material.title}</Text><Text style={[styles.materialSummary, { color: colors.muted }]}>{material.summary || material.content.slice(0, 180)}</Text></View>)}
+          {remoteMaterials.map((material) => <View key={material.id} style={[styles.material, { backgroundColor: colors.surface, borderColor: colors.border }]}><View style={styles.materialTop}><IconSymbol name="doc.on.doc.fill" size={17} color={colors.primary} /><Text style={[styles.materialSource, { color: colors.primary }]}>{material.source || "Material publicado"}</Text></View><Text style={[styles.materialTitle, { color: colors.foreground }]}>{material.title}</Text><Text style={[styles.materialSummary, { color: colors.muted }]}>{material.summary || material.content.slice(0, 180)}</Text></View>)}
         </>}
       </ScrollView>
     </ScreenContainer>
@@ -74,6 +96,8 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 14, lineHeight: 21, marginTop: 9, maxWidth: 360 },
   offlineButton: { flexDirection: "row", alignItems: "center", gap: 8, alignSelf: "flex-start", paddingHorizontal: 13, paddingVertical: 10, borderRadius: 13, borderWidth: 1, marginTop: 18 },
   offlineText: { fontSize: 12, fontWeight: "700" },
+  syncRow: { gap: 6, marginTop: 18 },
+  syncText: { fontSize: 10, lineHeight: 15 },
   sectionChooser: { flexDirection: "row", borderWidth: 1, borderRadius: 15, padding: 4, gap: 4, marginTop: 20 },
   sectionTab: { flex: 1, borderRadius: 11, paddingHorizontal: 8, paddingVertical: 11, alignItems: "center", justifyContent: "center" },
   sectionTabText: { fontWeight: "800", textAlign: "center" },

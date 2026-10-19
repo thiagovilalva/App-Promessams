@@ -63,6 +63,14 @@ export const appRouter = router({
   }),
   materials: router({
     list: publicProcedure.query(() => getPublishedMaterials()),
+    manifest: publicProcedure.query(async () => {
+      const published = await getPublishedMaterials();
+      const latest = published.reduce<Date | null>((current, item) => {
+        const value = item.createdAt instanceof Date ? item.createdAt : new Date(item.createdAt);
+        return !current || value > current ? value : current;
+      }, null);
+      return { version: latest?.toISOString() ?? "0", count: published.length };
+    }),
     adminList: adminProcedure.query(() => getAllMaterials()),
     create: adminProcedure.input(materialInput).mutation(({ ctx, input }) => createMaterial({ ...input, published: false, createdBy: ctx.user.id, summary: input.summary ?? null, source: input.source ?? null })),
     approve: adminProcedure.input(z.object({ id: z.number().int().positive() })).mutation(({ ctx, input }) => {
