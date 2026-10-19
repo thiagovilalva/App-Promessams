@@ -1,13 +1,14 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Clipboard from "expo-clipboard";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
+import { Alert, Image, Linking, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { useAccessibility } from "@/lib/accessibility-provider";
 import { trpc } from "@/lib/trpc";
+import { getApiBaseUrl } from "@/constants/oauth";
 import { CONTENT_MODULES, type ContentModule } from "@/shared/knowledge";
 import { mergeRemoteMaterials, REMOTE_MATERIALS_CACHE_KEY, REMOTE_MATERIALS_SYNC_KEY, type RemoteMaterial } from "@/shared/remote-content";
 
@@ -22,6 +23,7 @@ export default function ConteudosScreen() {
   const materialsQuery = trpc.materials.list.useQuery();
   const manifestQuery = trpc.materials.manifest.useQuery(undefined, { retry: false });
   const remoteMaterials = useMemo(() => mergeRemoteMaterials(materialsQuery.data as RemoteMaterial[] | undefined, cachedMaterials), [materialsQuery.data, cachedMaterials]);
+  const assetUrl = (url: string) => url.startsWith("/") ? `${getApiBaseUrl()}${url}` : url;
 
   useEffect(() => {
     AsyncStorage.multiGet([REMOTE_MATERIALS_CACHE_KEY, REMOTE_MATERIALS_SYNC_KEY]).then(([materialsEntry, syncEntry]) => {
@@ -82,7 +84,7 @@ export default function ConteudosScreen() {
         </View>
         {!!remoteMaterials.length && <>
           <Text style={[styles.extraKicker, { color: colors.primary }]}>ADICIONADOS PELA EQUIPE</Text>
-          {remoteMaterials.map((material) => <View key={material.id} style={[styles.material, { backgroundColor: colors.surface, borderColor: colors.border }]}><View style={styles.materialTop}><IconSymbol name="doc.on.doc.fill" size={17} color={colors.primary} /><Text style={[styles.materialSource, { color: colors.primary }]}>{material.source || "Material publicado"}</Text></View><Text style={[styles.materialTitle, { color: colors.foreground }]}>{material.title}</Text><Text style={[styles.materialSummary, { color: colors.muted }]}>{material.summary || material.content.slice(0, 180)}</Text></View>)}
+          {remoteMaterials.map((material) => <View key={material.id} style={[styles.material, { backgroundColor: colors.surface, borderColor: colors.border }]}><View style={styles.materialTop}><IconSymbol name="doc.on.doc.fill" size={17} color={colors.primary} /><Text style={[styles.materialSource, { color: colors.primary }]}>{material.source || "Material publicado"}</Text><Text style={[styles.materialVersion, { color: colors.muted }]}>v{material.version}</Text></View><Text style={[styles.materialTitle, { color: colors.foreground }]}>{material.title}</Text><Text style={[styles.materialCategory, { color: colors.primary }]}>{material.category === "pao-diario" ? "Pão Diário" : material.category === "hbj" ? "Hinário HBJ" : material.category === "ministerios" ? "Ministérios Regionais" : material.category === "filosofia" ? "Filosofia da Semente" : material.category === "projeto" ? "Projeto Sementes" : "Outros"}</Text><Text style={[styles.materialSummary, { color: colors.muted }]}>{material.summary || material.content.slice(0, 180)}</Text>{material.assetUrl && material.assetMimeType?.startsWith("image/") && <Image source={{ uri: assetUrl(material.assetUrl) }} style={styles.materialImage} resizeMode="cover" accessibilityLabel={material.assetName || material.title} />}{material.assetUrl && !material.assetMimeType?.startsWith("image/") && <Pressable onPress={() => void Linking.openURL(assetUrl(material.assetUrl!))} style={[styles.attachmentLink, { borderColor: colors.border }]}><IconSymbol name="paperclip" size={15} color={colors.primary} /><Text style={[styles.attachmentLinkText, { color: colors.primary }]}>Abrir anexo {material.assetName ? `· ${material.assetName}` : ""}</Text></Pressable>}</View>)}
         </>}
       </ScrollView>
     </ScreenContainer>
@@ -127,7 +129,12 @@ const styles = StyleSheet.create({
   extraKicker: { fontSize: 10, fontWeight: "800", letterSpacing: 1.3, marginTop: 28, marginBottom: 10 },
   material: { borderRadius: 18, borderWidth: 1, padding: 14, marginBottom: 10 },
   materialTop: { flexDirection: "row", alignItems: "center", gap: 7, marginBottom: 9 },
-  materialSource: { fontSize: 10, fontWeight: "800", letterSpacing: 0.5 },
+  materialSource: { fontSize: 10, fontWeight: "800", letterSpacing: 0.5, flex: 1 },
+  materialVersion: { fontSize: 10, fontWeight: "800" },
   materialTitle: { fontSize: 15, fontWeight: "800" },
+  materialCategory: { fontSize: 10, fontWeight: "800", marginTop: 5 },
   materialSummary: { fontSize: 12, lineHeight: 18, marginTop: 5 },
+  materialImage: { width: "100%", height: 160, borderRadius: 12, marginTop: 12 },
+  attachmentLink: { flexDirection: "row", alignItems: "center", gap: 7, borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 9, marginTop: 12 },
+  attachmentLinkText: { flex: 1, fontSize: 11, fontWeight: "800" },
 });

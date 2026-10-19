@@ -4,10 +4,17 @@ export const REMOTE_MATERIALS_SYNC_KEY = "promessams:remote-materials:last-sync:
 export type RemoteMaterial = {
   id: number;
   title: string;
+  category: "filosofia" | "projeto" | "pao-diario" | "hbj" | "ministerios" | "outros";
+  version: number;
   summary: string | null;
   content: string;
   source: string | null;
+  assetUrl?: string | null;
+  assetName?: string | null;
+  assetMimeType?: string | null;
+  assetSize?: number | null;
   createdAt: string | Date;
+  updatedAt?: string | Date;
 };
 
 export function mergeRemoteMaterials(

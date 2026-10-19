@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { mergeRemoteMaterials } from "../shared/remote-content";
 import fs from "node:fs";
 
-const material = (id: number, title: string, createdAt: string) => ({ id, title, summary: null, content: title, source: null, createdAt });
+const material = (id: number, title: string, createdAt: string) => ({ id, title, category: "outros" as const, version: 1, summary: null, content: title, source: null, createdAt });
 
 describe("arquitetura híbrida do PromessaMS", () => {
   it("prioriza o conteúdo online e mantém materiais do cache que ainda não foram retornados", () => {

@@ -6,6 +6,7 @@ import { buildBibleReferenceContext, buildLibraryContext } from "../shared/chat-
 import { fallbackAnswer, needsOnlineResearch } from "../shared/chat-fallback";
 import { COOKIE_NAME } from "../shared/const";
 import { createMaterial, getAllMaterials, getPublishedMaterials, getUserConversations, publishMaterial, saveConversation } from "./db";
+import { storagePut } from "./storage";
 import { invokeLLM } from "./_core/llm";
 import { ENV } from "./_core/env";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
@@ -47,10 +48,18 @@ async function searchOnline(query: string) {
 
 const materialInput = z.object({
   title: z.string().min(3).max(255),
+  category: z.enum(["filosofia", "projeto", "pao-diario", "hbj", "ministerios", "outros"]),
+  version: z.number().int().positive().max(9999).default(1),
   summary: z.string().max(1000).optional(),
   content: z.string().min(20).max(100000),
   source: z.string().max(255).optional(),
   published: z.boolean().default(true),
+  attachment: z.object({
+    name: z.string().min(1).max(255),
+    mimeType: z.string().min(1).max(160),
+    base64: z.string().max(14_000_000),
+    size: z.number().int().positive().max(10_000_000),
+  }).optional(),
 });
 
 export const appRouter = router({
@@ -66,13 +75,17 @@ export const appRouter = router({
     manifest: publicProcedure.query(async () => {
       const published = await getPublishedMaterials();
       const latest = published.reduce<Date | null>((current, item) => {
-        const value = item.createdAt instanceof Date ? item.createdAt : new Date(item.createdAt);
+        const value = item.updatedAt instanceof Date ? item.updatedAt : new Date(item.updatedAt);
         return !current || value > current ? value : current;
       }, null);
       return { version: latest?.toISOString() ?? "0", count: published.length };
     }),
     adminList: adminProcedure.query(() => getAllMaterials()),
-    create: adminProcedure.input(materialInput).mutation(({ ctx, input }) => createMaterial({ ...input, published: false, createdBy: ctx.user.id, summary: input.summary ?? null, source: input.source ?? null })),
+    create: adminProcedure.input(materialInput).mutation(async ({ ctx, input }) => {
+      const attachment = input.attachment;
+      const uploaded = attachment ? await storagePut(`promessams/materials/${attachment.name}`, Buffer.from(attachment.base64.replace(/^data:[^;]+;base64,/, ""), "base64"), attachment.mimeType) : null;
+      return createMaterial({ title: input.title, category: input.category, version: input.version, summary: input.summary ?? null, content: input.content, source: input.source ?? null, assetUrl: uploaded?.url ?? null, assetName: attachment?.name ?? null, assetMimeType: attachment?.mimeType ?? null, assetSize: attachment?.size ?? null, published: false, createdBy: ctx.user.id });
+    }),
     approve: adminProcedure.input(z.object({ id: z.number().int().positive() })).mutation(({ ctx, input }) => {
       if (!ENV.ownerOpenId || ctx.user.openId !== ENV.ownerOpenId) throw new TRPCError({ code: "FORBIDDEN", message: "Somente o gestor principal pode autorizar publicações." });
       return publishMaterial(input.id);

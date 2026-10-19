@@ -54,7 +54,7 @@ export async function getUserByOpenId(openId: string) {
 export async function getPublishedMaterials() {
   const db = await getDb();
   if (!db) return [];
-  return db.select({ id: materials.id, title: materials.title, summary: materials.summary, content: materials.content, source: materials.source, createdAt: materials.createdAt }).from(materials).where(eq(materials.published, true)).orderBy(desc(materials.createdAt));
+  return db.select({ id: materials.id, title: materials.title, category: materials.category, version: materials.version, summary: materials.summary, content: materials.content, source: materials.source, assetUrl: materials.assetUrl, assetName: materials.assetName, assetMimeType: materials.assetMimeType, assetSize: materials.assetSize, createdAt: materials.createdAt, updatedAt: materials.updatedAt }).from(materials).where(eq(materials.published, true)).orderBy(desc(materials.updatedAt));
 }
 
 export async function getAllMaterials() {
@@ -68,6 +68,13 @@ export async function createMaterial(input: Omit<InsertMaterial, "id" | "created
   if (!db) throw new Error("Database not available");
   await db.insert(materials).values(input);
   return { created: true } as const;
+}
+
+export async function getNextMaterialVersion(title: string) {
+  const db = await getDb();
+  if (!db) return 1;
+  const existing = await db.select({ version: materials.version }).from(materials).where(eq(materials.title, title)).orderBy(desc(materials.version)).limit(1);
+  return (existing[0]?.version ?? 0) + 1;
 }
 
 export async function publishMaterial(id: number) {
