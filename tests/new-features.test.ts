@@ -120,6 +120,12 @@ describe("requested product updates", () => {
     expect(config).toContain("enableMinifyInReleaseBuilds: true");
     expect(config).toContain("enableShrinkResourcesInReleaseBuilds: true");
   });
+  it("loads Material Icons before rendering the web interface", () => {
+    const layout = read("app/_layout.tsx");
+    expect(layout).toContain('import MaterialIcons from "@expo/vector-icons/MaterialIcons"');
+    expect(layout).toContain("useFonts({ ...MaterialIcons.font })");
+    expect(layout).toContain("if (!fontsLoaded) return null");
+  });
   it("uses the official Projeto Sementes symbol in the home header", () => {
     const source = read("app/(tabs)/index.tsx");
     expect(source).toContain("projeto-sementes-logo.png");
