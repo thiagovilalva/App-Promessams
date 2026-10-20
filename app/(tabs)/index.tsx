@@ -56,7 +56,7 @@ export default function HomeScreen() {
         {principles.map((item) => (
           <Pressable key={item.title} onPress={item.title === "Pão Diário 365" ? () => router.push("/pao-diario") : undefined} style={({ pressed }) => [styles.principle, { borderBottomColor: colors.border }, pressed && item.title === "Pão Diário 365" && styles.pressed]}>
             <View style={[styles.smallIcon, { backgroundColor: colors.primary + "18" }]}><IconSymbol name={item.icon as any} size={20} color={colors.primary} /></View>
-            <View style={styles.principleBody}><Text style={[styles.principleTitle, { color: colors.foreground }]}>{item.title}</Text><Text style={[styles.principleText, { color: colors.muted }]}>{item.text}</Text></View>
+            <View style={styles.principleBody}><Text style={[styles.principleTitle, { color: colors.foreground }]}>{item.title}</Text><Text style={[styles.principleText, { color: colors.muted }]}>{item.text}</Text></View>{item.title === "Pão Diário 365" && <IconSymbol name="chevron.right" size={18} color={colors.primary} />}
           </Pressable>
         ))}
 
