@@ -15,4 +15,8 @@ describe("chat mobile reading experience", () => {
     expect(source).toContain("Apagar conversa");
     expect(source).toContain('AsyncStorage.removeItem("sementes:chat")');
   });
+
+  it("removes the attachment hint from the chat page", () => {
+    expect(source).not.toContain("Anexe imagens ou textos para pedir uma análise mais específica.");
+  });
 });
