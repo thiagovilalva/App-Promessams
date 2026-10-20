@@ -27,4 +27,10 @@ describe("admin approval and accessibility", () => {
     expect(provider).toContain("speechRate");
     expect(chat).toContain("speechVoice === \"female\"");
   });
+
+  it("offers a safe publication request without granting deploy access", () => {
+    const screen = read("app/admin.tsx");
+    expect(screen).toContain("Solicitar publicação");
+    expect(screen).toContain("autorização final do deploy continua sendo feita no painel WebDev");
+  });
 });
