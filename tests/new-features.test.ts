@@ -196,4 +196,13 @@ describe("requested product updates", () => {
     expect(plan).not.toContain("LEITURA {String(index + 1)");
     expect(read("shared/knowledge.ts")).toContain("Projeto Sementes — documento integral revisado");
   });
+  it("ships a complete 66-book Bible text index for local phrase search", () => {
+    const index = JSON.parse(read("assets/data/bible-search-index.json"));
+    expect(index.books).toHaveLength(66);
+    expect(index.books.reduce((total: number, book: any) => total + book.chapters.length, 0)).toBe(1189);
+    const normalize = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[“”\"'.,;:!?()[\]{}—–-]/g, " ").replace(/\s+/g, " ").trim();
+    const phrase = normalize("o cordeiro de Deus que tira o pecado do mundo");
+    const match = index.books.flatMap((book: any) => book.chapters.flatMap(([chapter, verses]: [number, Array<[number, string]>]) => verses.map(([verse, text]) => ({ book: book.name, chapter, verse, text })))).find((item: any) => normalize(item.text).includes(phrase));
+    expect(match).toMatchObject({ book: "João", chapter: 1, verse: 29 });
+  });
 });

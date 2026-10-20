@@ -4,6 +4,7 @@ import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, Te
 import { ScreenContainer } from "@/components/screen-container";
 import { useAccessibility } from "@/lib/accessibility-provider";
 import { useColors } from "@/hooks/use-colors";
+import bibleSearchIndex from "@/assets/data/bible-search-index.json";
 
 const API = "https://bible.helloao.org/api/por_blj";
 const BOOKS = [["GEN", "Gênesis", 50], ["EXO", "Êxodo", 40], ["LEV", "Levítico", 27], ["NUM", "Números", 36], ["DEU", "Deuteronômio", 34], ["JOS", "Josué", 24], ["JDG", "Juízes", 21], ["RUT", "Rute", 4], ["1SA", "1 Samuel", 31], ["2SA", "2 Samuel", 24], ["1KI", "1 Reis", 22], ["2KI", "2 Reis", 25], ["1CH", "1 Crônicas", 29], ["2CH", "2 Crônicas", 36], ["EZR", "Esdras", 10], ["NEH", "Neemias", 13], ["EST", "Ester", 10], ["JOB", "Jó", 42], ["PSA", "Salmos", 150], ["PRO", "Provérbios", 31], ["ECC", "Eclesiastes", 12], ["SNG", "Cânticos", 8], ["ISA", "Isaías", 66], ["JER", "Jeremias", 52], ["LAM", "Lamentações", 5], ["EZK", "Ezequiel", 48], ["DAN", "Daniel", 12], ["HOS", "Oséias", 14], ["JOL", "Joel", 3], ["AMO", "Amós", 9], ["OBA", "Obadias", 1], ["JON", "Jonas", 4], ["MIC", "Miqueias", 7], ["NAM", "Naum", 3], ["HAB", "Habacuque", 3], ["ZEP", "Sofonias", 3], ["HAG", "Ageu", 2], ["ZEC", "Zacarias", 14], ["MAL", "Malaquias", 4], ["MAT", "Mateus", 28], ["MRK", "Marcos", 16], ["LUK", "Lucas", 24], ["JHN", "João", 21], ["ACT", "Atos", 28], ["ROM", "Romanos", 16], ["1CO", "1 Coríntios", 16], ["2CO", "2 Coríntios", 13], ["GAL", "Gálatas", 6], ["EPH", "Efésios", 6], ["PHP", "Filipenses", 4], ["COL", "Colossenses", 4], ["1TH", "1 Tessalonicenses", 5], ["2TH", "2 Tessalonicenses", 3], ["1TI", "1 Timóteo", 6], ["2TI", "2 Timóteo", 4], ["TIT", "Tito", 3], ["PHM", "Filemom", 1], ["HEB", "Hebreus", 13], ["JAS", "Tiago", 5], ["1PE", "1 Pedro", 5], ["2PE", "2 Pedro", 3], ["1JN", "1 João", 5], ["2JN", "2 João", 1], ["3JN", "3 João", 1], ["JUD", "Judas", 1], ["REV", "Apocalipse", 22]] as const;
@@ -11,9 +12,10 @@ type Book = typeof BOOKS[number];
 type Verse = { type: string; number: number; content: string[] };
 type ChapterResponse = { book: { name: string }; chapter: { number: number; content: Verse[] }; numberOfVerses: number };
 type SearchResult = { key: string; label: string; detail: string; bookIndex: number; chapter: number; verse?: number };
+type SearchBook = { id: string; name: string; chapters: Array<[number, Array<[number, string]>]> };
 
 function normalize(value: string) {
-  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[“”"'.,;:!?()[\]{}—–-]/g, " ").replace(/\s+/g, " ").trim();
 }
 
 export default function BibliaLivreScreen() {
@@ -72,20 +74,17 @@ export default function BibliaLivreScreen() {
       }
     }
     BOOKS.forEach((book, index) => { if (normalize(book[1]).includes(query)) results.push({ key: `book-${book[0]}`, label: book[1], detail: `${book[2]} capítulos`, bookIndex: index, chapter: 1 }); });
-    const addVerseMatches = (chapterData: ChapterResponse, bookIndexForResult: number, chapterNumber: number) => {
-      chapterData.chapter.content.filter((item) => item.type === "verse" && normalize(item.content.join(" ")).includes(query)).slice(0, 8).forEach((item) => results.push({ key: `text-${bookIndexForResult}-${chapterNumber}-${item.number}`, label: `${chapterData.book.name} ${chapterNumber}:${item.number}`, detail: item.content.join(" "), bookIndex: bookIndexForResult, chapter: chapterNumber, verse: item.number }));
-    };
-    if (data) addVerseMatches(data, bookIndex, chapter);
-    const cachedKeys = (await AsyncStorage.getAllKeys()).filter((key) => key.startsWith("blivre:"));
-    for (const cacheKey of cachedKeys.slice(0, 80)) {
-      const cached = await AsyncStorage.getItem(cacheKey);
-      if (!cached) continue;
-      try {
-        const cachedData = JSON.parse(cached) as ChapterResponse;
-        const [, code, chapterValue] = cacheKey.split(":");
-        const cachedBookIndex = BOOKS.findIndex((book) => book[0] === code);
-        if (cachedBookIndex >= 0) addVerseMatches(cachedData, cachedBookIndex, Number(chapterValue));
-      } catch { /* ignore invalid local cache */ }
+    for (const book of bibleSearchIndex.books as unknown as SearchBook[]) {
+      const bibleBookIndex = BOOKS.findIndex((item) => item[0] === book.id);
+      if (bibleBookIndex < 0) continue;
+      for (const [chapterNumber, verses] of book.chapters) {
+        for (const [verseNumber, text] of verses) {
+          if (normalize(text).includes(query)) results.push({ key: `text-${book.id}-${chapterNumber}-${verseNumber}`, label: `${book.name} ${chapterNumber}:${verseNumber}`, detail: text, bookIndex: bibleBookIndex, chapter: chapterNumber, verse: verseNumber });
+          if (results.length >= 12) break;
+        }
+        if (results.length >= 12) break;
+      }
+      if (results.length >= 12) break;
     }
     setSearchResults(results.filter((item, index, array) => array.findIndex((candidate) => candidate.key === item.key) === index).slice(0, 12));
   }
