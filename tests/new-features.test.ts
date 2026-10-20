@@ -71,6 +71,9 @@ describe("requested product updates", () => {
     expect(provider).toContain("https://stm17.srvstm.com:30368");
     expect(provider).toContain("shouldPlayInBackground: true");
     expect(provider).toContain("keepAudioSessionActive: true");
+    expect(provider).toContain("const startedByUser = useRef(false)");
+    expect(provider).toContain("startedByUser.current = true");
+    expect(provider).not.toContain("if (mounted && !pausedByUser.current)");
   });
   it("relays the live radio as an uninterrupted browser MP3 stream", () => {
     const server = read("server/_core/index.ts");

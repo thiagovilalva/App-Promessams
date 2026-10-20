@@ -19,6 +19,7 @@ export function RadioProvider({ children }: PropsWithChildren) {
   const player = useAudioPlayer(Platform.OS === "web" ? WEB_RADIO_URL : RADIO_URL, { keepAudioSessionActive: true });
   const status = useAudioPlayerStatus(player);
   const pausedByUser = useRef(false);
+  const startedByUser = useRef(false);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -39,15 +40,6 @@ export function RadioProvider({ children }: PropsWithChildren) {
           artist: "PromessaMS",
         });
       }
-      // Try autoplay on every platform. Native apps allow it; browsers may
-      // reject audible autoplay until the user interacts with the page.
-      if (mounted && !pausedByUser.current) {
-        try {
-          player.play();
-        } catch {
-          // The reconnect effect below retries transient stream start failures.
-        }
-      }
     });
 
     return () => {
@@ -58,11 +50,7 @@ export function RadioProvider({ children }: PropsWithChildren) {
   }, [player]);
 
   useEffect(() => {
-    if (pausedByUser.current || status.playing || status.isBuffering) return;
-    // A browser may block the first audible autoplay attempt. Avoid repeated
-    // attempts until the user presses the radio button, while native builds
-    // continue reconnecting automatically in the background.
-    if (Platform.OS === "web") return;
+    if (!startedByUser.current || pausedByUser.current || status.playing || status.isBuffering) return;
 
     // A live stream has no natural end. If the provider drops the connection,
     // reconnect automatically while the user has not pressed pause.
@@ -88,6 +76,7 @@ export function RadioProvider({ children }: PropsWithChildren) {
       return;
     }
 
+    startedByUser.current = true;
     pausedByUser.current = false;
     player.play();
   };
