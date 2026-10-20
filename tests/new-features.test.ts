@@ -86,7 +86,7 @@ describe("requested product updates", () => {
   it("keeps native chat on the stable public API and registers Android media controls", () => {
     const oauth = read("constants/oauth.ts");
     const provider = read("lib/radio-provider.tsx");
-    expect(oauth).toContain("https://sementesapp-8jp8nwu7.manus.space");
+    expect(oauth).toContain("https://promessamsapp-8jp8nwu7.manus.space");
     expect(oauth).toContain('Platform.OS !== "web"');
     expect(provider).toContain("player.setActiveForLockScreen(true");
     expect(provider).toContain("shouldPlayInBackground: true");

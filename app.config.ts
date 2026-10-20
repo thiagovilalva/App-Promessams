@@ -19,7 +19,7 @@ const config: ExpoConfig = {
   web: { bundler: "metro", output: "static", favicon: "./assets/images/favicon.png" },
   plugins: ["expo-router", "expo-asset", "expo-font", "expo-web-browser", ["expo-audio", { microphonePermission: false, enableBackgroundRecording: false }], ["expo-video", { supportsBackgroundPlayback: true, supportsPictureInPicture: true }], ["expo-splash-screen", { image: "./assets/images/splash-icon.png", imageWidth: 200, resizeMode: "contain", backgroundColor: "#FCFBF8", dark: { backgroundColor: "#151A17" } }], ["expo-build-properties", { android: { buildArchs: ["armeabi-v7a", "arm64-v8a"], minSdkVersion: 24, enableMinifyInReleaseBuilds: true, enableShrinkResourcesInReleaseBuilds: true } }]],
   extra: {
-    privacyPolicyUrl: "https://sementesapp-8jp8nwu7.manus.space/politica-privacidade.html",
+    privacyPolicyUrl: "https://promessamsapp-8jp8nwu7.manus.space/politica-privacidade.html",
     eas: {
       projectId: "152979a8-eeb4-4735-b069-c50c89b66b32",
     },

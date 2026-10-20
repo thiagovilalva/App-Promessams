@@ -18,7 +18,7 @@ const env = {
 
 // The native release cannot rely on the temporary 3000-sandbox host injected
 // during development. The deployed API and web app share this public origin.
-const PUBLIC_API_BASE_URL = "https://sementesapp-8jp8nwu7.manus.space";
+const PUBLIC_API_BASE_URL = "https://promessamsapp-8jp8nwu7.manus.space";
 
 export const OAUTH_PORTAL_URL = env.portal;
 export const OAUTH_SERVER_URL = env.server;
