@@ -54,8 +54,9 @@ describe("requested product updates", () => {
     expect(source).toContain("/acessibilidade");
     expect(source).toContain("accessibility");
     expect(source).toContain("Tire suas dúvidas aqui");
-    expect(source).toContain(">Conteúdos</Text>");
-    expect(source).toContain("Filosofia da Semente e projeto.");
+    expect(source).toContain(">Bíblia</Text>");
+    expect(source).toContain("Acesse a palavra de Deus aqui");
+    expect(source).not.toContain("/politica-privacidade");
     expect(source).not.toContain(">Perguntar</Text>");
     expect(source).not.toContain("Conteúdo de trabalho da Convenção");
     expect(source).not.toContain(">Ver tudo</Text>");
@@ -183,7 +184,14 @@ describe("requested product updates", () => {
     const home = read("app/(tabs)/index.tsx");
     const plan = read("app/plano-biblico.tsx");
     expect(plan).toContain("Bíblia & Devocionais");
-    expect(home).toContain("Devocionais na Palavra");
+    expect(home).toContain("Pão Diário 365");
+    expect(home).toContain("Acesse a palavra de Deus aqui");
+    expect(home).not.toContain("/politica-privacidade");
+    const bible = read("app/biblia-livre.tsx");
+    expect(bible).toContain("Buscar livro, João 3:16 ou parte do texto");
+    expect(bible).toContain("openSearchResult");
+    expect(read("app/(tabs)/chat.tsx")).toContain("Como usar o chat");
+    expect(read("app/(tabs)/chat.tsx")).not.toContain("Perguntas para começar");
     expect(plan).toContain("Abrir Bíblia Livre</Text>");
     expect(plan).not.toContain("LEITURA {String(index + 1)");
     expect(read("shared/knowledge.ts")).toContain("Projeto Sementes — documento integral revisado");

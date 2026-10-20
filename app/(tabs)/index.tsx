@@ -8,7 +8,7 @@ import { useThemeContext } from "@/lib/theme-provider";
 import { useRadio } from "@/lib/radio-provider";
 
 const principles = [
-  { icon: "auto-stories", title: "Devocionais na Palavra", text: "Quando mais próximos da Palavra ficamos, mais forte a prática missionária se torna." },
+  { icon: "auto-stories", title: "Pão Diário 365", text: "Quando mais próximos da Palavra ficamos, mais forte a prática missionária se torna." },
   { icon: "groups", title: "Todos são enviados", text: "Cada discípulo pode orar, acolher, testemunhar, servir e discipular." },
   { icon: "spa", title: "Cuidado contínuo", text: "Acompanhamos pessoas até a maturidade, sem reduzir missão a números." },
 ];
@@ -41,9 +41,9 @@ export default function HomeScreen() {
 
         <View style={styles.sectionHeader}><View><Text style={[styles.kicker, { color: colors.primary }]}>COMECE POR AQUI</Text><Text style={[styles.sectionTitle, { color: colors.foreground }]}>Uma jornada simples</Text></View></View>
         <View style={styles.quickGrid}>
-          <Pressable onPress={() => router.push("/conteudos")} style={({ pressed }) => [styles.quickCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]}>
+          <Pressable onPress={() => router.push("/biblia-livre")} style={({ pressed }) => [styles.quickCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Abrir Bíblia Livre">
             <View style={[styles.iconBox, { backgroundColor: "#E9F7F0" }]}><IconSymbol name="book.closed.fill" size={22} color="#167C55" /></View>
-            <Text style={[styles.quickTitle, { color: colors.foreground }]}>Conteúdos</Text><Text style={[styles.quickText, { color: colors.muted }]}>Filosofia da Semente e projeto.</Text>
+            <Text style={[styles.quickTitle, { color: colors.foreground }]}>Bíblia</Text><Text style={[styles.quickText, { color: colors.muted }]}>Acesse a palavra de Deus aqui</Text>
           </Pressable>
           <Pressable onPress={() => router.push("/hinario")} style={({ pressed }) => [styles.quickCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Abrir Hinário Promessista">
             <View style={[styles.iconBox, { backgroundColor: "#EAF0FF" }]}><IconSymbol name="music-note" size={22} color="#4267A9" /></View>
@@ -52,9 +52,9 @@ export default function HomeScreen() {
         </View>
 
         <Text style={[styles.kicker, { color: colors.primary, marginTop: 26 }]}>O QUE NOS GUIA</Text>
-        <Pressable onPress={() => router.push("/plano-biblico")} style={[styles.readingBanner, { backgroundColor: colors.surface, borderColor: colors.border }]}><View style={[styles.smallIcon, { backgroundColor: colors.primary + "18" }]}><IconSymbol name="book.closed.fill" size={20} color={colors.primary} /></View><View style={styles.principleBody}><Text style={[styles.principleTitle, { color: colors.foreground }]}>Bíblia & Devocionais</Text><Text style={[styles.principleText, { color: colors.muted }]}>Textos, contexto e aplicações para viver a missão.</Text></View><IconSymbol name="chevron.right" size={18} color={colors.primary} /></Pressable>
+        <Pressable onPress={() => router.push("/plano-biblico")} style={({ pressed }) => [styles.principle, { borderBottomColor: colors.border }, pressed && styles.pressed]}><View style={[styles.smallIcon, { backgroundColor: colors.primary + "18" }]}><IconSymbol name="auto-stories" size={20} color={colors.primary} /></View><View style={styles.principleBody}><Text style={[styles.principleTitle, { color: colors.foreground }]}>Devocionais</Text><Text style={[styles.principleText, { color: colors.muted }]}>Textos, contexto e aplicações para viver a missão.</Text></View><IconSymbol name="chevron.right" size={18} color={colors.primary} /></Pressable>
         {principles.map((item) => (
-          <Pressable key={item.title} onPress={item.title === "Devocionais na Palavra" ? () => router.push("/pao-diario") : undefined} style={({ pressed }) => [styles.principle, { borderBottomColor: colors.border }, pressed && item.title === "Devocionais na Palavra" && styles.pressed]}>
+          <Pressable key={item.title} onPress={item.title === "Pão Diário 365" ? () => router.push("/pao-diario") : undefined} style={({ pressed }) => [styles.principle, { borderBottomColor: colors.border }, pressed && item.title === "Pão Diário 365" && styles.pressed]}>
             <View style={[styles.smallIcon, { backgroundColor: colors.primary + "18" }]}><IconSymbol name={item.icon as any} size={20} color={colors.primary} /></View>
             <View style={styles.principleBody}><Text style={[styles.principleTitle, { color: colors.foreground }]}>{item.title}</Text><Text style={[styles.principleText, { color: colors.muted }]}>{item.text}</Text></View>
           </Pressable>
@@ -72,7 +72,6 @@ export default function HomeScreen() {
         </View>
         <Pressable onPress={() => router.push("/conta")} style={[styles.accountLink, { borderColor: colors.border, backgroundColor: colors.surface }]}><Text style={[styles.accountLinkText, { color: colors.primary }]}>Entrar ou criar conta Manus</Text><Text style={[styles.accountLinkHint, { color: colors.muted }]}>Guardar sua jornada e histórico</Text></Pressable>
         <Pressable onPress={() => void Linking.openURL("https://wa.me/5567999132610?text=Ol%C3%A1%2C%20quero%20saber%20mais%20sobre%20o%20Projeto%20Sementes.")} style={[styles.whatsappButton, { borderColor: "#25D366" }]} accessibilityRole="link" accessibilityLabel="Fale conosco pelo WhatsApp"><IconSymbol name="whatsapp" size={19} color="#128C49" /><Text style={[styles.whatsappText, { color: colors.foreground }]}>Fale conosco pelo WhatsApp</Text></Pressable>
-        <Pressable onPress={() => router.push("/politica-privacidade")} style={styles.privacyLink} accessibilityRole="link" accessibilityLabel="Ler Política de Privacidade"><Text style={[styles.privacyText, { color: colors.primary }]}>Política de Privacidade</Text><Text style={[styles.privacyHint, { color: colors.muted }]}>Como cuidamos dos seus dados</Text></Pressable>
       </ScrollView>
     </ScreenContainer>
   );

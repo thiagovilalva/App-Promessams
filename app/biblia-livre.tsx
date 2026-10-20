@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { useAccessibility } from "@/lib/accessibility-provider";
 import { useColors } from "@/hooks/use-colors";
@@ -10,6 +10,11 @@ const BOOKS = [["GEN", "Gênesis", 50], ["EXO", "Êxodo", 40], ["LEV", "Levític
 type Book = typeof BOOKS[number];
 type Verse = { type: string; number: number; content: string[] };
 type ChapterResponse = { book: { name: string }; chapter: { number: number; content: Verse[] }; numberOfVerses: number };
+type SearchResult = { key: string; label: string; detail: string; bookIndex: number; chapter: number; verse?: number };
+
+function normalize(value: string) {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+}
 
 export default function BibliaLivreScreen() {
   const colors = useColors();
@@ -21,6 +26,8 @@ export default function BibliaLivreScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [bookMenu, setBookMenu] = useState(false);
+  const [search, setSearch] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const scrollRef = useRef<ScrollView>(null);
   const versePositions = useRef<Record<number, number>>({});
   const chapterCardY = useRef(0);
@@ -49,10 +56,50 @@ export default function BibliaLivreScreen() {
     const y = versePositions.current[value];
     if (typeof y === "number") setTimeout(() => scrollRef.current?.scrollTo({ y: Math.max(0, y - 110), animated: true }), 40);
   };
+  async function searchBible(value: string) {
+    setSearch(value);
+    const query = normalize(value);
+    if (query.length < 2) { setSearchResults([]); return; }
+    const results: SearchResult[] = [];
+    const reference = query.match(/^(.*?)[\s]+(\d{1,3})(?::|\s+)(\d{1,3})$/);
+    if (reference) {
+      const bookQuery = normalize(reference[1]);
+      const matchingBook = BOOKS.findIndex((book) => normalize(book[1]).includes(bookQuery));
+      if (matchingBook >= 0) {
+        const chapterNumber = Number(reference[2]);
+        const verseNumber = Number(reference[3]);
+        if (chapterNumber <= BOOKS[matchingBook][2]) results.push({ key: `ref-${matchingBook}-${chapterNumber}-${verseNumber}`, label: `${BOOKS[matchingBook][1]} ${chapterNumber}:${verseNumber}`, detail: "Abrir referência bíblica", bookIndex: matchingBook, chapter: chapterNumber, verse: verseNumber });
+      }
+    }
+    BOOKS.forEach((book, index) => { if (normalize(book[1]).includes(query)) results.push({ key: `book-${book[0]}`, label: book[1], detail: `${book[2]} capítulos`, bookIndex: index, chapter: 1 }); });
+    const addVerseMatches = (chapterData: ChapterResponse, bookIndexForResult: number, chapterNumber: number) => {
+      chapterData.chapter.content.filter((item) => item.type === "verse" && normalize(item.content.join(" ")).includes(query)).slice(0, 8).forEach((item) => results.push({ key: `text-${bookIndexForResult}-${chapterNumber}-${item.number}`, label: `${chapterData.book.name} ${chapterNumber}:${item.number}`, detail: item.content.join(" "), bookIndex: bookIndexForResult, chapter: chapterNumber, verse: item.number }));
+    };
+    if (data) addVerseMatches(data, bookIndex, chapter);
+    const cachedKeys = (await AsyncStorage.getAllKeys()).filter((key) => key.startsWith("blivre:"));
+    for (const cacheKey of cachedKeys.slice(0, 80)) {
+      const cached = await AsyncStorage.getItem(cacheKey);
+      if (!cached) continue;
+      try {
+        const cachedData = JSON.parse(cached) as ChapterResponse;
+        const [, code, chapterValue] = cacheKey.split(":");
+        const cachedBookIndex = BOOKS.findIndex((book) => book[0] === code);
+        if (cachedBookIndex >= 0) addVerseMatches(cachedData, cachedBookIndex, Number(chapterValue));
+      } catch { /* ignore invalid local cache */ }
+    }
+    setSearchResults(results.filter((item, index, array) => array.findIndex((candidate) => candidate.key === item.key) === index).slice(0, 12));
+  }
+  async function openSearchResult(result: SearchResult) {
+    setSearch(""); setSearchResults([]); setBookIndex(result.bookIndex); setChapter(result.chapter); setBookMenu(false);
+    await loadChapter(BOOKS[result.bookIndex], result.chapter);
+    if (result.verse) setTimeout(() => chooseVerse(result.verse!), 100);
+  }
   return <ScreenContainer className="px-4" edges={["top", "left", "right"]}><ScrollView ref={scrollRef} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
     <Text style={[styles.kicker, { color: colors.primary }]}>BÍBLIA LIVRE · BLIVRE</Text>
     <Text style={[styles.title, { color: colors.foreground, fontSize: 29 * textScale, lineHeight: 36 * textScale }]}>Leia a Bíblia</Text>
     <Text style={[styles.subtitle, { color: colors.muted, fontSize: 14 * textScale, lineHeight: 21 * textScale }]}>Selecione um livro e deslize os capítulos. O capítulo escolhido aparece imediatamente abaixo.</Text>
+    <TextInput value={search} onChangeText={(value) => void searchBible(value)} placeholder="Buscar livro, João 3:16 ou parte do texto" placeholderTextColor={colors.muted} style={[styles.searchInput, { color: colors.foreground, backgroundColor: colors.surface, borderColor: colors.border, fontSize: 14 * textScale }]} accessibilityLabel="Buscar na Bíblia" />
+    {!!searchResults.length && <View style={[styles.searchResults, { backgroundColor: colors.surface, borderColor: colors.border }]}>{searchResults.map((result) => <Pressable key={result.key} onPress={() => void openSearchResult(result)} style={[styles.searchResult, { borderBottomColor: colors.border }]}><Text style={[styles.searchResultLabel, { color: colors.foreground }]}>{result.label}</Text><Text numberOfLines={2} style={[styles.searchResultDetail, { color: colors.muted }]}>{result.detail}</Text></Pressable>)}</View>}
     <Text style={[styles.label, { color: colors.foreground }]}>Livro</Text>
     <Pressable onPress={() => setBookMenu((value) => !value)} style={[styles.select, { backgroundColor: colors.surface, borderColor: colors.border }]} accessibilityRole="button"><Text style={[styles.selectText, { color: colors.foreground }]}>{selectedBook[1]}</Text><Text style={{ color: colors.primary, fontSize: 18 }}>{bookMenu ? "▲" : "▼"}</Text></Pressable>
     {bookMenu && <View style={[styles.bookPanel, { backgroundColor: colors.surface, borderColor: colors.border }]}><ScrollView nestedScrollEnabled showsVerticalScrollIndicator style={styles.bookScroll}>{BOOKS.map((book, index) => <Pressable key={book[0]} onPress={() => chooseBook(index)} style={[styles.bookItem, index === bookIndex && { backgroundColor: colors.primary + "20" }]}><Text style={[styles.bookText, { color: colors.foreground, fontSize: 15 * textScale }]}>{book[1]}</Text><Text style={{ color: colors.muted }}>{index < 39 ? "AT" : "NT"}</Text></Pressable>)}</ScrollView></View>}
@@ -65,4 +112,4 @@ export default function BibliaLivreScreen() {
     <Pressable onPress={() => void Linking.openURL("https://blivre.org/")} style={[styles.source, { borderColor: colors.primary }]}><Text style={[styles.sourceText, { color: colors.primary }]}>Fonte e licença da Bíblia Livre</Text></Pressable>
   </ScrollView></ScreenContainer>;
 }
-const styles = StyleSheet.create({ content: { paddingTop: 22, paddingBottom: 45, gap: 10 }, kicker: { fontSize: 10, fontWeight: "800", letterSpacing: 1.2 }, title: { fontWeight: "800", marginTop: 3 }, subtitle: { marginBottom: 4 }, label: { fontSize: 13, fontWeight: "800", marginTop: 7 }, select: { minHeight: 50, borderWidth: 1, borderRadius: 13, paddingHorizontal: 14, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }, selectText: { fontWeight: "800", fontSize: 16 }, bookPanel: { height: 285, borderWidth: 1, borderRadius: 13, overflow: "hidden" }, bookScroll: { flex: 1 }, bookItem: { minHeight: 48, paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#9CAAA3", flexDirection: "row", justifyContent: "space-between", alignItems: "center" }, bookText: { fontWeight: "700" }, chapterOptions: { gap: 8, paddingVertical: 3 }, chapterButton: { minWidth: 48, height: 44, borderWidth: 1, borderRadius: 11, alignItems: "center", justifyContent: "center", paddingHorizontal: 12 }, versePicker: { marginTop: 2 }, verseButton: { minWidth: 42, height: 38, borderWidth: 1, borderRadius: 10, alignItems: "center", justifyContent: "center", paddingHorizontal: 10 }, loading: { marginVertical: 14 }, error: { padding: 12, lineHeight: 20 }, chapterCard: { borderWidth: 1, borderRadius: 17, padding: 16, marginTop: 8 }, chapterTitle: { fontWeight: "800", marginBottom: 12 }, verseText: { paddingVertical: 6, paddingHorizontal: 5, borderRadius: 7 }, source: { alignSelf: "flex-start", borderWidth: 1, borderRadius: 12, paddingHorizontal: 13, paddingVertical: 10, marginTop: 4 }, sourceText: { fontWeight: "800", fontSize: 13 } });
+const styles = StyleSheet.create({ content: { paddingTop: 22, paddingBottom: 45, gap: 10 }, kicker: { fontSize: 10, fontWeight: "800", letterSpacing: 1.2 }, title: { fontWeight: "800", marginTop: 3 }, subtitle: { marginBottom: 4 }, searchInput: { minHeight: 50, borderWidth: 1, borderRadius: 13, paddingHorizontal: 14, marginTop: 4 }, searchResults: { borderWidth: 1, borderRadius: 13, overflow: "hidden", marginTop: -2 }, searchResult: { paddingHorizontal: 13, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth }, searchResultLabel: { fontSize: 14, fontWeight: "800" }, searchResultDetail: { fontSize: 12, lineHeight: 17, marginTop: 3 }, label: { fontSize: 13, fontWeight: "800", marginTop: 7 }, select: { minHeight: 50, borderWidth: 1, borderRadius: 13, paddingHorizontal: 14, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }, selectText: { fontWeight: "800", fontSize: 16 }, bookPanel: { height: 285, borderWidth: 1, borderRadius: 13, overflow: "hidden" }, bookScroll: { flex: 1 }, bookItem: { minHeight: 48, paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#9CAAA3", flexDirection: "row", justifyContent: "space-between", alignItems: "center" }, bookText: { fontWeight: "700" }, chapterOptions: { gap: 8, paddingVertical: 3 }, chapterButton: { minWidth: 48, height: 44, borderWidth: 1, borderRadius: 11, alignItems: "center", justifyContent: "center", paddingHorizontal: 12 }, versePicker: { marginTop: 2 }, verseButton: { minWidth: 42, height: 38, borderWidth: 1, borderRadius: 10, alignItems: "center", justifyContent: "center", paddingHorizontal: 10 }, loading: { marginVertical: 14 }, error: { padding: 12, lineHeight: 20 }, chapterCard: { borderWidth: 1, borderRadius: 17, padding: 16, marginTop: 8 }, chapterTitle: { fontWeight: "800", marginBottom: 12 }, verseText: { paddingVertical: 6, paddingHorizontal: 5, borderRadius: 7 }, source: { alignSelf: "flex-start", borderWidth: 1, borderRadius: 12, paddingHorizontal: 13, paddingVertical: 10, marginTop: 4 }, sourceText: { fontWeight: "800", fontSize: 13 } });
