@@ -27,6 +27,8 @@ export const OWNER_OPEN_ID = env.ownerId;
 export const OWNER_NAME = env.ownerName;
 export const API_BASE_URL = env.apiBaseUrl;
 
+const OAUTH_PORTAL_BASE_URL = OAUTH_PORTAL_URL || "https://manus.im";
+
 /**
  * Get the API base URL, deriving from current hostname if not set.
  * Metro runs on 8081, API server runs on 3000.
@@ -83,7 +85,10 @@ export const getLoginUrl = () => {
   const redirectUri = getRedirectUri();
   const state = encodeState(redirectUri);
 
-  const url = new URL(`${OAUTH_PORTAL_URL}/app-auth`);
+  if (!APP_ID) {
+    throw new Error("A configuração de login da Manus não está disponível nesta versão do app.");
+  }
+  const url = new URL(`${OAUTH_PORTAL_BASE_URL.replace(/\/$/, "")}/app-auth`);
   url.searchParams.set("appId", APP_ID);
   url.searchParams.set("redirectUri", redirectUri);
   url.searchParams.set("state", state);
@@ -103,7 +108,14 @@ export const getLoginUrl = () => {
  * @returns Always null, the callback is handled via deep link.
  */
 export async function startOAuthLogin(): Promise<string | null> {
-  const loginUrl = getLoginUrl();
+  let loginUrl: string;
+  try {
+    loginUrl = getLoginUrl();
+  } catch (error) {
+    console.error("[OAuth] Invalid login configuration:", error);
+    ReactNative.Alert.alert("Login indisponível", error instanceof Error ? error.message : "Tente novamente em instantes.");
+    return null;
+  }
 
   if (ReactNative.Platform.OS === "web") {
     // On web, just redirect
@@ -121,7 +133,7 @@ export async function startOAuthLogin(): Promise<string | null> {
     await Linking.openURL(loginUrl);
   } catch (error) {
     console.error("[OAuth] Failed to open login URL:", error);
-    // 可考虑抛出错误让调用方处理
+    ReactNative.Alert.alert("Não foi possível abrir o login", "Verifique sua conexão com a internet e tente novamente.");
   }
 
   // The OAuth callback will reopen the app via deep link.

@@ -103,6 +103,23 @@ describe("requested product updates", () => {
     expect(oauth).toContain("Linking.openURL(loginUrl)");
     expect(oauth).not.toContain("const supported = await Linking.canOpenURL(loginUrl)");
   });
+  it("keeps the account login actionable and reports OAuth failures", () => {
+    const account = read("app/conta.tsx");
+    const oauth = read("constants/oauth.ts");
+    expect(account).toContain('accessibilityLabel="Entrar, já tenho conta"');
+    expect(account).toContain("pressed && styles.pressed");
+    expect(oauth).toContain('const OAUTH_PORTAL_BASE_URL = OAUTH_PORTAL_URL || "https://manus.im"');
+    expect(oauth).toContain("ReactNative.Alert.alert");
+  });
+  it("uses cached native image loading and release optimizations", () => {
+    const contents = read("app/(tabs)/conteudos.tsx");
+    const config = read("app.config.ts");
+    expect(contents).toContain('import { Image } from "expo-image"');
+    expect(contents).toContain('cachePolicy="memory-disk"');
+    expect(config).toContain("versionCode: 12");
+    expect(config).toContain("enableMinifyInReleaseBuilds: true");
+    expect(config).toContain("enableShrinkResourcesInReleaseBuilds: true");
+  });
   it("uses the official Projeto Sementes symbol in the home header", () => {
     const source = read("app/(tabs)/index.tsx");
     expect(source).toContain("projeto-sementes-logo.png");
