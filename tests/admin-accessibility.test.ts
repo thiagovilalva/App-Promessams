@@ -12,6 +12,13 @@ describe("admin approval and accessibility", () => {
     expect(source).toContain("publishMaterial");
   });
 
+  it("keeps the Promessams Manus account as the primary approver", () => {
+    const env = read("server/_core/env.ts");
+    const db = read("server/db.ts");
+    expect(env).toContain('"UNutNdGPGHuatkNi9khShL"');
+    expect(db).toContain("user.openId === ENV.ownerOpenId");
+  });
+
   it("offers Libras access and adjustable natural speech", () => {
     const screen = read("app/acessibilidade.tsx");
     const provider = read("lib/accessibility-provider.tsx");
