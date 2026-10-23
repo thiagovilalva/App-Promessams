@@ -83,6 +83,12 @@ describe("requested product updates", () => {
     expect(server).not.toContain("AbortSignal.timeout(15_000)");
     expect(provider).toContain("/api/radio-stream");
   });
+  it("builds the static web bundle for persistent production hosting", () => {
+    const pkg = JSON.parse(fs.readFileSync(path.join(process.cwd(), "package.json"), "utf8")) as { scripts: { build: string } };
+    const server = read("server/_core/index.ts");
+    expect(pkg.scripts.build).toContain("expo export --platform web --output-dir web-dist");
+    expect(server).toContain("express.static(webDist");
+  });
   it("keeps native chat on the stable public API and registers Android media controls", () => {
     const oauth = read("constants/oauth.ts");
     const provider = read("lib/radio-provider.tsx");
