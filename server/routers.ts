@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 
 import { SEMENTES_KNOWLEDGE } from "../shared/knowledge";
 import { buildBibleReferenceContext, buildLibraryContext } from "../shared/chat-library";
+import { buildDoctrinalContext, DOCTRINAL_STUDIES } from "../shared/doctrinal-knowledge";
 import { fallbackAnswer, needsOnlineResearch } from "../shared/chat-fallback";
 import { COOKIE_NAME } from "../shared/const";
 import { createMaterial, getAllMaterials, getPublishedMaterials, getUserConversations, publishMaterial, saveConversation } from "./db";
@@ -163,6 +164,32 @@ export const appRouter = router({
         const answer = fallbackAnswer(input.messages[input.messages.length - 1]?.content ?? "");
         if (ctx.user) await saveConversation({ userId: ctx.user.id, title: input.messages[0]?.content.slice(0, 80) || "Conversa Projeto Sementes", messages: JSON.stringify([...input.messages, { role: "assistant", content: answer }]) });
         return { answer, researched: false };
+      }
+    }),
+  }),
+  doctrinalChat: router({
+    studies: publicProcedure.query(() => DOCTRINAL_STUDIES.map(({ number, title }) => ({ number, title }))),
+    ask: publicProcedure.input(z.object({ messages: z.array(chatMessageSchema).min(1).max(20) })).mutation(async ({ ctx, input }) => {
+      try {
+        const latestQuery = [...input.messages].reverse().find((message) => message.role === "user")?.content ?? "";
+        const doctrinalContext = buildDoctrinalContext(latestQuery);
+        const messages = [
+          {
+            role: "system" as const,
+            content: `Você é o Orientador Bíblico e Doutrinário do aplicativo PromessaMS. Responda em português do Brasil com clareza, reverência, humildade pastoral e linguagem acessível. Sua base prioritária é O Doutrinal: Nossa crença ponto a ponto, da Editora Promessa, validado pela Comissão Teológica e pela Câmara Teológica da Igreja Adventista da Promessa. Explique a doutrina da igreja com forte fundamentação bíblica e contexto histórico, mas não invente posições oficiais, citações, referências ou decisões institucionais. Diferencie: (1) o que está explicitamente na Bíblia; (2) o ensino apresentado na base institucional; (3) contexto histórico ou interpretação; e (4) aplicação sugerida para estudo e vida cristã. Quando houver controvérsia, reconheça os limites da base e recomende diálogo com o pastor ou liderança local. O objetivo é edificar, estimular o estudo das Escrituras e a participação responsável na igreja local, não substituir o pastor, a Comissão Teológica ou a consciência do usuário. Não use pesquisa online para alterar a doutrina institucional. Cite os estudos e as referências bíblicas presentes no contexto quando forem relevantes. Entregue respostas completas e conclua todos os tópicos.\n\nBASE INSTITUCIONAL:\n${doctrinalContext}`,
+          },
+          ...input.messages.map((message) => ({ role: message.role as "user" | "assistant", content: message.content })),
+        ];
+        const response = await invokeLLM({ model: "gpt-5-mini", messages, maxTokens: 2200 });
+        const answer = textFromContent(response.choices?.[0]?.message?.content) || "Não consegui formular uma resposta doutrinária agora. Consulte o estudo correspondente e converse com a liderança local.";
+        if (ctx.user) {
+          const safeMessages = [...input.messages, { role: "assistant" as const, content: answer }].map(({ role, content }) => ({ role, content }));
+          await saveConversation({ userId: ctx.user.id, title: `Doutrina: ${latestQuery.slice(0, 70) || "estudo bíblico"}`, messages: JSON.stringify(safeMessages) });
+        }
+        return { answer, source: "O Doutrinal — Editora Promessa, 2023" };
+      } catch (error) {
+        console.error("[DoctrinalChat] LLM request failed:", error);
+        return { answer: "Não foi possível responder agora. Leia o estudo correspondente em O Doutrinal e procure a orientação do pastor ou da liderança local.", source: "O Doutrinal — Editora Promessa, 2023" };
       }
     }),
   }),

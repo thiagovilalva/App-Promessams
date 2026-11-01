@@ -86,8 +86,20 @@ describe("requested product updates", () => {
   it("builds the static web bundle for persistent production hosting", () => {
     const pkg = JSON.parse(fs.readFileSync(path.join(process.cwd(), "package.json"), "utf8")) as { scripts: { build: string } };
     const server = read("server/_core/index.ts");
-    expect(pkg.scripts.build).toContain("expo export --platform web --output-dir web-dist");
+    expect(pkg.scripts.build).toContain("expo export --platform web --clear --output-dir web-dist");
     expect(server).toContain("express.static(webDist");
+  });
+  it("adds a separate doctrinal chat grounded in the institutional brochure", () => {
+    const router = read("server/routers.ts");
+    const doctrine = read("shared/doctrinal-knowledge.ts");
+    const screen = read("app/chat-doutrina.tsx");
+    const home = read("app/(tabs)/index.tsx");
+    expect(doctrine).toContain("O Doutrinal: Nossa crença ponto a ponto");
+    expect(doctrine).toContain('"number":31');
+    expect(router).toContain("doctrinalChat");
+    expect(router).toContain("buildDoctrinalContext");
+    expect(screen).toContain("Orientador Bíblico e Doutrinário");
+    expect(home).toContain("Estudos Bíblicos e Doutrina");
   });
   it("keeps native chat on the stable public API and registers Android media controls", () => {
     const oauth = read("constants/oauth.ts");

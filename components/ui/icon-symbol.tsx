@@ -9,6 +9,7 @@ type MaterialIconName = ComponentProps<typeof MaterialIcons>["name"];
 const MAPPING: Record<string, MaterialIconName> = {
   "house.fill": "home",
   "book.closed.fill": "menu-book",
+  "book.open": "menu-book",
   "bubble.left.and.bubble.right.fill": "forum",
   "heart.fill": "favorite",
   "arrow.forward": "arrow-forward",

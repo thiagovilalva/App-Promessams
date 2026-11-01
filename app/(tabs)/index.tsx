@@ -50,6 +50,11 @@ export default function HomeScreen() {
             <Text style={[styles.quickTitle, { color: colors.foreground }]}>Hinário HBJ</Text><Text style={[styles.quickText, { color: colors.muted }]}>Brados de Júbilo.</Text>
           </Pressable>
         </View>
+        <Pressable onPress={() => router.push("/chat-doutrina")} style={({ pressed }) => [styles.doctrineCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Abrir Orientador Bíblico e Doutrinário">
+          <View style={[styles.iconBox, { backgroundColor: "#FFF4DD" }]}><IconSymbol name="book.open" size={22} color="#A76418" /></View>
+          <View style={styles.doctrineCopy}><Text style={[styles.quickTitle, { color: colors.foreground }]}>Estudos Bíblicos e Doutrina</Text><Text style={[styles.quickText, { color: colors.muted }]}>Compreenda a fé da igreja à luz das Escrituras e de O Doutrinal.</Text></View>
+          <IconSymbol name="chevron.right" size={18} color={colors.primary} />
+        </Pressable>
 
         <Text style={[styles.kicker, { color: colors.primary, marginTop: 26 }]}>O QUE NOS GUIA</Text>
         <Pressable onPress={() => router.push("/plano-biblico")} style={({ pressed }) => [styles.principle, { borderBottomColor: colors.border }, pressed && styles.pressed]}><View style={[styles.smallIcon, { backgroundColor: colors.primary + "18" }]}><IconSymbol name="auto-stories" size={20} color={colors.primary} /></View><View style={styles.principleBody}><Text style={[styles.principleTitle, { color: colors.foreground }]}>Devocionais</Text><Text style={[styles.principleText, { color: colors.muted }]}>Textos, contexto e aplicações para viver a missão.</Text></View><IconSymbol name="chevron.right" size={18} color={colors.primary} /></Pressable>
@@ -103,6 +108,8 @@ const styles = StyleSheet.create({
   iconBox: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center", marginBottom: 13 },
   quickTitle: { fontSize: 15, fontWeight: "800", marginBottom: 5 },
   quickText: { fontSize: 12, lineHeight: 17 },
+  doctrineCard: { flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 18, borderWidth: 1, padding: 14, minHeight: 82, marginTop: 12 },
+  doctrineCopy: { flex: 1 },
   principle: { flexDirection: "row", alignItems: "flex-start", gap: 12, paddingVertical: 14, borderBottomWidth: 1 },
   smallIcon: { width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center" },
   principleBody: { flex: 1 },
