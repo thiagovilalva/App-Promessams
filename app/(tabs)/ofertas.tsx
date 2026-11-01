@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Alert, Image, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Image } from "expo-image";
 import * as Clipboard from "expo-clipboard";
 import QRCode from "react-native-qrcode-svg";
 
@@ -34,7 +35,7 @@ export default function OfertasScreen() {
   return (
     <ScreenContainer className="px-5" edges={["top", "left", "right"]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        <View style={styles.illustration}><Image source={require("@/assets/images/ofertas-missao.png")} style={styles.illustrationImage} resizeMode="contain" accessibilityLabel="Projeto Missional Sementes" /></View>
+        <View style={styles.illustration}><Image source={require("@/assets/images/ofertas-missao.png")} style={styles.illustrationImage} contentFit="contain" cachePolicy="memory-disk" accessibilityLabel="Projeto Missional Sementes" /></View>
         <Text style={[styles.kicker, { color: "#A76418" }]}>APOIE A MISSÃO</Text>
         <Text style={[styles.title, { color: colors.foreground }]}>Toda semente pode alcançar mais vidas.</Text>
         <Text style={[styles.subtitle, { color: colors.muted }]}>Sua oferta ajuda a Convenção Regional Sul-Mato-Grossense a manter e investir no Projeto Sementes junto às igrejas locais.</Text>

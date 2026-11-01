@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
-import { Linking, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image } from "expo-image";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -23,7 +24,7 @@ export default function HomeScreen() {
     <ScreenContainer className="px-5" edges={["top", "left", "right"]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         <View style={styles.topline}>
-          <Image source={require("@/assets/images/projeto-sementes-logo.png")} style={styles.brandMark} resizeMode="contain" accessibilityLabel="Símbolo do Projeto Sementes" />
+          <Image source={require("@/assets/images/projeto-sementes-logo.png")} style={styles.brandMark} contentFit="contain" cachePolicy="memory-disk" accessibilityLabel="Símbolo do Projeto Sementes" />
           <View><Text style={[styles.brandName, { color: colors.foreground }]}>PromessaMS</Text><Text style={[styles.brandCaption, { color: colors.muted }]}>Igreja viva no Modo Missão</Text></View>
           <View style={styles.topActions}><Pressable onPress={() => setColorScheme(colorScheme === "light" ? "dark" : "light")} style={[styles.themeButton, { borderColor: colors.border, backgroundColor: colors.surface }]} accessibilityLabel="Alternar modo claro e escuro"><Text style={[styles.themeButtonText, { color: colors.foreground }]}>{colorScheme === "light" ? "Escuro" : "Claro"}</Text></Pressable><Pressable onPress={() => router.push("/acessibilidade")} style={[styles.accessibilityButton, { borderColor: colors.border, backgroundColor: colors.surface }]} accessibilityRole="button" accessibilityLabel="Abrir acessibilidade"><IconSymbol name="accessibility" size={16} color={colors.foreground} /></Pressable></View>
         </View>
@@ -66,7 +67,7 @@ export default function HomeScreen() {
         ))}
 
         <View style={[styles.radioCard, { backgroundColor: colors.surface, borderColor: colors.border }]} accessibilityLabel="Rádio da Promessa">
-          <Image source={require("@/assets/images/radio-da-promessa-correta.jpg")} style={styles.radioIcon} accessibilityLabel="Ícone da Rádio da Promessa" />
+          <Image source={require("@/assets/images/radio-da-promessa-correta.jpg")} style={styles.radioIcon} contentFit="cover" cachePolicy="memory-disk" accessibilityLabel="Ícone da Rádio da Promessa" />
           <View style={styles.radioCopy}>
             <Text style={[styles.radioTitle, { color: colors.foreground }]}>Rádio da Promessa</Text>
             <Text style={[styles.radioText, { color: colors.muted }]}>{radioBuffering ? "Conectando à transmissão..." : radioPlaying ? "Ao vivo agora" : "Toque para ouvir online"}</Text>
@@ -75,6 +76,9 @@ export default function HomeScreen() {
             <IconSymbol name={radioPlaying ? "stop.fill" : "play.fill"} size={18} color="#FFFFFF" />
           </Pressable>
         </View>
+        <Pressable onPress={() => router.push("/radio-promessa")} style={({ pressed }) => [styles.radioDetails, { borderColor: colors.border, backgroundColor: colors.surface }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Abrir recursos da Rádio da Promessa">
+          <Text style={[styles.radioDetailsText, { color: colors.primary }]}>Programação, igrejas e comunidade</Text><Text style={[styles.radioDetailsArrow, { color: colors.primary }]}>›</Text>
+        </Pressable>
         <Pressable onPress={() => router.push("/conta")} style={[styles.accountLink, { borderColor: colors.border, backgroundColor: colors.surface }]}><Text style={[styles.accountLinkText, { color: colors.primary }]}>Entrar ou criar conta Manus</Text><Text style={[styles.accountLinkHint, { color: colors.muted }]}>Guardar sua jornada e histórico</Text></Pressable>
         <Pressable onPress={() => void Linking.openURL("https://wa.me/5567999132610?text=Ol%C3%A1%2C%20quero%20saber%20mais%20sobre%20o%20Projeto%20Sementes.")} style={[styles.whatsappButton, { borderColor: "#25D366" }]} accessibilityRole="link" accessibilityLabel="Fale conosco pelo WhatsApp"><IconSymbol name="whatsapp" size={19} color="#128C49" /><Text style={[styles.whatsappText, { color: colors.foreground }]}>Fale conosco pelo WhatsApp</Text></Pressable>
       </ScrollView>
@@ -135,6 +139,9 @@ const styles = StyleSheet.create({
   radioTitle: { fontSize: 14, fontWeight: "800", marginBottom: 3 },
   radioText: { fontSize: 11, lineHeight: 16 },
   radioButton: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  radioDetails: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderWidth: 1, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 11, marginTop: 8 },
+  radioDetailsText: { fontSize: 12, fontWeight: "800" },
+  radioDetailsArrow: { fontSize: 22, lineHeight: 22 },
   privacyLink: { alignItems: "center", marginTop: 16, padding: 6 },
   privacyText: { fontSize: 12, fontWeight: "800" },
   privacyHint: { fontSize: 10, marginTop: 3 },

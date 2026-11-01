@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, type PropsWithChildren } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type PropsWithChildren } from "react";
 import { Platform } from "react-native";
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { getApiBaseUrl } from "@/constants/oauth";
@@ -10,7 +10,9 @@ const RECONNECT_INTERVAL_MS = 5_000;
 type RadioContextValue = {
   playing: boolean;
   isBuffering: boolean;
+  volume: number;
   toggle: () => void;
+  setVolume: (value: number) => void;
 };
 
 const RadioContext = createContext<RadioContextValue | null>(null);
@@ -18,6 +20,7 @@ const RadioContext = createContext<RadioContextValue | null>(null);
 export function RadioProvider({ children }: PropsWithChildren) {
   const player = useAudioPlayer(Platform.OS === "web" ? WEB_RADIO_URL : RADIO_URL, { keepAudioSessionActive: true });
   const status = useAudioPlayerStatus(player);
+  const [volume, setVolumeState] = useState(0.8);
   const pausedByUser = useRef(false);
   const startedByUser = useRef(false);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -81,8 +84,14 @@ export function RadioProvider({ children }: PropsWithChildren) {
     player.play();
   };
 
+  const setVolume = (value: number) => {
+    const nextVolume = Math.max(0, Math.min(1, value));
+    player.volume = nextVolume;
+    setVolumeState(nextVolume);
+  };
+
   return (
-    <RadioContext.Provider value={{ playing: status.playing, isBuffering: status.isBuffering, toggle }}>
+    <RadioContext.Provider value={{ playing: status.playing, isBuffering: status.isBuffering, volume, toggle, setVolume }}>
       {children}
     </RadioContext.Provider>
   );

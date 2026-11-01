@@ -83,6 +83,18 @@ describe("requested product updates", () => {
     expect(server).not.toContain("AbortSignal.timeout(15_000)");
     expect(provider).toContain("/api/radio-stream");
   });
+  it("adds the radio community page and volume/timer controls", () => {
+    const radioPage = read("app/radio-promessa.tsx");
+    const home = read("app/(tabs)/index.tsx");
+    const provider = read("lib/radio-provider.tsx");
+    expect(radioPage).toContain("Programação");
+    expect(radioPage).toContain("Igrejas");
+    expect(radioPage).toContain("Pedir música");
+    expect(radioPage).toContain("Grupo da rádio no WhatsApp");
+    expect(radioPage).toContain("TIMER_OPTIONS");
+    expect(home).toContain('router.push("/radio-promessa")');
+    expect(provider).toContain("setVolume");
+  });
   it("builds the static web bundle for persistent production hosting", () => {
     const pkg = JSON.parse(fs.readFileSync(path.join(process.cwd(), "package.json"), "utf8")) as { scripts: { build: string } };
     const server = read("server/_core/index.ts");
@@ -132,9 +144,14 @@ describe("requested product updates", () => {
   });
   it("uses cached native image loading and release optimizations", () => {
     const contents = read("app/(tabs)/conteudos.tsx");
+    const home = read("app/(tabs)/index.tsx");
+    const offers = read("app/(tabs)/ofertas.tsx");
     const config = read("app.config.ts");
     expect(contents).toContain('import { Image } from "expo-image"');
     expect(contents).toContain('cachePolicy="memory-disk"');
+    expect(home).toContain('import { Image } from "expo-image"');
+    expect(home).toContain('cachePolicy="memory-disk"');
+    expect(offers).toContain('import { Image } from "expo-image"');
     expect(config).toContain("versionCode: 12");
     expect(config).toContain("enableMinifyInReleaseBuilds: true");
     expect(config).toContain("enableShrinkResourcesInReleaseBuilds: true");
