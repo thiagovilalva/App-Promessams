@@ -8,10 +8,11 @@ import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
 
 type Message = { role: "user" | "assistant"; content: string };
+const MAX_QUESTION_LENGTH = 10000;
 
 const INTRO: Message = {
   role: "assistant",
-  content: "Olá! Sou o Orientador Bíblico e Doutrinário. Posso ajudar você a estudar a fé da Igreja Adventista da Promessa à luz das Escrituras e de O Doutrinal. Faça sua pergunta; quando houver uma questão pastoral ou institucional sensível, procure também o pastor e a liderança local.",
+  content: "Olá! Sou o Professor Doutrinário. Posso ajudar você a estudar à luz das Escrituras todas as doutrinas da Igreja Adventista da Promessa. Faça sua pergunta sobre qualquer um dos 31 pontos.",
 };
 
 export default function DoctrinalChatScreen() {
@@ -20,7 +21,6 @@ export default function DoctrinalChatScreen() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const mutation = trpc.doctrinalChat.ask.useMutation();
-  const studies = trpc.doctrinalChat.studies.useQuery();
 
   useEffect(() => {
     AsyncStorage.getItem("promessams:doctrinal-chat").then((value) => {
@@ -58,15 +58,11 @@ export default function DoctrinalChatScreen() {
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : "height"}>
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} accessibilityRole="button"><Text style={[styles.back, { color: colors.primary }]}>‹ Voltar</Text></Pressable>
-          <Text style={[styles.kicker, { color: colors.primary }]}>ESTUDO BÍBLICO</Text>
+          <Text style={[styles.kicker, { color: colors.primary }]}>O DOUTRINAL</Text>
           {!!messages.length && <Pressable onPress={clearConversation}><Text style={[styles.clear, { color: colors.error }]}>Apagar</Text></Pressable>}
         </View>
-        <Text style={[styles.title, { color: colors.foreground }]}>Orientador Bíblico e Doutrinário</Text>
-        <Text style={[styles.subtitle, { color: colors.muted }]}>Doutrina, Bíblia e história para fortalecer o estudo e a participação na igreja local.</Text>
-        <View style={[styles.source, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Text style={[styles.sourceTitle, { color: colors.foreground }]}>Base institucional</Text>
-          <Text style={[styles.sourceText, { color: colors.muted }]}>O Doutrinal · Editora Promessa · 2023 · {studies.data?.length ?? 31} estudos</Text>
-        </View>
+        <Text style={[styles.title, { color: colors.foreground }]}>Professor Doutrinário</Text>
+        <Text style={[styles.subtitle, { color: colors.muted }]}>Se aprofunde na doutrina bíblica da promessa.</Text>
         <ScrollView style={styles.messages} contentContainerStyle={styles.messageContent} showsVerticalScrollIndicator keyboardShouldPersistTaps="handled">
           {visibleMessages.map((message, index) => <View key={`${index}-${message.role}`} style={[styles.row, message.role === "user" && styles.userRow]}>
             {message.role === "assistant" && <View style={[styles.avatar, { backgroundColor: colors.primary }]}><Text style={styles.avatarText}>B</Text></View>}
@@ -77,9 +73,10 @@ export default function DoctrinalChatScreen() {
           {mutation.isPending && <View style={styles.row}><View style={[styles.avatar, { backgroundColor: colors.primary }]}><Text style={styles.avatarText}>B</Text></View><View style={[styles.bubble, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}><ActivityIndicator color={colors.primary} /></View></View>}
         </ScrollView>
         <View style={[styles.composer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <TextInput value={input} onChangeText={setInput} placeholder="Pergunte sobre a doutrina..." placeholderTextColor={colors.muted} multiline maxLength={1200} style={[styles.input, { color: colors.foreground }]} onSubmitEditing={() => void sendMessage()} returnKeyType="send" />
+          <TextInput value={input} onChangeText={setInput} placeholder="Pergunte sobre a doutrina..." placeholderTextColor={colors.muted} multiline maxLength={MAX_QUESTION_LENGTH} style={[styles.input, { color: colors.foreground }]} onSubmitEditing={() => void sendMessage()} returnKeyType="send" />
           <Pressable onPress={() => void sendMessage()} style={({ pressed }) => [styles.send, { backgroundColor: input.trim() ? colors.primary : colors.border }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Enviar pergunta doutrinária"><Text style={styles.sendText}>↑</Text></Pressable>
         </View>
+        <Text style={[styles.limitHint, { color: colors.muted }]}>Máximo de 10.000 caracteres por pergunta · {input.length.toLocaleString("pt-BR")} usados</Text>
       </KeyboardAvoidingView>
     </ScreenContainer>
   );
@@ -93,9 +90,6 @@ const styles = StyleSheet.create({
   clear: { fontSize: 12, fontWeight: "800" },
   title: { fontSize: 27, lineHeight: 33, fontWeight: "800", letterSpacing: -0.4 },
   subtitle: { fontSize: 13, lineHeight: 19, marginTop: 5 },
-  source: { borderWidth: 1, borderRadius: 14, padding: 11, marginTop: 13 },
-  sourceTitle: { fontSize: 12, fontWeight: "800" },
-  sourceText: { fontSize: 11, marginTop: 3 },
   messages: { flex: 1, marginTop: 14 },
   messageContent: { paddingBottom: 15, gap: 12 },
   row: { flexDirection: "row", alignItems: "flex-end", gap: 8, maxWidth: "94%" },
@@ -108,5 +102,6 @@ const styles = StyleSheet.create({
   input: { flex: 1, minHeight: 38, maxHeight: 120, paddingHorizontal: 9, paddingVertical: 8, fontSize: 15 },
   send: { width: 39, height: 39, borderRadius: 13, alignItems: "center", justifyContent: "center" },
   sendText: { color: "#FFFFFF", fontSize: 22, fontWeight: "800" },
+  limitHint: { fontSize: 10, lineHeight: 14, textAlign: "right", marginTop: 4, marginBottom: 4 },
   pressed: { opacity: 0.78 },
 });

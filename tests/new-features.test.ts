@@ -98,8 +98,9 @@ describe("requested product updates", () => {
     expect(doctrine).toContain('"number":31');
     expect(router).toContain("doctrinalChat");
     expect(router).toContain("buildDoctrinalContext");
-    expect(screen).toContain("Orientador Bíblico e Doutrinário");
-    expect(home).toContain("Estudos Bíblicos e Doutrina");
+    expect(screen).toContain("Professor Doutrinário");
+    expect(screen).toContain("Máximo de 10.000 caracteres por pergunta");
+    expect(home).toContain("O Doutrinal");
   });
   it("keeps native chat on the stable public API and registers Android media controls", () => {
     const oauth = read("constants/oauth.ts");

@@ -19,7 +19,7 @@ const chatAttachmentSchema = z.object({
   text: z.string().max(30000).optional(),
   dataUrl: z.string().max(12000000).optional(),
 });
-const chatMessageSchema = z.object({ role: z.enum(["user", "assistant"]), content: z.string().min(1).max(6000), attachments: z.array(chatAttachmentSchema).max(3).optional() });
+const chatMessageSchema = z.object({ role: z.enum(["user", "assistant"]), content: z.string().min(1).max(10000), attachments: z.array(chatAttachmentSchema).max(3).optional() });
 
 function textFromContent(content: unknown): string {
   if (typeof content === "string") return content;
@@ -176,11 +176,11 @@ export const appRouter = router({
         const messages = [
           {
             role: "system" as const,
-            content: `Você é o Orientador Bíblico e Doutrinário do aplicativo PromessaMS. Responda em português do Brasil com clareza, reverência, humildade pastoral e linguagem acessível. Sua base prioritária é O Doutrinal: Nossa crença ponto a ponto, da Editora Promessa, validado pela Comissão Teológica e pela Câmara Teológica da Igreja Adventista da Promessa. Explique a doutrina da igreja com forte fundamentação bíblica e contexto histórico, mas não invente posições oficiais, citações, referências ou decisões institucionais. Diferencie: (1) o que está explicitamente na Bíblia; (2) o ensino apresentado na base institucional; (3) contexto histórico ou interpretação; e (4) aplicação sugerida para estudo e vida cristã. Quando houver controvérsia, reconheça os limites da base e recomende diálogo com o pastor ou liderança local. O objetivo é edificar, estimular o estudo das Escrituras e a participação responsável na igreja local, não substituir o pastor, a Comissão Teológica ou a consciência do usuário. Não use pesquisa online para alterar a doutrina institucional. Cite os estudos e as referências bíblicas presentes no contexto quando forem relevantes. Entregue respostas completas e conclua todos os tópicos.\n\nBASE INSTITUCIONAL:\n${doctrinalContext}`,
+            content: `Você é o Professor Doutrinário do aplicativo PromessaMS. Responda em português do Brasil com clareza, reverência, firmeza bíblica, humildade pastoral e linguagem acessível. Sua base prioritária é O Doutrinal: Nossa crença ponto a ponto, da Editora Promessa, validado pela Comissão Teológica e pela Câmara Teológica da Igreja Adventista da Promessa. Explique os 31 pontos doutrinários com fundamentação bíblica e contexto histórico, sem inventar posições oficiais, citações ou referências. Diferencie o texto bíblico, o ensino doutrinário da Promessa, o contexto histórico e a aplicação prática. Não concorde automaticamente com a afirmação do usuário: quando ela contrariar a Bíblia ou a doutrina apresentada na base, diga com respeito e clareza que há um equívoco, explique por que a posição é inadequada e conduza a pessoa passo a passo à compreensão da doutrina bíblica ensinada pela Igreja Adventista da Promessa. Confronte o erro com a verdade, nunca a pessoa; evite humilhação, agressividade, condenação ou disputa. Quando houver questão pastoral, disciplina eclesiástica ou situação institucional sensível, recomende diálogo com o pastor ou liderança local. Não use pesquisa online para alterar a doutrina institucional. Cite estudos e referências bíblicas relevantes. Entregue respostas completas, sem cortar frases, listas ou conclusões; desenvolva todos os pontos necessários para que o usuário consiga ler e compreender a resposta.\n\nCONTEXTO DOS ESTUDOS:\n${doctrinalContext}`,
           },
           ...input.messages.map((message) => ({ role: message.role as "user" | "assistant", content: message.content })),
         ];
-        const response = await invokeLLM({ model: "gpt-5-mini", messages, maxTokens: 2200 });
+        const response = await invokeLLM({ model: "gpt-5-mini", messages, maxTokens: 6000 });
         const answer = textFromContent(response.choices?.[0]?.message?.content) || "Não consegui formular uma resposta doutrinária agora. Consulte o estudo correspondente e converse com a liderança local.";
         if (ctx.user) {
           const safeMessages = [...input.messages, { role: "assistant" as const, content: answer }].map(({ role, content }) => ({ role, content }));

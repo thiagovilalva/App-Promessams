@@ -50,9 +50,9 @@ export default function HomeScreen() {
             <Text style={[styles.quickTitle, { color: colors.foreground }]}>Hinário HBJ</Text><Text style={[styles.quickText, { color: colors.muted }]}>Brados de Júbilo.</Text>
           </Pressable>
         </View>
-        <Pressable onPress={() => router.push("/chat-doutrina")} style={({ pressed }) => [styles.doctrineCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Abrir Orientador Bíblico e Doutrinário">
+        <Pressable onPress={() => router.push("/chat-doutrina")} style={({ pressed }) => [styles.doctrineCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Abrir O Doutrinal">
           <View style={[styles.iconBox, { backgroundColor: "#FFF4DD" }]}><IconSymbol name="book.open" size={22} color="#A76418" /></View>
-          <View style={styles.doctrineCopy}><Text style={[styles.quickTitle, { color: colors.foreground }]}>Estudos Bíblicos e Doutrina</Text><Text style={[styles.quickText, { color: colors.muted }]}>Compreenda a fé da igreja à luz das Escrituras e de O Doutrinal.</Text></View>
+          <View style={styles.doctrineCopy}><Text style={[styles.quickTitle, { color: colors.foreground }]}>O Doutrinal</Text><Text style={[styles.quickText, { color: colors.muted }]}>Compreenda a doutrina da promessa aqui</Text></View>
           <IconSymbol name="chevron.right" size={18} color={colors.primary} />
         </Pressable>
 
