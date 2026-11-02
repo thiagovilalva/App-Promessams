@@ -3,7 +3,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useFonts } from "expo-font";
-import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
@@ -97,7 +96,6 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="oauth/callback" />
           </Stack>
-          <StatusBar style="auto" />
           </RadioProvider>
         </QueryClientProvider>
       </trpc.Provider>

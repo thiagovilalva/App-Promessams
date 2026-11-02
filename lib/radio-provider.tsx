@@ -26,37 +26,31 @@ export function RadioProvider({ children }: PropsWithChildren) {
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    let mounted = true;
-
+    // Configure the session without starting native MediaSession services. The
+    // lock-screen service is registered only after an explicit user play action.
     void setAudioModeAsync({
       playsInSilentMode: true,
       shouldPlayInBackground: true,
-      interruptionModeAndroid: "duckOthers",
-      interruptionMode: "mixWithOthers",
-    }).then(() => {
-      if (Platform.OS === "android") {
-        // Register the live stream with Android MediaSession. This causes
-        // expo-audio to keep its mediaPlayback foreground service alive when
-        // the screen is locked or the app is backgrounded.
-        player.setActiveForLockScreen(true, {
-          title: "Rádio da Promessa",
-          artist: "PromessaMS",
-        });
-      }
+      interruptionMode: "duckOthers",
+    }).catch(() => {
+      // Playback is attempted again from the user action if session setup fails.
     });
 
     return () => {
-      mounted = false;
       if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
-      if (Platform.OS === "android") player.clearLockScreenControls();
+      if (Platform.OS === "android") {
+        try {
+          player.clearLockScreenControls();
+        } catch {
+          // The native media service may already be gone during teardown.
+        }
+      }
     };
   }, [player]);
 
   useEffect(() => {
     if (!startedByUser.current || pausedByUser.current || status.playing || status.isBuffering) return;
 
-    // A live stream has no natural end. If the provider drops the connection,
-    // reconnect automatically while the user has not pressed pause.
     reconnectTimer.current = setTimeout(() => {
       if (!pausedByUser.current) {
         try {
@@ -76,11 +70,25 @@ export function RadioProvider({ children }: PropsWithChildren) {
     if (status.playing) {
       pausedByUser.current = true;
       player.pause();
+      if (Platform.OS === "android") {
+        try {
+          player.clearLockScreenControls();
+        } catch {
+          // Ignore teardown races with the Android media service.
+        }
+      }
       return;
     }
 
     startedByUser.current = true;
     pausedByUser.current = false;
+    if (Platform.OS === "android") {
+      try {
+        player.setActiveForLockScreen(true, { title: "Rádio da Promessa", artist: "PromessaMS" });
+      } catch {
+        // Playback remains available if lock-screen controls are unavailable.
+      }
+    }
     player.play();
   };
 
