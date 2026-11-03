@@ -39,6 +39,13 @@ export default function BibliaLivreScreen() {
   const selectedBook = BOOKS[bookIndex];
   const chapterOptions = useMemo(() => Array.from({ length: selectedBook[2] }, (_, index) => index + 1), [selectedBook]);
 
+  function localChapter(nextBook: Book, nextChapter: number): ChapterResponse | null {
+    const indexedBook = (bibleSearchIndex.books as unknown as SearchBook[]).find((book) => book.id === nextBook[0]);
+    const indexedChapter = indexedBook?.chapters.find(([number]) => number === nextChapter);
+    if (!indexedBook || !indexedChapter) return null;
+    return { book: { name: nextBook[1] }, chapter: { number: nextChapter, content: indexedChapter[1].map(([number, text]) => ({ type: "verse", number, content: [text] })) }, numberOfVerses: indexedChapter[1].length };
+  }
+
   async function loadChapter(nextBook: Book = selectedBook, nextChapter = chapter) {
     const currentRequest = ++requestId.current;
     setLoading(true); setError("");
@@ -52,7 +59,11 @@ export default function BibliaLivreScreen() {
     } catch {
       const cached = await AsyncStorage.getItem(`blivre:${nextBook[0]}:${nextChapter}`);
       if (cached && currentRequest === requestId.current) { setData(JSON.parse(cached)); setVerse(1); }
-      else setError("Sem conexão e este capítulo ainda não foi salvo no dispositivo.");
+      else {
+        const local = localChapter(nextBook, nextChapter);
+        if (local && currentRequest === requestId.current) { setData(local); setVerse(1); }
+        else setError("Sem conexão e este capítulo ainda não foi salvo no dispositivo.");
+      }
     } finally { setLoading(false); }
   }
   useEffect(() => { void loadChapter(BOOKS[0], 1); }, []);

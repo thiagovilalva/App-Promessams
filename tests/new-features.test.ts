@@ -69,7 +69,7 @@ describe("requested product updates", () => {
     expect(source).toContain("radio-da-promessa-correta.jpg");
     const provider = read("lib/radio-provider.tsx");
     expect(provider).toContain("https://stm17.srvstm.com:30368");
-    expect(provider).toContain("shouldPlayInBackground: true");
+    expect(provider).toContain("shouldPlayInBackground: false");
     expect(provider).toContain("keepAudioSessionActive: true");
     expect(provider).toContain("const startedByUser = useRef(false)");
     expect(provider).toContain("startedByUser.current = true");
@@ -114,13 +114,13 @@ describe("requested product updates", () => {
     expect(screen).toContain("Máximo de 10.000 caracteres por pergunta");
     expect(home).toContain("O Doutrinal");
   });
-  it("keeps native chat on the stable public API and registers Android media controls", () => {
+  it("keeps native chat on the stable public API without Android 15 boot audio services", () => {
     const oauth = read("constants/oauth.ts");
     const provider = read("lib/radio-provider.tsx");
     expect(oauth).toContain("https://promessamsapp-8jp8nwu7.manus.space");
     expect(oauth).toContain('Platform.OS !== "web"');
-    expect(provider).toContain("player.setActiveForLockScreen(true");
-    expect(provider).toContain("shouldPlayInBackground: true");
+    expect(provider).toContain("shouldPlayInBackground: false");
+    expect(read("app.config.ts")).toContain("enableBackgroundPlayback: false");
   });
   it("routes Manus OAuth back to the PromessaMS app scheme", () => {
     const oauth = read("constants/oauth.ts");
@@ -152,9 +152,9 @@ describe("requested product updates", () => {
     expect(home).toContain('import { Image } from "expo-image"');
     expect(home).toContain('cachePolicy="memory-disk"');
     expect(offers).toContain('import { Image } from "expo-image"');
-    expect(config).toContain("versionCode: 15");
-    expect(config).toContain("enableMinifyInReleaseBuilds: false");
-    expect(config).toContain("enableShrinkResourcesInReleaseBuilds: false");
+    expect(config).toContain("versionCode: 16");
+    expect(config).toContain("enableMinifyInReleaseBuilds: true");
+    expect(config).toContain("enableShrinkResourcesInReleaseBuilds: true");
     expect(read("lib/radio-provider.tsx")).toContain("useAudioPlayer(null");
   });
   it("loads Material Icons before rendering the web interface", () => {
@@ -215,7 +215,7 @@ describe("requested product updates", () => {
     expect(hymnary).toContain("groupedThemes");
     expect(hymnary).toContain("themeTopic");
     expect(hymnary).toContain("themeHeaderText");
-    expect(hymnary).toContain("Voltar para Início");
+    expect(hymnary).toContain(">Voltar</Text>");
     expect(hymnary).toContain("Hinário HBJ");
   });
   it("keeps the selected devotional day visible on mobile and exposes themes", () => {

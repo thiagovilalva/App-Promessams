@@ -34,7 +34,7 @@ export function RadioProvider({ children }: PropsWithChildren) {
     // lock-screen service is registered only after an explicit user play action.
     void setAudioModeAsync({
       playsInSilentMode: true,
-      shouldPlayInBackground: true,
+      shouldPlayInBackground: false,
       interruptionMode: "duckOthers",
     }).catch(() => {
       // Playback is attempted again from the user action if session setup fails.
@@ -90,14 +90,7 @@ export function RadioProvider({ children }: PropsWithChildren) {
       player.replace(Platform.OS === "web" ? WEB_RADIO_URL : RADIO_URL);
       sourceAttached.current = true;
     }
-    void setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: true, interruptionMode: "duckOthers" }).catch(() => undefined);
-    if (Platform.OS === "android") {
-      try {
-        player.setActiveForLockScreen(true, { title: "Rádio da Promessa", artist: "PromessaMS" });
-      } catch {
-        // Playback remains available if lock-screen controls are unavailable.
-      }
-    }
+    void setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: false, interruptionMode: "duckOthers" }).catch(() => undefined);
     player.play();
   };
 
