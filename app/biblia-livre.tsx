@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
@@ -20,6 +21,7 @@ function normalize(value: string) {
 
 export default function BibliaLivreScreen() {
   const colors = useColors();
+  const router = useRouter();
   const { textScale } = useAccessibility();
   const [bookIndex, setBookIndex] = useState(0);
   const [chapter, setChapter] = useState(1);
@@ -33,20 +35,23 @@ export default function BibliaLivreScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const versePositions = useRef<Record<number, number>>({});
   const chapterCardY = useRef(0);
+  const requestId = useRef(0);
   const selectedBook = BOOKS[bookIndex];
   const chapterOptions = useMemo(() => Array.from({ length: selectedBook[2] }, (_, index) => index + 1), [selectedBook]);
 
   async function loadChapter(nextBook: Book = selectedBook, nextChapter = chapter) {
+    const currentRequest = ++requestId.current;
     setLoading(true); setError("");
     try {
       const response = await fetch(`${API}/${nextBook[0]}/${nextChapter}.json`);
       if (!response.ok) throw new Error("request");
       const result = await response.json() as ChapterResponse;
+      if (currentRequest !== requestId.current) return;
       setData(result); setVerse(1);
       await AsyncStorage.setItem(`blivre:${nextBook[0]}:${nextChapter}`, JSON.stringify(result));
     } catch {
       const cached = await AsyncStorage.getItem(`blivre:${nextBook[0]}:${nextChapter}`);
-      if (cached) { setData(JSON.parse(cached)); setVerse(1); }
+      if (cached && currentRequest === requestId.current) { setData(JSON.parse(cached)); setVerse(1); }
       else setError("Sem conexão e este capítulo ainda não foi salvo no dispositivo.");
     } finally { setLoading(false); }
   }
@@ -94,6 +99,7 @@ export default function BibliaLivreScreen() {
     if (result.verse) setTimeout(() => chooseVerse(result.verse!), 100);
   }
   return <ScreenContainer className="px-4" edges={["top", "left", "right"]}><ScrollView ref={scrollRef} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <Pressable onPress={() => router.replace("/")} style={styles.backButton} accessibilityRole="button"><Text style={[styles.backText, { color: colors.primary }]}>Voltar</Text></Pressable>
     <Text style={[styles.kicker, { color: colors.primary }]}>BÍBLIA LIVRE · BLIVRE</Text>
     <Text style={[styles.title, { color: colors.foreground, fontSize: 29 * textScale, lineHeight: 36 * textScale }]}>Leia a Bíblia</Text>
     <Text style={[styles.subtitle, { color: colors.muted, fontSize: 14 * textScale, lineHeight: 21 * textScale }]}>Selecione um livro e deslize os capítulos. O capítulo escolhido aparece imediatamente abaixo.</Text>
@@ -111,4 +117,4 @@ export default function BibliaLivreScreen() {
     <Pressable onPress={() => void Linking.openURL("https://blivre.org/")} style={[styles.source, { borderColor: colors.primary }]}><Text style={[styles.sourceText, { color: colors.primary }]}>Fonte e licença da Bíblia Livre</Text></Pressable>
   </ScrollView></ScreenContainer>;
 }
-const styles = StyleSheet.create({ content: { paddingTop: 22, paddingBottom: 45, gap: 10 }, kicker: { fontSize: 10, fontWeight: "800", letterSpacing: 1.2 }, title: { fontWeight: "800", marginTop: 3 }, subtitle: { marginBottom: 4 }, searchInput: { minHeight: 50, borderWidth: 1, borderRadius: 13, paddingHorizontal: 14, marginTop: 4 }, searchResults: { borderWidth: 1, borderRadius: 13, overflow: "hidden", marginTop: -2 }, searchResult: { paddingHorizontal: 13, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth }, searchResultLabel: { fontSize: 14, fontWeight: "800" }, searchResultDetail: { fontSize: 12, lineHeight: 17, marginTop: 3 }, label: { fontSize: 13, fontWeight: "800", marginTop: 7 }, select: { minHeight: 50, borderWidth: 1, borderRadius: 13, paddingHorizontal: 14, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }, selectText: { fontWeight: "800", fontSize: 16 }, bookPanel: { height: 285, borderWidth: 1, borderRadius: 13, overflow: "hidden" }, bookScroll: { flex: 1 }, bookItem: { minHeight: 48, paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#9CAAA3", flexDirection: "row", justifyContent: "space-between", alignItems: "center" }, bookText: { fontWeight: "700" }, chapterOptions: { gap: 8, paddingVertical: 3 }, chapterButton: { minWidth: 48, height: 44, borderWidth: 1, borderRadius: 11, alignItems: "center", justifyContent: "center", paddingHorizontal: 12 }, versePicker: { marginTop: 2 }, verseButton: { minWidth: 42, height: 38, borderWidth: 1, borderRadius: 10, alignItems: "center", justifyContent: "center", paddingHorizontal: 10 }, loading: { marginVertical: 14 }, error: { padding: 12, lineHeight: 20 }, chapterCard: { borderWidth: 1, borderRadius: 17, padding: 16, marginTop: 8 }, chapterTitle: { fontWeight: "800", marginBottom: 12 }, verseText: { paddingVertical: 6, paddingHorizontal: 5, borderRadius: 7 }, source: { alignSelf: "flex-start", borderWidth: 1, borderRadius: 12, paddingHorizontal: 13, paddingVertical: 10, marginTop: 4 }, sourceText: { fontWeight: "800", fontSize: 13 } });
+const styles = StyleSheet.create({ content: { paddingTop: 14, paddingBottom: 45, gap: 10 }, backButton: { paddingVertical: 6, alignSelf: "flex-start" }, backText: { fontSize: 14, fontWeight: "800" }, kicker: { fontSize: 10, fontWeight: "800", letterSpacing: 1.2 }, title: { fontWeight: "800", marginTop: 3 }, subtitle: { marginBottom: 4 }, searchInput: { minHeight: 50, borderWidth: 1, borderRadius: 13, paddingHorizontal: 14, marginTop: 4 }, searchResults: { borderWidth: 1, borderRadius: 13, overflow: "hidden", marginTop: -2 }, searchResult: { paddingHorizontal: 13, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth }, searchResultLabel: { fontSize: 14, fontWeight: "800" }, searchResultDetail: { fontSize: 12, lineHeight: 17, marginTop: 3 }, label: { fontSize: 13, fontWeight: "800", marginTop: 7 }, select: { minHeight: 50, borderWidth: 1, borderRadius: 13, paddingHorizontal: 14, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }, selectText: { fontWeight: "800", fontSize: 16 }, bookPanel: { height: 285, borderWidth: 1, borderRadius: 13, overflow: "hidden" }, bookScroll: { flex: 1 }, bookItem: { minHeight: 48, paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#9CAAA3", flexDirection: "row", justifyContent: "space-between", alignItems: "center" }, bookText: { fontWeight: "700" }, chapterOptions: { gap: 8, paddingVertical: 3 }, chapterButton: { minWidth: 48, height: 44, borderWidth: 1, borderRadius: 11, alignItems: "center", justifyContent: "center", paddingHorizontal: 12 }, versePicker: { marginTop: 2 }, verseButton: { minWidth: 42, height: 38, borderWidth: 1, borderRadius: 10, alignItems: "center", justifyContent: "center", paddingHorizontal: 10 }, loading: { marginVertical: 14 }, error: { padding: 12, lineHeight: 20 }, chapterCard: { borderWidth: 1, borderRadius: 17, padding: 16, marginTop: 8 }, chapterTitle: { fontWeight: "800", marginBottom: 12 }, verseText: { paddingVertical: 6, paddingHorizontal: 5, borderRadius: 7 }, source: { alignSelf: "flex-start", borderWidth: 1, borderRadius: 12, paddingHorizontal: 13, paddingVertical: 10, marginTop: 4 }, sourceText: { fontWeight: "800", fontSize: 13 } });

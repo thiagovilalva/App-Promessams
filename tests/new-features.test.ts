@@ -152,9 +152,10 @@ describe("requested product updates", () => {
     expect(home).toContain('import { Image } from "expo-image"');
     expect(home).toContain('cachePolicy="memory-disk"');
     expect(offers).toContain('import { Image } from "expo-image"');
-    expect(config).toContain("versionCode: 14");
-    expect(config).toContain("enableMinifyInReleaseBuilds: true");
-    expect(config).toContain("enableShrinkResourcesInReleaseBuilds: true");
+    expect(config).toContain("versionCode: 15");
+    expect(config).toContain("enableMinifyInReleaseBuilds: false");
+    expect(config).toContain("enableShrinkResourcesInReleaseBuilds: false");
+    expect(read("lib/radio-provider.tsx")).toContain("useAudioPlayer(null");
   });
   it("loads Material Icons before rendering the web interface", () => {
     const layout = read("app/_layout.tsx");

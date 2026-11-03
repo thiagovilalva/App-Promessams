@@ -77,7 +77,7 @@ export default function HomeScreen() {
           </Pressable>
         </View>
         <Pressable onPress={() => router.push("/radio-promessa")} style={({ pressed }) => [styles.radioDetails, { borderColor: colors.border, backgroundColor: colors.surface }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Abrir recursos da Rádio da Promessa">
-          <Text style={[styles.radioDetailsText, { color: colors.primary }]}>Programação, igrejas e comunidade</Text><Text style={[styles.radioDetailsArrow, { color: colors.primary }]}>›</Text>
+          <Text style={[styles.radioDetailsText, { color: colors.primary }]}>Programas, Igrejas e Comunidade</Text><Text style={[styles.radioDetailsArrow, { color: colors.primary }]}>›</Text>
         </Pressable>
         <Pressable onPress={() => router.push("/conta")} style={[styles.accountLink, { borderColor: colors.border, backgroundColor: colors.surface }]}><Text style={[styles.accountLinkText, { color: colors.primary }]}>Entrar ou criar conta Manus</Text><Text style={[styles.accountLinkHint, { color: colors.muted }]}>Guardar sua jornada e histórico</Text></Pressable>
         <Pressable onPress={() => void Linking.openURL("https://wa.me/5567999132610?text=Ol%C3%A1%2C%20quero%20saber%20mais%20sobre%20o%20Projeto%20Sementes.")} style={[styles.whatsappButton, { borderColor: "#25D366" }]} accessibilityRole="link" accessibilityLabel="Fale conosco pelo WhatsApp"><IconSymbol name="whatsapp" size={19} color="#128C49" /><Text style={[styles.whatsappText, { color: colors.foreground }]}>Fale conosco pelo WhatsApp</Text></Pressable>

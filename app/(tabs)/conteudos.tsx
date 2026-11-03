@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Clipboard from "expo-clipboard";
 import { Image } from "expo-image";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Linking, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
+import { Alert, Linking, Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -46,8 +46,21 @@ export default function ConteudosScreen() {
 
   async function saveForOffline() {
     await AsyncStorage.setItem("sementes:conteudos", JSON.stringify(CONTENT_MODULES));
+    if (Platform.OS === "web") {
+      const groups = [
+        { name: "filosofia-da-semente", label: "Filosofia da Semente", ids: ["filosofia", "distincao", "principios", "lideranca", "filosofia-cristocentrismo", "filosofia-palavra", "filosofia-oracao", "filosofia-relacionamentos", "filosofia-todos-enviados", "filosofia-multiplicacao", "filosofia-contextualizacao", "documento-integral"] },
+        { name: "projeto-sementes", label: "Projeto Sementes", ids: ["projeto-acolhimento", "jornada", "projeto-discipulados", "projeto-equipes", "igreja-viva", "projeto-cuidado", "projeto-integracao", "projeto-formacao", "projeto-avaliacao", "projeto-multiplicacao", "projeto-territorio", "projeto-documento-integral"] },
+        { name: "ministerios-regionais", label: "Ministérios Regionais", ids: ["ministerios-fundamento", "ministerios-alinhamento", "ministerios-principios", "ministerios-governanca", "ministerios-ciclo", "ministerios-areas", "ministerios-capacitacao", "ministerios-mentoria", "ministerios-seguranca", "ministerios-indicadores", "ministerios-apresentacao-integral", "ministerios-documento-integral"] },
+      ];
+      for (const group of groups) {
+        const content = CONTENT_MODULES.filter((item) => group.ids.includes(item.id)).map((item) => `${item.title}\n\n${item.body}\n\nLeitura de apoio: ${item.scripture}\nPróximo passo: ${item.practice}`).join(`\n\n${"=".repeat(70)}\n\n`);
+        const blob = new Blob([`${group.label}\n\n${content}`], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement("a"); anchor.href = url; anchor.download = `${group.name}.txt`; anchor.click(); URL.revokeObjectURL(url);
+      }
+    }
     setSaved(true);
-    if (selected) Alert.alert("Conteúdo salvo", "Este material já está disponível dentro do app, mesmo sem internet.");
+    Alert.alert("Conteúdo salvo", Platform.OS === "web" ? "Os três arquivos da biblioteca foram baixados para o dispositivo." : "Este material já está disponível dentro do app, mesmo sem internet.");
   }
 
   async function copyText(text: string) {

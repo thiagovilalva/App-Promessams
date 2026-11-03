@@ -10,6 +10,27 @@ import { trpc } from "@/lib/trpc";
 type Message = { role: "user" | "assistant"; content: string };
 const MAX_QUESTION_LENGTH = 10000;
 
+function escapeHtml(value: string) {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function exportAnswer(content: string, format: "doc" | "pdf") {
+  if (Platform.OS !== "web") {
+    window.alert("A geração de arquivos está disponível no site. Abra o PromessaMS pelo navegador para baixar a resposta.");
+    return;
+  }
+  const html = `<html><head><meta charset="utf-8"><title>Resposta do Professor Doutrinário</title><style>body{font-family:Arial,sans-serif;line-height:1.6;max-width:800px;margin:40px auto;padding:0 24px;white-space:pre-wrap}h1{font-size:22px}</style></head><body><h1>Professor Doutrinário</h1>${escapeHtml(content).replace(/\n/g, "<br>")}</body></html>`;
+  if (format === "doc") {
+    const blob = new Blob([html], { type: "application/msword" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a"); anchor.href = url; anchor.download = "resposta-professor-doutrinario.doc"; anchor.click(); URL.revokeObjectURL(url);
+    return;
+  }
+  const printWindow = window.open("", "_blank", "noopener,noreferrer");
+  if (!printWindow) { window.alert("Permita janelas pop-up para salvar a resposta em PDF."); return; }
+  printWindow.document.write(html); printWindow.document.close(); printWindow.focus(); printWindow.print();
+}
+
 const INTRO: Message = {
   role: "assistant",
   content: "Olá! Sou o Professor Doutrinário. Posso ajudar você a estudar à luz das Escrituras todas as doutrinas da Igreja Adventista da Promessa. Faça sua pergunta sobre qualquer um dos 31 pontos.",
@@ -67,7 +88,8 @@ export default function DoctrinalChatScreen() {
           {visibleMessages.map((message, index) => <View key={`${index}-${message.role}`} style={[styles.row, message.role === "user" && styles.userRow]}>
             {message.role === "assistant" && <View style={[styles.avatar, { backgroundColor: colors.primary }]}><Text style={styles.avatarText}>B</Text></View>}
             <View style={[styles.bubble, message.role === "user" ? { backgroundColor: colors.primary } : { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}>
-              <Text style={[styles.message, { color: message.role === "user" ? "#FFFFFF" : colors.foreground }]}>{message.content}</Text>
+              <Text selectable style={[styles.message, { color: message.role === "user" ? "#FFFFFF" : colors.foreground }]}>{message.content}</Text>
+              {message.role === "assistant" && index > 0 && <View style={styles.exportActions}><Pressable onPress={() => exportAnswer(message.content, "doc")} style={[styles.exportButton, { borderColor: colors.border }]}><Text style={[styles.exportText, { color: colors.primary }]}>Baixar DOC</Text></Pressable><Pressable onPress={() => exportAnswer(message.content, "pdf")} style={[styles.exportButton, { borderColor: colors.border }]}><Text style={[styles.exportText, { color: colors.primary }]}>Salvar PDF</Text></Pressable></View>}
             </View>
           </View>)}
           {mutation.isPending && <View style={styles.row}><View style={[styles.avatar, { backgroundColor: colors.primary }]}><Text style={styles.avatarText}>B</Text></View><View style={[styles.bubble, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}><ActivityIndicator color={colors.primary} /></View></View>}
@@ -102,6 +124,6 @@ const styles = StyleSheet.create({
   input: { flex: 1, minHeight: 38, maxHeight: 120, paddingHorizontal: 9, paddingVertical: 8, fontSize: 15 },
   send: { width: 39, height: 39, borderRadius: 13, alignItems: "center", justifyContent: "center" },
   sendText: { color: "#FFFFFF", fontSize: 22, fontWeight: "800" },
-  limitHint: { fontSize: 10, lineHeight: 14, textAlign: "right", marginTop: 4, marginBottom: 4 },
+  limitHint: { fontSize: 10, lineHeight: 14, textAlign: "right", marginTop: 4, marginBottom: 4 }, exportActions: { flexDirection: "row", gap: 7, marginTop: 10, flexWrap: "wrap" }, exportButton: { borderWidth: 1, borderRadius: 9, paddingHorizontal: 9, paddingVertical: 6 }, exportText: { fontSize: 11, fontWeight: "800" },
   pressed: { opacity: 0.78 },
 });

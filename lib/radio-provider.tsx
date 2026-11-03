@@ -18,11 +18,15 @@ type RadioContextValue = {
 const RadioContext = createContext<RadioContextValue | null>(null);
 
 export function RadioProvider({ children }: PropsWithChildren) {
-  const player = useAudioPlayer(Platform.OS === "web" ? WEB_RADIO_URL : RADIO_URL, { keepAudioSessionActive: true });
+  // Do not resolve or open the live stream during app startup. Android may
+  // initialize Media3 while the first screen is still mounting; the stream is
+  // attached only after the user explicitly presses Play.
+  const player = useAudioPlayer(null, { keepAudioSessionActive: true });
   const status = useAudioPlayerStatus(player);
   const [volume, setVolumeState] = useState(0.8);
   const pausedByUser = useRef(false);
   const startedByUser = useRef(false);
+  const sourceAttached = useRef(false);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -82,6 +86,11 @@ export function RadioProvider({ children }: PropsWithChildren) {
 
     startedByUser.current = true;
     pausedByUser.current = false;
+    if (!sourceAttached.current) {
+      player.replace(Platform.OS === "web" ? WEB_RADIO_URL : RADIO_URL);
+      sourceAttached.current = true;
+    }
+    void setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: true, interruptionMode: "duckOthers" }).catch(() => undefined);
     if (Platform.OS === "android") {
       try {
         player.setActiveForLockScreen(true, { title: "Rádio da Promessa", artist: "PromessaMS" });
