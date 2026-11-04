@@ -4,7 +4,7 @@ import path from "node:path";
 import express from "express";
 import type { AddressInfo } from "node:net";
 import { RADIO_PROGRAMS, REGIONAL_CHURCHES } from "../shared/radio-community";
-import { parseRadioCatalog, musicRequestSchema, registerRadioMusicRoutes } from "../server/radio-music";
+import { parseRadioCatalog, readRadioCatalogResponse, musicRequestSchema, registerRadioMusicRoutes } from "../server/radio-music";
 
 const read = (file: string) => fs.readFileSync(path.join(process.cwd(), file), "utf8");
 const sample = { data: [["<i></i> Canção", '<button onclick=\'pedir("Cancao_da_Promessa.mp3")\'>Pedir</button>']] };
@@ -46,6 +46,20 @@ describe("radio directory and startup regressions", () => {
   it("parses songs into plain native data without rendering provider HTML", () => {
     expect(parseRadioCatalog(sample)).toEqual([{ id: "Cancao_da_Promessa.mp3", title: "Cancao da Promessa" }]);
     expect(musicRequestSchema.safeParse({ name: "A", email: "invalid", songId: "x" }).success).toBe(false);
+  });
+  it("finishes reading valid catalog JSON without waiting for HTTP EOF", async () => {
+    const cancel = vi.fn();
+    const json = JSON.stringify(sample);
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode(json.slice(0, 30)));
+        controller.enqueue(new TextEncoder().encode(json.slice(30)));
+        // Deliberately never close: this reproduces the provider's response.
+      },
+      cancel,
+    });
+    expect(await readRadioCatalogResponse(new Response(body))).toEqual(sample);
+    expect(cancel).toHaveBeenCalledOnce();
   });
   it("loads, validates, sends and throttles requests using a mocked provider only", async () => {
     const provider = vi.fn<typeof fetch>().mockResolvedValueOnce(new Response(JSON.stringify(sample), { headers: { "content-type": "application/json" } })).mockResolvedValueOnce(new Response("10 minutos"));

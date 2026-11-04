@@ -3,6 +3,28 @@ import { z } from "zod";
 
 const PROVIDER = "https://player.conectastm.com/pedir-musica/30368";
 export type RadioSong = { id: string; title: string };
+// Some provider responses send a complete JSON value but keep their HTTP body
+// open. Consume until JSON parses instead of waiting forever for EOF.
+export async function readRadioCatalogResponse(response: Response): Promise<unknown> {
+  if (!response.body) throw new Error("Empty catalog response");
+  const reader = response.body.getReader();
+  let data = new Uint8Array(0);
+  try {
+    while (true) {
+      const chunk = await reader.read();
+      if (chunk.value) {
+        if (data.byteLength + chunk.value.byteLength > 2_000_000) throw new Error("Catalog exceeds limit");
+        const merged = new Uint8Array(data.byteLength + chunk.value.byteLength);
+        merged.set(data); merged.set(chunk.value, data.byteLength); data = merged;
+      }
+      let text: string;
+      try { text = new TextDecoder("utf-8", { fatal: true }).decode(data); }
+      catch { text = new TextDecoder("windows-1252").decode(data); }
+      try { return JSON.parse(text); }
+      catch { if (chunk.done) throw new Error("Invalid catalog JSON"); }
+    }
+  } finally { await reader.cancel().catch(() => undefined); }
+}
 export function parseRadioCatalog(payload: unknown): RadioSong[] {
   const rows = z.object({ data: z.array(z.array(z.string())) }).parse(payload).data;
   const songs = new Map<string, RadioSong>();
@@ -29,13 +51,12 @@ export function registerRadioMusicRoutes(app: Express, fetcher: typeof fetch = f
     if (catalog.length && Date.now() - cachedAt < 900_000) return catalog;
     if (!loading) {
       loading = (async () => {
-        const response = await fetcher(`${PROVIDER}/musicas`, { signal: AbortSignal.timeout(60_000) });
+        const response = await fetcher(`${PROVIDER}/musicas`, {
+          headers: { "User-Agent": "Mozilla/5.0 (compatible; PromessaMS/1.0)", "Accept": "application/json", "Accept-Encoding": "identity", "Connection": "close" },
+          signal: AbortSignal.timeout(180_000),
+        });
         if (!response.ok) throw new Error("Catalog unavailable");
-        const bytes = await response.arrayBuffer();
-        let raw = new TextDecoder("utf-8", { fatal: true });
-        let text: string;
-        try { text = raw.decode(bytes); } catch { raw = new TextDecoder("windows-1252"); text = raw.decode(bytes); }
-        const parsed = parseRadioCatalog(JSON.parse(text));
+        const parsed = parseRadioCatalog(await readRadioCatalogResponse(response));
         if (!parsed.length) throw new Error("Empty catalog");
         catalog = parsed;
         cachedAt = Date.now();
