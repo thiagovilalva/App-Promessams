@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useMemo, useEffect, useState } from "react";
-import { FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { FlatList, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { useAccessibility } from "@/lib/accessibility-provider";
@@ -56,7 +56,7 @@ export default function HinarioScreen() {
     const isFavorite = favorites.includes(selected.number);
     const readingColors = readingBackground === "dark" ? { background: "#18201C", text: "#F2F7F3", muted: "#B9C8BF" } : readingBackground === "cream" ? { background: "#FFF8E8", text: "#332B1E", muted: "#75664E" } : { background: colors.background, text: colors.foreground, muted: colors.muted };
     return (
-      <ScreenContainer edges={["top", "left", "right", "bottom"]} containerClassName="bg-background">
+      <ScreenContainer key={Platform.OS === "web" ? "hymn-reader" : undefined} edges={["top", "left", "right", "bottom"]} containerClassName="bg-background">
         <View style={styles.reader}>
           <View style={styles.readerTop}>
             <Pressable onPress={() => setSelected(null)} style={styles.backButton} accessibilityRole="button"><Text style={[styles.back, { color: colors.primary }]}>Voltar</Text></Pressable>
@@ -81,7 +81,7 @@ export default function HinarioScreen() {
 
   const shownHymns = panel === "favorites" ? favoriteHymns : filteredHymns;
   return (
-    <ScreenContainer className="px-5" edges={["top", "left", "right"]}>
+    <ScreenContainer key={Platform.OS === "web" ? "hymn-list" : undefined} className="px-5" edges={["top", "left", "right"]}>
       <View style={styles.content}>
         <Pressable onPress={() => router.replace("/")} style={styles.homeLink} accessibilityRole="button"><Text style={[styles.back, { color: colors.primary }]}>Voltar</Text></Pressable>
         <Text style={[styles.kicker, { color: colors.primary }]}>BRADO DE JÚBILO</Text>
