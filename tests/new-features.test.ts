@@ -89,6 +89,7 @@ describe("requested product updates", () => {
     expect(bible).toContain('Platform.OS === "web" && local');
     expect(bible).toContain("BOOKS[bibleBookIndex][1]");
     expect(bible).not.toContain("nestedScrollEnabled");
+    expect(bible).not.toContain("bookPanel: { height:");
   });
   it("returns from the hymnal through the public Home route", () => {
     expect(read("app/hinario.tsx")).toContain('router.replace("/")');
@@ -101,7 +102,7 @@ describe("requested product updates", () => {
     expect(provider).toContain("audio.onerror");
     expect(provider).toContain("startWebRadio(true)");
   });
-  it("adds the radio community page and volume/timer controls", () => {
+  it("keeps the radio community native without a duplicate player", () => {
     const radioPage = read("app/radio-promessa.tsx");
     const home = read("app/(tabs)/index.tsx");
     const provider = read("lib/radio-provider.tsx");
@@ -109,7 +110,12 @@ describe("requested product updates", () => {
     expect(radioPage).toContain("Igrejas");
     expect(radioPage).toContain("Pedir música");
     expect(radioPage).toContain("Grupo da rádio no WhatsApp");
-    expect(radioPage).toContain("TIMER_OPTIONS");
+    expect(radioPage).not.toContain("useRadio");
+    expect(radioPage).not.toContain("TIMER_OPTIONS");
+    expect(radioPage).not.toContain("promessams-gt8vmutx");
+    expect(radioPage).toContain('"/programacao"');
+    expect(radioPage).toContain('"/igrejas"');
+    expect(radioPage).toContain('"/pedir-musica"');
     expect(home).toContain('router.push("/radio-promessa")');
     expect(provider).toContain("setVolume");
   });
@@ -135,11 +141,11 @@ describe("requested product updates", () => {
   it("keeps native chat on the stable public API without Android 15 boot audio services", () => {
     const oauth = read("constants/oauth.ts");
     const provider = read("lib/radio-provider.tsx");
-    expect(oauth).toContain("https://promessamsapp-8jp8nwu7.manus.space");
+    expect(oauth).toContain("https://sementesapp-8jp8nwu7.manus.space");
     expect(oauth).toContain('Platform.OS !== "web"');
     expect(provider).not.toContain("expo-audio");
     expect(read("app.config.ts")).not.toContain('"expo-audio"');
-    expect(read("app.config.ts")).toContain("newArchEnabled: false");
+    expect(read("app.config.ts")).toContain("newArchEnabled: true");
   });
   it("routes Manus OAuth back to the PromessaMS app scheme", () => {
     const oauth = read("constants/oauth.ts");

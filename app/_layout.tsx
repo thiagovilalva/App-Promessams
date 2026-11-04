@@ -53,8 +53,6 @@ export default function RootLayout() {
     return () => unsubscribe();
   }, [handleSafeAreaUpdate]);
 
-  if (!fontsLoaded) return null;
-
   // Create clients once and reuse them
   const [queryClient] = useState(
     () =>
@@ -83,6 +81,10 @@ export default function RootLayout() {
       },
     };
   }, [initialInsets, initialFrame]);
+
+  // All hooks must run on both the initial font-loading render and the ready
+  // render. Returning earlier causes React's hook-order initialization error.
+  if (!fontsLoaded) return null;
 
   const content = (
     <GestureHandlerRootView style={{ flex: 1 }}>

@@ -1,7 +1,16 @@
 {
+  "cli": {
+    "appVersionSource": "local"
+  },
   "build": {
     "production": {
       "distribution": "store",
+      "env": {
+        "EXPO_PUBLIC_APP_ID": "8JP8nwu79Jw76KbbXHNAjZ",
+        "EXPO_PUBLIC_API_BASE_URL": "https://sementesapp-8jp8nwu7.manus.space",
+        "EXPO_PUBLIC_OAUTH_PORTAL_URL": "https://manus.im",
+        "EXPO_PUBLIC_OAUTH_SERVER_URL": "https://api.manus.im"
+      },
       "android": {
         "buildType": "app-bundle"
       }

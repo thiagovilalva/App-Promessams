@@ -24,7 +24,7 @@ const sections = [
   },
   {
     title: "5. Compartilhamento e prestadores",
-    body: "Para prestar os recursos solicitados, os dados podem ser processados por provedores técnicos contratados, como hospedagem, autenticação, armazenamento, análise técnica e serviços de inteligência artificial. Esses provedores devem processar os dados somente para executar os serviços contratados e aplicar medidas de segurança. Também podemos compartilhar dados quando exigido por lei, ordem válida de autoridade competente ou para proteger direitos e segurança.",
+    body: "Para prestar os recursos solicitados, os dados podem ser processados por provedores técnicos de hospedagem, autenticação, armazenamento, análise técnica e inteligência artificial. Ao enviar um pedido de música, seu nome, e-mail e música escolhida são encaminhados à Rádio da Promessa e ao provedor ConectaSTM para processar a solicitação. O PromessaMS não grava esses campos em seu banco; mantém temporariamente em memória o endereço IP e o horário da solicitação para limitar abuso. Os provedores da rádio podem aplicar suas próprias regras de retenção. Também podemos compartilhar dados quando exigido por lei ou para proteger direitos e segurança.",
   },
   {
     title: "6. Conteúdo offline e armazenamento no dispositivo",
@@ -73,7 +73,7 @@ export default function PrivacyPolicyScreen() {
           </Pressable>
           <Text style={[styles.kicker, { color: colors.primary }]}>TRANSPARÊNCIA</Text>
           <Text style={[styles.title, { color: colors.foreground }]}>Política de Privacidade</Text>
-          <Text style={[styles.updated, { color: colors.muted }]}>PromessaMS · última atualização: 3 de outubro de 2026</Text>
+          <Text style={[styles.updated, { color: colors.muted }]}>PromessaMS · última atualização: 4 de novembro de 2026</Text>
         </View>
 
         <View style={[styles.notice, { backgroundColor: colors.surface, borderColor: colors.border }]}>

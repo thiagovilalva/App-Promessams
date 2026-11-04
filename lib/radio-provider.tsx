@@ -17,11 +17,10 @@ type RadioContextValue = {
 const RadioContext = createContext<RadioContextValue | null>(null);
 
 /**
- * Radio is deliberately web-only in this Android build. Previous releases
- * loaded the native audio module while the root layout was mounting, which could start
- * Android media services before the user touched Play and caused an immediate
- * Android 15 process crash. Keeping this provider free of native audio code
- * makes app startup deterministic; the public web app retains the live player.
+ * Native audio is excluded in this diagnostic release to isolate media-service
+ * startup from app initialization. The device's crash trace is still needed to
+ * prove any native media fault; the root hook-order fault is fixed separately.
+ * The public web app retains its player; Android opens the stream externally.
  */
 export function RadioProvider({ children }: PropsWithChildren) {
   const [volume, setVolumeState] = useState(0.8);

@@ -1,0 +1,247 @@
+// Copied from the public institutional directory on 2026-11-04.
+// Bundled data: users never navigate to the source domain to read it.
+export const RADIO_PROGRAMS = [
+  {
+    "name": "Manhã com Deus",
+    "schedule": "De segunda a sexta-feira · 08:00–10:00",
+    "host": "Pastor Emerson Muniz",
+    "contactUrl": "https://wa.me/5567998818945"
+  },
+  {
+    "name": "Som da Promessa",
+    "schedule": "Segunda-feira · 19:00–22:00",
+    "host": "Adriano Morelli",
+    "contactUrl": "https://wa.me/5551999411480"
+  },
+  {
+    "name": "Devocional do Pôr do Sol",
+    "schedule": "Sexta-feira · 18:00",
+    "host": "Pastor Felipe Rocha",
+    "contactUrl": "https://wa.me/5567993356470"
+  },
+  {
+    "name": "Viver em Cristo",
+    "schedule": "Sábado · 06:00",
+    "host": "Presbítero Anderson Silva",
+    "contactUrl": "https://wa.me/5577999449545"
+  },
+  {
+    "name": "A Voz do Cenáculo",
+    "schedule": "Sábado · 15:00",
+    "host": "Dácio Veras",
+    "contactUrl": "https://wa.me/5585997797325"
+  }
+] as const;
+
+export const REGIONAL_CHURCHES = [
+  {
+    "name": "IAP Vila Antunes",
+    "city": "Campo Grande/MS",
+    "address": "Rua Paiaguás, 805 — Jardim Colibri, CEP 79.071-190",
+    "mapUrl": "https://maps.app.goo.gl/BGScwr8kQaWTcWzn9"
+  },
+  {
+    "name": "IAP Jardim Nhanha",
+    "city": "Campo Grande/MS",
+    "address": "Rua dos Peixes, 544 — Jardim Nhanha, CEP 79.081-290",
+    "mapUrl": "https://maps.app.goo.gl/L9yMg8RQkjQH93x89"
+  },
+  {
+    "name": "IAP Jardim Aero Rancho",
+    "city": "Campo Grande/MS",
+    "address": "Avenida Anhembi, 260 — Jardim Aero Rancho, CEP 79.083-480",
+    "mapUrl": "https://maps.app.goo.gl/Sc19R1DqW4155gBV6"
+  },
+  {
+    "name": "IAP Vila Almeida",
+    "city": "Campo Grande/MS",
+    "address": "Rua Ranieri Mazzilli, 71 — Vila Almeida, CEP 79.112-500",
+    "mapUrl": "https://maps.app.goo.gl/bZs4URTxLmBhG15a9"
+  },
+  {
+    "name": "IAP Parque do Sol",
+    "city": "Campo Grande/MS",
+    "address": "Rua Durando Pereira da Silva, 106 — Parque do Lageado, CEP 79.075-120",
+    "mapUrl": "https://maps.app.goo.gl/u9RZag3vudfMjN8N6"
+  },
+  {
+    "name": "IAP Nova Capital",
+    "city": "Campo Grande/MS",
+    "address": "Rua Crispim Moura, 435 — Moreninha, CEP 79.064-375",
+    "mapUrl": "https://maps.app.goo.gl/ThWeex1zk5HfNsmB9"
+  },
+  {
+    "name": "IAP Central — Campo Grande",
+    "city": "Campo Grande/MS",
+    "address": "Rua Antônio Maria Coelho, 1617 — Vila Planalto, CEP 79.002-221",
+    "mapUrl": "https://maps.app.goo.gl/uRkBBrhbeVAaGyaD6"
+  },
+  {
+    "name": "IAP Vila Kellen",
+    "city": "Campo Grande/MS",
+    "address": "Rua dos Mariscos, 214 — Coophavila II, CEP 79.097-180",
+    "mapUrl": "https://maps.app.goo.gl/VctUDniKFsV2t3368"
+  },
+  {
+    "name": "IAP Jardim Jóquei Clube",
+    "city": "Dourados/MS",
+    "address": "Rua Alfenas, 685 — Jardim Jóquei Clube, CEP 79.843-190",
+    "mapUrl": "https://maps.app.goo.gl/QT3zPB2VvLVPUKQV8"
+  },
+  {
+    "name": "IAP Jardim Água Boa",
+    "city": "Dourados/MS",
+    "address": "Rua Italívio de Souza Pael, 1415 — Jardim Rasslem, CEP 79.813-050",
+    "mapUrl": "https://maps.app.goo.gl/sWvEYnBiDNTLb9Cu9"
+  },
+  {
+    "name": "IAP Jardim Maracanã",
+    "city": "Dourados/MS",
+    "address": "Rua Antônio de Amaral, 1480 — Jardim Maracana, CEP 79.841-140",
+    "mapUrl": "https://maps.app.goo.gl/dacrGUkJkH8evccJ9"
+  },
+  {
+    "name": "IAP Central Dourados",
+    "city": "Dourados/MS",
+    "address": "Rua Major Capilé, 3297 — Jardim Caramuru, CEP 79.805-010",
+    "mapUrl": "https://maps.app.goo.gl/qB49S6ZpSTAd4kXK6"
+  },
+  {
+    "name": "IAP Vila Vargas",
+    "city": "Dourados/MS",
+    "address": "Rua Manoel da Silva Belo, 3134, CEP 79.878-000",
+    "mapUrl": "https://maps.app.goo.gl/ovZSU1wBEuXrtvWr5"
+  },
+  {
+    "name": "IAP Ponta Porã",
+    "city": "Ponta Porã/MS",
+    "address": "Rua 12 de Outubro, 877 — Jardim Primor, CEP 79.900-000",
+    "mapUrl": "https://maps.app.goo.gl/kdmf2v9Gx4aj6BRq8"
+  },
+  {
+    "name": "IAP Nioaque",
+    "city": "Nioaque/MS",
+    "address": "Rua Treze de Maio, 168 — Vila Militar, CEP 79.220-000",
+    "mapUrl": "https://maps.app.goo.gl/LcwEMBM1sLtgGVY97"
+  },
+  {
+    "name": "IAP Itaquiraí",
+    "city": "Itaquiraí/MS",
+    "address": "Rua Tiradentes, 65 — Jardim Progresso, CEP 79.965-000",
+    "mapUrl": "https://maps.app.goo.gl/uAPKr2Pbw24tJJnw7"
+  },
+  {
+    "name": "IAP Coxim",
+    "city": "Coxim/MS",
+    "address": "Rua General Mendes de Morais, 1647 — Sr. Divino, CEP 79.400-000",
+    "mapUrl": "https://maps.app.goo.gl/ysfiR354TQ87GaAZ8"
+  },
+  {
+    "name": "IAP Taquarussu",
+    "city": "Taquarussu/MS",
+    "address": "Avenida Felinto Müller, 1171, CEP 79.765-000",
+    "mapUrl": "https://maps.app.goo.gl/gBkZJ93cnYGHkfDJ7"
+  },
+  {
+    "name": "IAP Fátima do Sul",
+    "city": "Fátima do Sul/MS",
+    "address": "Rua Melvin Jones, 1373 — Centro, CEP 79.700-000",
+    "mapUrl": "https://maps.app.goo.gl/Hoxu1JiuTxc2xp4M8"
+  },
+  {
+    "name": "IAP Sonora",
+    "city": "Sonora/MS",
+    "address": "Avenida Pedro Pedrossiam, 462, CEP 79.415-000",
+    "mapUrl": "https://maps.app.goo.gl/2vxeiVv4S3owDhoL7"
+  },
+  {
+    "name": "IAP Nova Andradina",
+    "city": "Nova Andradina/MS",
+    "address": "Avenida José Heitor de Almeida Camargo, 1645 — Centro, CEP 79.750-000",
+    "mapUrl": "https://maps.app.goo.gl/fPfHfNjQG1k4P97D6"
+  },
+  {
+    "name": "IAP Anastácio",
+    "city": "Anastácio/MS",
+    "address": "Rua Benício Pereira Mendes, 1000 — Setor I, CEP 79.210-000",
+    "mapUrl": "https://maps.app.goo.gl/7pWfMhuZ6cogsLbB6"
+  },
+  {
+    "name": "IAP Aldeia",
+    "city": "Aquidauana/MS",
+    "address": "Aldeia Água Branca, 145 — Rural, CEP 79.200-000",
+    "mapUrl": "https://maps.app.goo.gl/EzyYWrWHbVdGzFj6A"
+  },
+  {
+    "name": "IAP Rio Verde",
+    "city": "Rio Verde de Mato Grosso",
+    "address": "Rua Sete de Setembro, 360 — Nova Rio Verde, CEP 79.480-000",
+    "mapUrl": "https://maps.app.goo.gl/TCUMJrz1DYsxXaoc7"
+  },
+  {
+    "name": "IAP Aquidauana",
+    "city": "Aquidauana/MS",
+    "address": "Vila Cidade Nova, CEP 79.200-000",
+    "mapUrl": "https://maps.app.goo.gl/oVjbuxiqsWo8xXrn8"
+  },
+  {
+    "name": "IAP Douradina",
+    "city": "Douradina/MS",
+    "address": "Rua João Gomes de Lira, 1057, CEP 79.880-000",
+    "mapUrl": "https://maps.app.goo.gl/cPWQeMQ4w4BvwVUA6"
+  },
+  {
+    "name": "IAP Rio Brilhante",
+    "city": "Rio Brilhante/MS",
+    "address": "Rua Cel. Antônio Alves Corrêa, 1385 — Trombini, CEP 79.130-000",
+    "mapUrl": "https://maps.app.goo.gl/BTXE9a4kFz9GgmUU9"
+  },
+  {
+    "name": "IAP Naviraí",
+    "city": "Naviraí/MS",
+    "address": "Rua Aquidauana, 34 — Jardim Vale Encantado, CEP 79.950-000",
+    "mapUrl": "https://maps.app.goo.gl/awZKaMDByRJBTacR9"
+  },
+  {
+    "name": "IAP Nova Alvorada do Sul",
+    "city": "Nova Alvorada do Sul/MS",
+    "address": "Rua Ataíde Barbosa de Souza, 2419, CEP 79.140-000",
+    "mapUrl": "https://maps.app.goo.gl/1fH2Rnde6xwGHqby6"
+  },
+  {
+    "name": "IAP Costa Rica",
+    "city": "Costa Rica",
+    "address": "Avenida João Correa Neto, 256 — Jardim Novo Horizonte, CEP 79.550-000",
+    "mapUrl": "https://maps.app.goo.gl/7swCwfYjcYsr3ddT7"
+  },
+  {
+    "name": "IAP Três Lagoas",
+    "city": "Três Lagoas/MS",
+    "address": "Rua Rayldo de Oliveira Gomes, 715 — Parque Residencial Lagoa, CEP 79.611-150",
+    "mapUrl": "https://maps.app.goo.gl/MRxXRJnUNhVArzLfA"
+  },
+  {
+    "name": "IAP Sete Quedas",
+    "city": "Sete Quedas/MS",
+    "address": "Rua Olavo Bilac, 33 — Centro, CEP 79.935-000",
+    "mapUrl": "https://maps.app.goo.gl/ivJtDpeNnKanMZUD8"
+  },
+  {
+    "name": "IAP Chapadão do Sul",
+    "city": "Chapadão do Sul/MS",
+    "address": "Rua Caracol, 98-246, CEP 79.560-000",
+    "mapUrl": "https://maps.app.goo.gl/nDSBhgyejf4C17c76"
+  },
+  {
+    "name": "Ribas do Rio Pardo",
+    "city": "Ribas do Rio Pardo/MS",
+    "address": "Rua Braulino N. da Silva, 1373 — Vila Santo Andre, CEP 79.180-000",
+    "mapUrl": "https://maps.app.goo.gl/skWrQYpPAi1e6tcU9"
+  },
+  {
+    "name": "IAP Mundo Novo",
+    "city": "Mundo Novo/MS",
+    "address": "Rua Paraiba, 220 — Copagril, CEP 79.980-000",
+    "mapUrl": "https://maps.app.goo.gl/aja2eLvvd9USDGHz9"
+  }
+] as const;
