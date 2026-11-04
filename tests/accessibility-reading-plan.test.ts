@@ -31,7 +31,7 @@ describe("accessibility and reading plan updates", () => {
     expect(read("app/biblia-livre.tsx")).toContain("scrollTo");
     expect(read("app/biblia-livre.tsx")).toContain("versePositions");
     expect(read("app/(tabs)/index.tsx")).toContain('router.push("/hinario")');
-    expect(read("app/biblia-livre.tsx")).toContain("nestedScrollEnabled");
+    expect(read("app/biblia-livre.tsx")).not.toContain("nestedScrollEnabled");
     expect(read("app/biblia-livre.tsx")).toContain("chapterOptions");
     expect(source).not.toContain("deve ser consultado");
     expect(source).toContain("Bíblia Livre (BLivre)");

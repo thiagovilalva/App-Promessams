@@ -80,6 +80,9 @@ async function startServer() {
       res.setHeader("Content-Type", "audio/mpeg");
       res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
       res.setHeader("Accept-Ranges", "none");
+      res.setHeader("Connection", "keep-alive");
+      res.setHeader("X-Accel-Buffering", "no");
+      res.flushHeaders();
       const stream = Readable.fromWeb(upstream.body as import("stream/web").ReadableStream);
       stream.on("error", () => {
         if (!res.headersSent) res.status(502).send("Radio stream unavailable");

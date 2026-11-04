@@ -83,7 +83,7 @@ export default function HinarioScreen() {
   return (
     <ScreenContainer className="px-5" edges={["top", "left", "right"]}>
       <View style={styles.content}>
-        <Pressable onPress={() => router.replace("/(tabs)")} style={styles.homeLink} accessibilityRole="button"><Text style={[styles.back, { color: colors.primary }]}>Voltar</Text></Pressable>
+        <Pressable onPress={() => router.replace("/")} style={styles.homeLink} accessibilityRole="button"><Text style={[styles.back, { color: colors.primary }]}>Voltar</Text></Pressable>
         <Text style={[styles.kicker, { color: colors.primary }]}>BRADO DE JÚBILO</Text>
         <Text style={[styles.title, { color: colors.foreground, fontSize: 29 * textScale }]}>Hinário HBJ</Text>
         <Text style={[styles.subtitle, { color: colors.muted, fontSize: 14 * textScale }]}>HBJ Novo · leitura offline com busca por número, título ou palavra da letra.</Text>

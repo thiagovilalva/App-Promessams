@@ -80,8 +80,28 @@ describe("requested product updates", () => {
     const provider = read("lib/radio-provider.tsx");
     expect(server).toContain('app.get("/api/radio-stream"');
     expect(server).toContain('res.setHeader("Content-Type", "audio/mpeg")');
+    expect(server).toContain('res.setHeader("Connection", "keep-alive")');
+    expect(server).toContain("res.flushHeaders()");
     expect(server).not.toContain("AbortSignal.timeout(15_000)");
     expect(provider).toContain("/api/radio-stream");
+  });
+  it("keeps Bible navigation local and reliable on mobile web", () => {
+    const bible = read("app/biblia-livre.tsx");
+    expect(bible).toContain('import { ActivityIndicator, Linking, Platform');
+    expect(bible).toContain('Platform.OS === "web" && local');
+    expect(bible).toContain("BOOKS[bibleBookIndex][1]");
+    expect(bible).not.toContain("nestedScrollEnabled");
+  });
+  it("returns from the hymnal through the public Home route", () => {
+    expect(read("app/hinario.tsx")).toContain('router.replace("/")');
+    expect(read("app/hinario.tsx")).not.toContain('router.replace("/(tabs)")');
+  });
+  it("reconnects the web radio by reloading an HTML audio stream", () => {
+    const provider = read("lib/radio-provider.tsx");
+    expect(provider).toContain("globalThis.Audio");
+    expect(provider).toContain("audio.load()");
+    expect(provider).toContain("audio.onerror");
+    expect(provider).toContain("playWebRadio(true)");
   });
   it("adds the radio community page and volume/timer controls", () => {
     const radioPage = read("app/radio-promessa.tsx");
