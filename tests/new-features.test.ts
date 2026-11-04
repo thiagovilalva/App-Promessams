@@ -69,10 +69,8 @@ describe("requested product updates", () => {
     expect(source).toContain("radio-da-promessa-correta.jpg");
     const provider = read("lib/radio-provider.tsx");
     expect(provider).toContain("https://stm17.srvstm.com:30368");
-    expect(provider).toContain("shouldPlayInBackground: false");
-    expect(provider).toContain("keepAudioSessionActive: true");
+    expect(provider).toContain("Native audio is intentionally not bundled");
     expect(provider).toContain("const startedByUser = useRef(false)");
-    expect(provider).toContain("startedByUser.current = true");
     expect(provider).not.toContain("if (mounted && !pausedByUser.current)");
   });
   it("relays the live radio as an uninterrupted browser MP3 stream", () => {
@@ -101,7 +99,7 @@ describe("requested product updates", () => {
     expect(provider).toContain("globalThis.Audio");
     expect(provider).toContain("audio.load()");
     expect(provider).toContain("audio.onerror");
-    expect(provider).toContain("playWebRadio(true)");
+    expect(provider).toContain("startWebRadio(true)");
   });
   it("adds the radio community page and volume/timer controls", () => {
     const radioPage = read("app/radio-promessa.tsx");
@@ -139,8 +137,9 @@ describe("requested product updates", () => {
     const provider = read("lib/radio-provider.tsx");
     expect(oauth).toContain("https://promessamsapp-8jp8nwu7.manus.space");
     expect(oauth).toContain('Platform.OS !== "web"');
-    expect(provider).toContain("shouldPlayInBackground: false");
-    expect(read("app.config.ts")).toContain("enableBackgroundPlayback: false");
+    expect(provider).not.toContain("expo-audio");
+    expect(read("app.config.ts")).not.toContain('"expo-audio"');
+    expect(read("app.config.ts")).toContain("newArchEnabled: false");
   });
   it("routes Manus OAuth back to the PromessaMS app scheme", () => {
     const oauth = read("constants/oauth.ts");
@@ -172,10 +171,10 @@ describe("requested product updates", () => {
     expect(home).toContain('import { Image } from "expo-image"');
     expect(home).toContain('cachePolicy="memory-disk"');
     expect(offers).toContain('import { Image } from "expo-image"');
-    expect(config).toContain("versionCode: 16");
+    expect(config).toContain("versionCode: 17");
     expect(config).toContain("enableMinifyInReleaseBuilds: true");
     expect(config).toContain("enableShrinkResourcesInReleaseBuilds: true");
-    expect(read("lib/radio-provider.tsx")).toContain("useAudioPlayer(null");
+    expect(read("lib/radio-provider.tsx")).not.toContain("useAudioPlayer");
   });
   it("loads Material Icons before rendering the web interface", () => {
     const layout = read("app/_layout.tsx");

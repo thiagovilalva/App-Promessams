@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState, type PropsWithChildren } from "react";
-import { Platform } from "react-native";
-import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
+import { Linking, Platform } from "react-native";
 import { getApiBaseUrl } from "@/constants/oauth";
 
 const RADIO_URL = "https://stm17.srvstm.com:30368";
@@ -17,75 +16,50 @@ type RadioContextValue = {
 
 const RadioContext = createContext<RadioContextValue | null>(null);
 
+/**
+ * Radio is deliberately web-only in this Android build. Previous releases
+ * loaded the native audio module while the root layout was mounting, which could start
+ * Android media services before the user touched Play and caused an immediate
+ * Android 15 process crash. Keeping this provider free of native audio code
+ * makes app startup deterministic; the public web app retains the live player.
+ */
 export function RadioProvider({ children }: PropsWithChildren) {
-  // Native playback stays lazy and does not register Android foreground audio
-  // services until a user explicitly presses Play.
-  const player = useAudioPlayer(null, { keepAudioSessionActive: true });
-  const status = useAudioPlayerStatus(player);
   const [volume, setVolumeState] = useState(0.8);
   const [webPlaying, setWebPlaying] = useState(false);
   const [webBuffering, setWebBuffering] = useState(false);
-  const pausedByUser = useRef(false);
   const startedByUser = useRef(false);
-  const sourceAttached = useRef(false);
-  const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pausedByUser = useRef(false);
   const webAudio = useRef<HTMLAudioElement | null>(null);
-  const webReconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const clearReconnectTimer = () => {
-    if (webReconnectTimer.current) {
-      clearTimeout(webReconnectTimer.current);
-      webReconnectTimer.current = null;
+  const clearReconnect = () => {
+    if (reconnectTimer.current) {
+      clearTimeout(reconnectTimer.current);
+      reconnectTimer.current = null;
     }
   };
 
-  const scheduleWebReconnect = () => {
-    clearReconnectTimer();
-    if (pausedByUser.current || !startedByUser.current) return;
-    webReconnectTimer.current = setTimeout(() => {
-      if (!pausedByUser.current) void playWebRadio(true);
-    }, RECONNECT_INTERVAL_MS);
+  const scheduleReconnect = () => {
+    clearReconnect();
+    if (Platform.OS !== "web" || !startedByUser.current || pausedByUser.current) return;
+    reconnectTimer.current = setTimeout(() => void startWebRadio(true), RECONNECT_INTERVAL_MS);
   };
 
-  const playWebRadio = async (reconnect = false) => {
-    if (Platform.OS !== "web" || pausedByUser.current) return;
-    const AudioCtor = globalThis.Audio;
-    if (!AudioCtor) return;
-
+  const startWebRadio = async (reconnect = false) => {
+    if (Platform.OS !== "web" || pausedByUser.current || typeof globalThis.Audio !== "function") return;
     let audio = webAudio.current;
     if (!audio) {
-      audio = new AudioCtor();
+      audio = new globalThis.Audio();
       audio.preload = "none";
-      audio.autoplay = false;
       audio.volume = volume;
-      audio.onplaying = () => {
-        setWebPlaying(true);
-        setWebBuffering(false);
-      };
-      audio.onwaiting = () => {
-        setWebBuffering(true);
-      };
-      audio.onstalled = () => {
-        setWebPlaying(false);
-        setWebBuffering(true);
-        scheduleWebReconnect();
-      };
-      audio.onended = () => {
-        setWebPlaying(false);
-        setWebBuffering(true);
-        scheduleWebReconnect();
-      };
-      audio.onerror = () => {
-        setWebPlaying(false);
-        setWebBuffering(true);
-        scheduleWebReconnect();
-      };
+      audio.onplaying = () => { setWebPlaying(true); setWebBuffering(false); };
+      audio.onwaiting = () => setWebBuffering(true);
+      audio.onstalled = () => { setWebPlaying(false); setWebBuffering(true); scheduleReconnect(); };
+      audio.onended = () => { setWebPlaying(false); setWebBuffering(true); scheduleReconnect(); };
+      audio.onerror = () => { setWebPlaying(false); setWebBuffering(true); scheduleReconnect(); };
       webAudio.current = audio;
     }
-
     setWebBuffering(true);
-    // Reassigning and loading the source is important after a mobile browser
-    // closes an idle/unstable Shoutcast connection; play() alone cannot revive it.
     if (reconnect || audio.src !== WEB_RADIO_URL) {
       audio.src = WEB_RADIO_URL;
       audio.load();
@@ -97,50 +71,11 @@ export function RadioProvider({ children }: PropsWithChildren) {
     } catch {
       setWebPlaying(false);
       setWebBuffering(false);
-      // A first play must come from a user gesture. The user can press Play
-      // again; a failed reconnect never turns into an unsolicited autoplay.
     }
   };
 
-  useEffect(() => {
-    if (Platform.OS === "web") return;
-    void setAudioModeAsync({
-      playsInSilentMode: true,
-      shouldPlayInBackground: false,
-      interruptionMode: "duckOthers",
-    }).catch(() => undefined);
-
-    return () => {
-      if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
-      try {
-        player.clearLockScreenControls();
-      } catch {
-        // The native media service may already be gone during teardown.
-      }
-    };
-  }, [player]);
-
-  useEffect(() => {
-    if (Platform.OS === "web") return;
-    if (!startedByUser.current || pausedByUser.current || status.playing || status.isBuffering) return;
-
-    reconnectTimer.current = setTimeout(() => {
-      if (!pausedByUser.current) {
-        try {
-          player.play();
-        } catch {
-          // The next status update schedules another attempt.
-        }
-      }
-    }, RECONNECT_INTERVAL_MS);
-
-    return () => {
-      if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
-    };
-  }, [player, status.playing, status.isBuffering, status.isLoaded, status.playbackState]);
-
   useEffect(() => () => {
-    clearReconnectTimer();
+    clearReconnect();
     const audio = webAudio.current;
     if (audio) {
       audio.pause();
@@ -151,55 +86,34 @@ export function RadioProvider({ children }: PropsWithChildren) {
   }, []);
 
   const toggle = () => {
-    if (Platform.OS === "web") {
-      const audio = webAudio.current;
-      if (webPlaying || audio?.paused === false) {
-        pausedByUser.current = true;
-        clearReconnectTimer();
-        audio?.pause();
-        setWebPlaying(false);
-        setWebBuffering(false);
-        return;
-      }
-      startedByUser.current = true;
-      pausedByUser.current = false;
-      void playWebRadio(false);
+    if (Platform.OS !== "web") {
+      // Native audio is intentionally not bundled in this crash-fix release.
+      // Open the official stream safely instead of loading foreground services.
+      void Linking.openURL(RADIO_URL).catch(() => undefined);
       return;
     }
-
-    if (status.playing) {
+    const audio = webAudio.current;
+    if (webPlaying || audio?.paused === false) {
       pausedByUser.current = true;
-      player.pause();
-      try {
-        player.clearLockScreenControls();
-      } catch {
-        // Ignore teardown races with the Android media service.
-      }
+      clearReconnect();
+      audio?.pause();
+      setWebPlaying(false);
+      setWebBuffering(false);
       return;
     }
-
     startedByUser.current = true;
     pausedByUser.current = false;
-    if (!sourceAttached.current) {
-      player.replace(RADIO_URL);
-      sourceAttached.current = true;
-    }
-    void setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: false, interruptionMode: "duckOthers" }).catch(() => undefined);
-    player.play();
+    void startWebRadio(false);
   };
 
   const setVolume = (value: number) => {
     const nextVolume = Math.max(0, Math.min(1, value));
     if (webAudio.current) webAudio.current.volume = nextVolume;
-    player.volume = nextVolume;
     setVolumeState(nextVolume);
   };
 
-  const playing = Platform.OS === "web" ? webPlaying : status.playing;
-  const isBuffering = Platform.OS === "web" ? webBuffering : status.isBuffering;
-
   return (
-    <RadioContext.Provider value={{ playing, isBuffering, volume, toggle, setVolume }}>
+    <RadioContext.Provider value={{ playing: Platform.OS === "web" ? webPlaying : false, isBuffering: Platform.OS === "web" && webBuffering, volume, toggle, setVolume }}>
       {children}
     </RadioContext.Provider>
   );
