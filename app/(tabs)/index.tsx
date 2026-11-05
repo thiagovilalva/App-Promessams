@@ -10,15 +10,13 @@ import { useRadio } from "@/lib/radio-provider";
 
 const principles = [
   { icon: "auto-stories", title: "Pão Diário 365", text: "Quando mais próximos da Palavra ficamos, mais forte a prática missionária se torna." },
-  { icon: "groups", title: "Todos são enviados", text: "Cada discípulo pode orar, acolher, testemunhar, servir e discipular." },
-  { icon: "spa", title: "Cuidado contínuo", text: "Acompanhamos pessoas até a maturidade, sem reduzir missão a números." },
 ];
 
 export default function HomeScreen() {
   const router = useRouter();
   const colors = useColors();
   const { colorScheme, setColorScheme } = useThemeContext();
-  const { playing: radioPlaying, isBuffering: radioBuffering, toggle: toggleRadio } = useRadio();
+  const { playing: radioPlaying, isBuffering: radioBuffering, requested: radioRequested, error: radioError, toggle: toggleRadio } = useRadio();
 
   return (
     <ScreenContainer className="px-5" edges={["top", "left", "right"]}>
@@ -34,13 +32,9 @@ export default function HomeScreen() {
           <Text style={styles.heroEyebrow}>MULTIPLICANDO VIDAS</Text>
           <Text style={styles.heroTitle}>Uma fé que cria raízes e dá fruto.</Text>
           <Text style={styles.heroText}>Aprenda, reflita e encontre próximos passos para viver a missão de Jesus na igreja local.</Text>
-          <Pressable onPress={() => router.push("/chat")} style={({ pressed }) => [styles.heroButton, pressed && styles.pressed]}>
-            <Text style={[styles.heroButtonText, { color: colors.primary }]}>Tire suas dúvidas aqui</Text>
-            <IconSymbol name="arrow.forward" size={18} color={colors.primary} />
-          </Pressable>
         </View>
 
-        <View style={styles.sectionHeader}><View><Text style={[styles.kicker, { color: colors.primary }]}>COMECE POR AQUI</Text><Text style={[styles.sectionTitle, { color: colors.foreground }]}>Uma jornada simples</Text></View></View>
+        <Pressable onPress={() => router.push("/chat")} accessibilityRole="button" accessibilityLabel="Comece por aqui: conversar com o Guia Sementes" style={({ pressed }) => [styles.sectionHeader, pressed && styles.pressed]}><View><Text style={[styles.kicker, { color: colors.primary }]}>COMECE POR AQUI</Text><Text style={[styles.sectionTitle, { color: colors.foreground }]}>Uma jornada simples</Text></View><IconSymbol name="chevron.right" size={28} color={colors.primary} /></Pressable>
         <View style={styles.quickGrid}>
           <Pressable onPress={() => router.push("/biblia-livre")} style={({ pressed }) => [styles.quickCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Abrir Bíblia Livre">
             <View style={[styles.iconBox, { backgroundColor: "#E9F7F0" }]}><IconSymbol name="book.closed.fill" size={22} color="#167C55" /></View>
@@ -70,17 +64,17 @@ export default function HomeScreen() {
           <Image source={require("@/assets/images/radio-da-promessa-correta.jpg")} style={styles.radioIcon} contentFit="cover" cachePolicy="memory-disk" accessibilityLabel="Ícone da Rádio da Promessa" />
           <View style={styles.radioCopy}>
             <Text style={[styles.radioTitle, { color: colors.foreground }]}>Rádio da Promessa</Text>
-            <Text style={[styles.radioText, { color: colors.muted }]}>{radioBuffering ? "Conectando à transmissão..." : radioPlaying ? "Ao vivo agora" : "Toque para ouvir online"}</Text>
+            <Text style={[styles.radioText, { color: colors.muted }]}>{radioError && !radioBuffering ? "Falha de conexão. Toque para tentar novamente." : radioBuffering ? "Conectando à transmissão..." : radioPlaying ? "Ao vivo agora" : "Toque para ouvir online"}</Text>
           </View>
-          <Pressable onPress={toggleRadio} style={({ pressed }) => [styles.radioButton, { backgroundColor: colors.primary }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel={radioPlaying ? "Parar Rádio da Promessa" : "Ouvir Rádio da Promessa"}>
-            <IconSymbol name={radioPlaying ? "stop.fill" : "play.fill"} size={18} color="#FFFFFF" />
+          <Pressable onPress={toggleRadio} style={({ pressed }) => [styles.radioButton, { backgroundColor: colors.primary }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel={radioRequested ? "Parar Rádio da Promessa" : "Ouvir Rádio da Promessa"}>
+            <IconSymbol name={radioRequested ? "stop.fill" : "play.fill"} size={18} color="#FFFFFF" />
           </Pressable>
         </View>
-        <Pressable onPress={() => router.push("/radio-promessa")} style={({ pressed }) => [styles.radioDetails, { borderColor: colors.border, backgroundColor: colors.surface }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Abrir recursos da Rádio da Promessa">
+        <Pressable onPress={() => router.push("/radio-promessa")} style={({ pressed }) => [styles.radioDetails, { borderColor: colors.primary, backgroundColor: colors.primary + "12" }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Abrir recursos da Rádio da Promessa">
           <Text style={[styles.radioDetailsText, { color: colors.primary }]}>Programas, Igrejas e Comunidade</Text><Text style={[styles.radioDetailsArrow, { color: colors.primary }]}>›</Text>
         </Pressable>
-        <Pressable onPress={() => router.push("/conta")} style={[styles.accountLink, { borderColor: colors.border, backgroundColor: colors.surface }]}><Text style={[styles.accountLinkText, { color: colors.primary }]}>Entrar ou criar conta Manus</Text><Text style={[styles.accountLinkHint, { color: colors.muted }]}>Guardar sua jornada e histórico</Text></Pressable>
-        <Pressable onPress={() => void Linking.openURL("https://wa.me/5567999132610?text=Ol%C3%A1%2C%20quero%20saber%20mais%20sobre%20o%20Projeto%20Sementes.")} style={[styles.whatsappButton, { borderColor: "#25D366" }]} accessibilityRole="link" accessibilityLabel="Fale conosco pelo WhatsApp"><IconSymbol name="whatsapp" size={19} color="#128C49" /><Text style={[styles.whatsappText, { color: colors.foreground }]}>Fale conosco pelo WhatsApp</Text></Pressable>
+        <Pressable onPress={() => void Linking.openURL(`https://wa.me/5567999132610?text=${encodeURIComponent("Olá, Gostaria de conversar com a secretaria regional.")}`)} style={[styles.whatsappButton, { borderColor: "#25D366", backgroundColor: colors.surface }]} accessibilityRole="link" accessibilityLabel="Fale Com A Convenção pelo WhatsApp"><IconSymbol name="whatsapp" size={24} color="#128C49" /><Text style={[styles.whatsappText, { color: colors.foreground }]}>Fale Com A Convenção</Text></Pressable>
+        <Pressable onPress={() => router.push("/conta")} accessibilityRole="button" style={[styles.accountLink, { borderColor: colors.border, backgroundColor: colors.surface }]}><Text style={[styles.accountLinkText, { color: colors.primary }]}>Entrar ou Criar Conta</Text><Text style={[styles.accountLinkHint, { color: colors.muted }]}>Guardar sua jornada e histórico</Text></Pressable>
       </ScrollView>
     </ScreenContainer>
   );
@@ -96,7 +90,7 @@ const styles = StyleSheet.create({
   brandMark: { width: 38, height: 38, borderRadius: 13 },
   brandName: { fontSize: 17, fontWeight: "800", letterSpacing: -0.2 },
   brandCaption: { fontSize: 11, marginTop: 1 },
-  hero: { padding: 24, borderRadius: 28, overflow: "hidden", marginBottom: 26 },
+  hero: { padding: 20, borderRadius: 28, overflow: "hidden", marginBottom: 20 },
   heroGlow: { position: "absolute", width: 180, height: 180, borderRadius: 100, right: -65, top: -70, backgroundColor: "#FFFFFF20" },
   heroEyebrow: { color: "#D7F4E6", fontSize: 11, fontWeight: "800", letterSpacing: 1.2, marginBottom: 10 },
   heroTitle: { color: "#FFFFFF", fontSize: 30, lineHeight: 35, fontWeight: "800", maxWidth: 310, letterSpacing: -0.7 },
@@ -127,8 +121,8 @@ const styles = StyleSheet.create({
   offerText: { fontSize: 11, lineHeight: 16 },
   footer: { textAlign: "center", fontSize: 10, marginTop: 26, lineHeight: 15 },
   accountLink: { borderWidth: 1, borderRadius: 16, padding: 13, marginTop: 14, alignItems: "center" },
-  accountLinkText: { fontSize: 13, fontWeight: "800" },
-  accountLinkHint: { fontSize: 11, marginTop: 3 },
+  accountLinkText: { fontSize: 16, fontWeight: "800" },
+  accountLinkHint: { fontSize: 13, marginTop: 3 },
   teamLink: { alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 5, marginTop: 12, padding: 5 },
   teamLinkText: { fontSize: 10, fontWeight: "700" },
   whatsappButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderWidth: 1, borderRadius: 15, paddingVertical: 13, paddingHorizontal: 14, marginTop: 10 },
@@ -139,8 +133,8 @@ const styles = StyleSheet.create({
   radioTitle: { fontSize: 14, fontWeight: "800", marginBottom: 3 },
   radioText: { fontSize: 11, lineHeight: 16 },
   radioButton: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
-  radioDetails: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderWidth: 1, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 11, marginTop: 8 },
-  radioDetailsText: { fontSize: 12, fontWeight: "800" },
+  radioDetails: { minHeight: 66, gap: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderWidth: 1, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 11, marginTop: 8 },
+  radioDetailsText: { flex: 1, fontSize: 16, lineHeight: 23, fontWeight: "800" },
   radioDetailsArrow: { fontSize: 22, lineHeight: 22 },
   privacyLink: { alignItems: "center", marginTop: 16, padding: 6 },
   privacyText: { fontSize: 12, fontWeight: "800" },

@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { SymbolWeight } from "expo-symbols";
 import { ComponentProps } from "react";
 import { OpaqueColorValue, type StyleProp, type TextStyle } from "react-native";
@@ -42,5 +43,6 @@ const MAPPING: Record<string, MaterialIconName> = {
 };
 
 export function IconSymbol({ name, size = 24, color, style }: { name: IconSymbolName; size?: number; color: string | OpaqueColorValue; style?: StyleProp<TextStyle>; weight?: SymbolWeight }) {
+  if (name === "whatsapp") return <FontAwesome name="whatsapp" color={color} size={size} style={style} />;
   return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
 }

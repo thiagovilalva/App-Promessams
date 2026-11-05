@@ -35,12 +35,13 @@ describe("radio directory and startup regressions", () => {
     expect(guard).toBeGreaterThan(layout.lastIndexOf("useEffect("));
     expect(guard).toBeGreaterThan(layout.lastIndexOf("useCallback("));
   });
-  it("retains the architecture required by Reanimated 4 and excludes unused audio/video binaries", () => {
+  it("retains the architecture required by Reanimated 4 and initializes audio only after Play and excludes unused video binaries", () => {
     const config = read("app.config.ts");
     const pkg = JSON.parse(read("package.json"));
     expect(config).toContain("newArchEnabled: true");
-    expect(config).toContain("versionCode: 18");
-    expect(pkg.dependencies["expo-audio"]).toBeUndefined();
+    expect(config).toContain("versionCode: 19");
+    expect(pkg.dependencies["expo-audio"]).toBe("~1.1.1");
+    expect(read("lib/native-radio.ts")).toContain('await import("expo-audio")');
     expect(pkg.dependencies["expo-video"]).toBeUndefined();
   });
   it("parses songs into plain native data without rendering provider HTML", () => {

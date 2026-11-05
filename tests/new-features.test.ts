@@ -53,7 +53,7 @@ describe("requested product updates", () => {
     expect(source).toContain("wa.me/5567999132610");
     expect(source).toContain("/acessibilidade");
     expect(source).toContain("accessibility");
-    expect(source).toContain("Tire suas dúvidas aqui");
+    expect(source).toContain("Comece por aqui: conversar com o Guia Sementes");
     expect(source).toContain(">Bíblia</Text>");
     expect(source).toContain("Acesse a palavra de Deus aqui");
     expect(source).not.toContain("/politica-privacidade");
@@ -69,7 +69,8 @@ describe("requested product updates", () => {
     expect(source).toContain("radio-da-promessa-correta.jpg");
     const provider = read("lib/radio-provider.tsx");
     expect(provider).toContain("https://stm17.srvstm.com:30368");
-    expect(provider).toContain("Native audio is intentionally not bundled");
+    expect(provider).toContain("createNativeRadioController");
+    expect(provider).not.toContain("Linking.openURL");
     expect(provider).toContain("const startedByUser = useRef(false)");
     expect(provider).not.toContain("if (mounted && !pausedByUser.current)");
   });
@@ -144,7 +145,7 @@ describe("requested product updates", () => {
     expect(oauth).toContain("https://sementesapp-8jp8nwu7.manus.space");
     expect(oauth).toContain('Platform.OS !== "web"');
     expect(provider).not.toContain("expo-audio");
-    expect(read("app.config.ts")).not.toContain('"expo-audio"');
+    expect(read("app.config.ts")).toContain("recordAudioAndroid: false");
     expect(read("app.config.ts")).toContain("newArchEnabled: true");
   });
   it("routes Manus OAuth back to the PromessaMS app scheme", () => {
@@ -179,7 +180,7 @@ describe("requested product updates", () => {
     expect(home).toContain('import { Image } from "expo-image"');
     expect(home).toContain('cachePolicy="memory-disk"');
     expect(offers).toContain('import { Image } from "expo-image"');
-    expect(config).toContain("versionCode: 18");
+    expect(config).toContain("versionCode: 19");
     expect(config).toContain("enableMinifyInReleaseBuilds: true");
     expect(config).toContain("enableShrinkResourcesInReleaseBuilds: true");
     expect(read("lib/radio-provider.tsx")).not.toContain("useAudioPlayer");
@@ -187,7 +188,7 @@ describe("requested product updates", () => {
   it("loads Material Icons before rendering the web interface", () => {
     const layout = read("app/_layout.tsx");
     expect(layout).toContain('import MaterialIcons from "@expo/vector-icons/MaterialIcons"');
-    expect(layout).toContain("useFonts({ ...MaterialIcons.font })");
+    expect(layout).toContain("useFonts({ ...MaterialIcons.font, ...FontAwesome.font })");
     expect(layout).toContain("if (!fontsLoaded) return null");
   });
   it("uses the official Projeto Sementes symbol in the home header", () => {

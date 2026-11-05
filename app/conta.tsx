@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 
 export default function AccountScreen() {
@@ -19,10 +19,12 @@ export default function AccountScreen() {
 
   return <ScreenContainer className="px-5" edges={["top", "left", "right"]}>
     <ScrollView contentContainerStyle={styles.content}>
-      <Text style={[styles.kicker, { color: colors.primary }]}>SUA JORNADA</Text>
+      <Pressable accessibilityRole="button" accessibilityLabel="Voltar à tela inicial" onPress={() => router.replace("/")} style={styles.back}><Text style={[styles.backText, { color: colors.primary }]}>Voltar</Text></Pressable>
+      <View style={styles.topline}><Text style={[styles.kicker, { color: colors.primary }]}>SUA JORNADA</Text>{user && <Pressable accessibilityRole="button" accessibilityLabel="Abrir Relatórios" onPress={() => Platform.OS === "web" ? router.push("/relatorios" as never) : router.push({ pathname: "/pagina-web" as never, params: { page: "relatorios" } })} style={[styles.reportsButton, { backgroundColor: colors.primary }]}><Text style={styles.buttonTextLight}>RELATÓRIOS</Text></Pressable>}</View>
       <Text style={[styles.title, { color: colors.foreground }]}>Conta e histórico</Text>
       <Text style={[styles.body, { color: colors.muted }]}>Entre com sua conta Manus para guardar suas conversas e continuar sua jornada em outro acesso.</Text>
       {login === "cancelled" && !user && <Text style={[styles.body, { color: colors.muted }]}>O login foi cancelado. Você pode tentar novamente pelo botão Entrar.</Text>}
+      {["incomplete", "expired", "failed"].includes(login || "") && !user && <Text accessibilityRole="alert" style={[styles.body, { color: colors.error }]}>Não foi possível concluir este login. Clique em Entrar para iniciar uma nova tentativa; se necessário, use o mesmo navegador até concluir a autenticação.</Text>}
       {loading ? <ActivityIndicator color={colors.primary} /> : user ? <>
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.welcome, { color: colors.foreground }]}>Olá, {user.name || user.email || "participante"}.</Text><Text style={[styles.body, { color: colors.muted }]}>Este dispositivo tem {historyCount} pergunta(s) guardada(s). O histórico sincronizado aparece abaixo.</Text><Pressable onPress={() => void logout()} style={[styles.button, { backgroundColor: colors.border }]}><Text style={[styles.buttonText, { color: colors.foreground }]}>Sair da conta</Text></Pressable></View>
         <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Conversas salvas</Text>
@@ -37,4 +39,4 @@ export default function AccountScreen() {
   </ScreenContainer>;
 }
 
-  const styles = StyleSheet.create({ content: { paddingTop: 24, paddingBottom: 40, gap: 14 }, kicker: { fontSize: 10, fontWeight: "800", letterSpacing: 1.2 }, title: { fontSize: 29, lineHeight: 36, fontWeight: "800" }, body: { fontSize: 14, lineHeight: 21 }, card: { borderWidth: 1, borderRadius: 18, padding: 18, gap: 12 }, welcome: { fontSize: 17, fontWeight: "800" }, accountChoices: { gap: 8 }, button: { alignItems: "center", borderRadius: 14, paddingVertical: 14, paddingHorizontal: 18, marginTop: 6 }, pressed: { opacity: 0.78 }, buttonText: { fontWeight: "800" }, buttonTextLight: { color: "#FFFFFF", fontWeight: "800" }, sectionTitle: { fontSize: 18, fontWeight: "800", marginTop: 12 }, historyItem: { borderWidth: 1, borderRadius: 14, padding: 13, gap: 4 }, historyTitle: { fontWeight: "800", fontSize: 13 }, historyDate: { fontSize: 11 }, note: { borderWidth: 1, borderRadius: 18, padding: 16, gap: 8, marginTop: 10 }, noteTitle: { fontWeight: "800", fontSize: 15 }, privacyLink: { alignItems: "center", marginTop: 8, padding: 6 }, privacyText: { fontSize: 12, fontWeight: "800" }, privacyHint: { fontSize: 10, marginTop: 3 } });
+  const styles = StyleSheet.create({ content: { paddingTop: 18, paddingBottom: 40, gap: 14 }, back: { alignSelf: "flex-start", paddingVertical: 10 }, backText: { fontSize: 16, fontWeight: "800" }, topline: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 16 }, reportsButton: { borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12 }, kicker: { fontSize: 11, fontWeight: "800", letterSpacing: 1.2 }, title: { fontSize: 29, lineHeight: 36, fontWeight: "800" }, body: { fontSize: 14, lineHeight: 21 }, card: { borderWidth: 1, borderRadius: 18, padding: 18, gap: 12 }, welcome: { fontSize: 17, fontWeight: "800" }, accountChoices: { gap: 8 }, button: { alignItems: "center", borderRadius: 14, paddingVertical: 14, paddingHorizontal: 18, marginTop: 6 }, pressed: { opacity: 0.78 }, buttonText: { fontWeight: "800" }, buttonTextLight: { color: "#FFFFFF", fontWeight: "800" }, sectionTitle: { fontSize: 18, fontWeight: "800", marginTop: 12 }, historyItem: { borderWidth: 1, borderRadius: 14, padding: 13, gap: 4 }, historyTitle: { fontWeight: "800", fontSize: 13 }, historyDate: { fontSize: 11 }, note: { borderWidth: 1, borderRadius: 18, padding: 16, gap: 8, marginTop: 10 }, noteTitle: { fontWeight: "800", fontSize: 15 }, privacyLink: { alignItems: "center", marginTop: 8, padding: 6 }, privacyText: { fontSize: 12, fontWeight: "800" }, privacyHint: { fontSize: 10, marginTop: 3 } });

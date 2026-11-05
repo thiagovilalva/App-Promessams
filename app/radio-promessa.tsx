@@ -1,5 +1,5 @@
 import { useRouter, type Href } from "expo-router";
-import { FlatList, Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Linking, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 
@@ -27,7 +27,7 @@ export default function RadioPromessaScreen() {
           <Text style={[styles.title, { color: colors.foreground }]}>Programas, Igrejas e Comunidade</Text>
           <Text style={[styles.description, { color: colors.muted }]}>Acompanhe a programação, encontre sua igreja e participe. Para ouvir a rádio, use o botão na tela inicial.</Text>
         </View>}
-        renderItem={({ item }) => <Pressable onPress={() => router.push(item.route as Href)} style={({ pressed }) => [styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel={`Abrir ${item.title}`}>
+        renderItem={({ item }) => <Pressable onPress={() => Platform.OS === "web" ? router.push(item.route as Href) : router.push({ pathname: "/pagina-web" as never, params: { page: item.route.slice(1) } })} style={({ pressed }) => [styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel={`Abrir ${item.title}`}>
           <View style={styles.cardBody}><Text style={[styles.cardTitle, { color: colors.foreground }]}>{item.title}</Text><Text style={[styles.cardText, { color: colors.muted }]}>{item.subtitle}</Text></View><Text style={[styles.arrow, { color: colors.primary }]}>›</Text>
         </Pressable>}
         ListFooterComponent={<View>

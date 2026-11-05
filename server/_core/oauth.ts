@@ -4,7 +4,8 @@ import { getUserByOpenId, upsertUser } from "../db";
 import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
 import { ENV } from "./env";
-import { createWebOAuthAttempt, getOAuthWebOrigin, OAUTH_STATE_COOKIE, OAUTH_STATE_TTL_MS, validateWebOAuthAttempt, validateNativeOAuthState } from "../oauth-policy";
+import { createWebOAuthAttempt, getOAuthWebOrigin, OAUTH_STATE_COOKIE, OAUTH_STATE_TTL_MS, recoverWebOAuthState, validateWebOAuthAttempt, validateNativeOAuthState } from "../oauth-policy";
+import { resolveHostedDestination } from "../../shared/hosted-pages";
 
 function getQueryParam(req: Request, key: string): string | undefined {
   const value = req.query[key];
@@ -81,11 +82,13 @@ export function registerOAuthRoutes(app: Express) {
     url.searchParams.set("redirectUri", attempt.redirectUri);
     url.searchParams.set("state", attempt.state);
     url.searchParams.set("type", "signIn");
+    url.searchParams.set("responseType", "code");
     res.redirect(302, url.toString());
   });
-  app.get("/api/oauth/callback", async (req: Request, res: Response) => {
-    const code = getQueryParam(req, "code");
-    const state = getQueryParam(req, "state");
+  const callback = async (req: Request, res: Response) => {
+    const code = getQueryParam(req, "code") || (typeof req.body?.code === "string" ? req.body.code : undefined);
+    const providedState = getQueryParam(req, "state") || (typeof req.body?.state === "string" ? req.body.state : undefined);
+    const state = providedState || recoverWebOAuthState(req);
 
     if (getQueryParam(req, "error")) {
       res.clearCookie(OAUTH_STATE_COOKIE, getSessionCookieOptions(req));
@@ -93,11 +96,11 @@ export function registerOAuthRoutes(app: Express) {
       return;
     }
     if (!code || !state) {
-      res.status(400).json({ error: "code and state are required" });
+      res.redirect(302, `${getOAuthWebOrigin(req)}/conta?login=incomplete`);
       return;
     }
     if (!validateWebOAuthAttempt(req, state)) {
-      res.status(400).json({ error: "Esta tentativa de login expirou. Volte ao site e clique em Entrar novamente." });
+      res.redirect(302, `${getOAuthWebOrigin(req)}/conta?login=expired`);
       return;
     }
     res.clearCookie(OAUTH_STATE_COOKIE, getSessionCookieOptions(req));
@@ -118,9 +121,11 @@ export function registerOAuthRoutes(app: Express) {
       res.redirect(302, `${getOAuthWebOrigin(req)}/conta?login=success`);
     } catch (error) {
       console.error("[OAuth] Callback failed:", error instanceof Error ? error.name : "Unknown error");
-      res.status(500).json({ error: "OAuth callback failed" });
+      res.redirect(302, `${getOAuthWebOrigin(req)}/conta?login=failed`);
     }
-  });
+  };
+  app.get(["/api/oauth/callback", "/api/oauth/callback/:loginNonce"], callback);
+  app.post(["/api/oauth/callback", "/api/oauth/callback/:loginNonce"], callback);
 
   app.get("/api/oauth/mobile", async (req: Request, res: Response) => {
     const code = getQueryParam(req, "code");
@@ -156,6 +161,18 @@ export function registerOAuthRoutes(app: Express) {
       console.error("[OAuth] Mobile exchange failed:", error instanceof Error ? error.name : "Unknown error");
       res.status(500).json({ error: "OAuth mobile exchange failed" });
     }
+  });
+
+  app.get("/api/auth/open-page", async (req: Request, res: Response) => {
+    const destination = resolveHostedDestination(req.query.destination);
+    if (!destination) { res.status(400).json({ error: "Página não permitida." }); return; }
+    const auth = req.headers.authorization;
+    if (typeof auth !== "string" || !auth.startsWith("Bearer ")) { res.redirect(302, `${getOAuthWebOrigin(req)}/conta`); return; }
+    try {
+      await sdk.authenticateRequest(req);
+      res.cookie(COOKIE_NAME, auth.slice(7).trim(), { ...getSessionCookieOptions(req), maxAge: ONE_YEAR_MS });
+      res.redirect(302, `${getOAuthWebOrigin(req)}${destination}`);
+    } catch { res.redirect(302, `${getOAuthWebOrigin(req)}/conta?login=expired`); }
   });
 
   app.post("/api/auth/logout", (req: Request, res: Response) => {

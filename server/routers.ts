@@ -95,6 +95,10 @@ export const appRouter = router({
   history: router({
     list: protectedProcedure.query(({ ctx }) => getUserConversations(ctx.user.id)),
   }),
+  reports: router({
+    // Content will be published online; this area intentionally starts empty.
+    list: protectedProcedure.query(() => [] as Array<{ id: number; title: string; content: string }>),
+  }),
   chat: router({
     ask: publicProcedure.input(z.object({ messages: z.array(chatMessageSchema).min(1).max(20) })).mutation(async ({ ctx, input }) => {
       try {

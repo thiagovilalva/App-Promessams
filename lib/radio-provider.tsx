@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState, type PropsWithChildren } from "react";
-import { Linking, Platform } from "react-native";
+import { Platform } from "react-native";
 import { getApiBaseUrl } from "@/constants/oauth";
+import { createNativeRadioController, type NativeRadioController, type NativeRadioStatus } from "@/lib/native-radio";
 
 const RADIO_URL = "https://stm17.srvstm.com:30368";
 const WEB_RADIO_URL = `${getApiBaseUrl()}/api/radio-stream`;
@@ -9,6 +10,8 @@ const RECONNECT_INTERVAL_MS = 3_000;
 type RadioContextValue = {
   playing: boolean;
   isBuffering: boolean;
+  requested: boolean;
+  error: string | null;
   volume: number;
   toggle: () => void;
   setVolume: (value: number) => void;
@@ -16,16 +19,15 @@ type RadioContextValue = {
 
 const RadioContext = createContext<RadioContextValue | null>(null);
 
-/**
- * Native audio is excluded in this diagnostic release to isolate media-service
- * startup from app initialization. The device's crash trace is still needed to
- * prove any native media fault; the root hook-order fault is fixed separately.
- * The public web app retains its player; Android opens the stream externally.
- */
+/** One persistent player; the native module is first loaded after explicit Play. */
 export function RadioProvider({ children }: PropsWithChildren) {
   const [volume, setVolumeState] = useState(0.8);
   const [webPlaying, setWebPlaying] = useState(false);
   const [webBuffering, setWebBuffering] = useState(false);
+  const [requested, setRequested] = useState(false);
+  const [nativeState, setNativeState] = useState<NativeRadioStatus>({ playing: false, isBuffering: false, volume: 0.8, error: null });
+  const nativeController = useRef<NativeRadioController | null>(null);
+  const nativeRequested = useRef(false);
   const startedByUser = useRef(false);
   const pausedByUser = useRef(false);
   const webAudio = useRef<HTMLAudioElement | null>(null);
@@ -75,6 +77,8 @@ export function RadioProvider({ children }: PropsWithChildren) {
 
   useEffect(() => () => {
     clearReconnect();
+    nativeController.current?.dispose();
+    nativeController.current = null;
     const audio = webAudio.current;
     if (audio) {
       audio.pause();
@@ -86,14 +90,26 @@ export function RadioProvider({ children }: PropsWithChildren) {
 
   const toggle = () => {
     if (Platform.OS !== "web") {
-      // Native audio is intentionally not bundled in this crash-fix release.
-      // Open the official stream safely instead of loading foreground services.
-      void Linking.openURL(RADIO_URL).catch(() => undefined);
+      if (nativeRequested.current) {
+        nativeRequested.current = false;
+        setRequested(false);
+        nativeController.current?.stop();
+      } else {
+        if (!nativeController.current) nativeController.current = createNativeRadioController(state => {
+          setNativeState(state);
+          if (state.error && !state.isBuffering) { nativeRequested.current = false; setRequested(false); }
+        });
+        nativeRequested.current = true;
+        setRequested(true);
+        nativeController.current.setVolume(volume);
+        void nativeController.current.play();
+      }
       return;
     }
     const audio = webAudio.current;
-    if (webPlaying || audio?.paused === false) {
+    if (requested || webPlaying || audio?.paused === false) {
       pausedByUser.current = true;
+      setRequested(false);
       clearReconnect();
       audio?.pause();
       setWebPlaying(false);
@@ -102,17 +118,19 @@ export function RadioProvider({ children }: PropsWithChildren) {
     }
     startedByUser.current = true;
     pausedByUser.current = false;
+    setRequested(true);
     void startWebRadio(false);
   };
 
   const setVolume = (value: number) => {
     const nextVolume = Math.max(0, Math.min(1, value));
     if (webAudio.current) webAudio.current.volume = nextVolume;
+    nativeController.current?.setVolume(nextVolume);
     setVolumeState(nextVolume);
   };
 
   return (
-    <RadioContext.Provider value={{ playing: Platform.OS === "web" ? webPlaying : false, isBuffering: Platform.OS === "web" && webBuffering, volume, toggle, setVolume }}>
+    <RadioContext.Provider value={{ playing: Platform.OS === "web" ? webPlaying : nativeState.playing, isBuffering: Platform.OS === "web" ? webBuffering : nativeState.isBuffering, requested, error: Platform.OS === "web" ? null : nativeState.error, volume, toggle, setVolume }}>
       {children}
     </RadioContext.Provider>
   );

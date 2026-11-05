@@ -29,7 +29,7 @@ async function withServer(work: (base: string) => Promise<void>) {
 }
 const hostHeaders = { Host: "sementesapp-8jp8nwu7.manus.space", "X-Forwarded-Proto": "https" };
 function callbackParams(redirect: URL, state: string, code = "synthetic-code") {
-  return new URLSearchParams({ code, state, loginNonce: redirect.searchParams.get("loginNonce")! });
+  return new URLSearchParams({ code, state });
 }
 
 beforeEach(() => {
@@ -71,8 +71,9 @@ describe("PromessaMS OAuth production regressions", () => {
       expect(portal.searchParams.get("appId")).toBe("test-project-id");
       const redirect = new URL(portal.searchParams.get("redirectUri")!);
       expect(redirect.origin).toBe(PUBLIC_SITE_ORIGIN);
-      expect(redirect.pathname).toBe("/api/oauth/callback");
-      expect(redirect.searchParams.get("loginNonce")).toHaveLength(43);
+      expect(redirect.pathname).toMatch(/^\/api\/oauth\/callback\/[A-Za-z0-9_-]{43}$/);
+      expect(redirect.search).toBe("");
+      expect(portal.searchParams.get("responseType")).toBe("code");
       const cookie = response.headers.get("set-cookie")!;
       expect(cookie).toContain(OAUTH_STATE_COOKIE); expect(cookie).toContain("HttpOnly"); expect(cookie).toContain("Secure"); expect(cookie).not.toContain("Domain=");
       expect(response.headers.get("cache-control")).toBe("no-store");
@@ -84,7 +85,7 @@ describe("PromessaMS OAuth production regressions", () => {
       const attempt = createWebOAuthAttempt(request());
       const redirect = new URL(attempt.redirectUri);
       const cookie = `${OAUTH_STATE_COOKIE}=${attempt.cookieValue}`;
-      const response = await fetch(`${base}/api/oauth/callback?${callbackParams(redirect, attempt.state)}`, { headers: { ...hostHeaders, Cookie: cookie }, redirect: "manual" });
+      const response = await fetch(`${base}${redirect.pathname}?${callbackParams(redirect, attempt.state)}`, { headers: { ...hostHeaders, Cookie: cookie }, redirect: "manual" });
       expect(response.status).toBe(302);
       expect(response.headers.get("location")).toBe(`${PUBLIC_SITE_ORIGIN}/conta?login=success`);
       expect(response.headers.get("location")).not.toContain("localhost");
@@ -96,13 +97,37 @@ describe("PromessaMS OAuth production regressions", () => {
       expect((await authenticated.json()).user.openId).toBe(user.openId);
     });
   });
+  it("recovers omitted state only with matching random path and HttpOnly cookie", async () => {
+    await withServer(async base => {
+      const attempt = createWebOAuthAttempt(request());
+      const redirect = new URL(attempt.redirectUri);
+      const good = await fetch(`${base}${redirect.pathname}?code=synthetic-code`, { headers: { ...hostHeaders, Cookie: `${OAUTH_STATE_COOKIE}=${attempt.cookieValue}` }, redirect: "manual" });
+      expect(good.status).toBe(302); expect(good.headers.get("location")).toContain("login=success");
+      expect(sdk.exchangeCodeForToken).toHaveBeenCalledWith("synthetic-code", attempt.state);
+      vi.mocked(sdk.exchangeCodeForToken).mockClear();
+      const bad = await fetch(`${base}${redirect.pathname}?code=synthetic-code`, { headers: hostHeaders, redirect: "manual" });
+      expect(bad.headers.get("location")).toContain("login=incomplete");
+      expect(sdk.exchangeCodeForToken).not.toHaveBeenCalled();
+    });
+  });
+  it("opens only allowlisted hosted pages and never includes bearer tokens in redirects", async () => {
+    await withServer(async base => {
+      const good = await fetch(`${base}/api/auth/open-page?destination=%2Frelatorios`, { headers: { ...hostHeaders, Authorization: "Bearer synthetic-session-token" }, redirect: "manual" });
+      expect(good.headers.get("location")).toBe(`${PUBLIC_SITE_ORIGIN}/relatorios`);
+      expect(good.headers.get("set-cookie")).toContain("app_session_id=synthetic-session-token");
+      const bad = await fetch(`${base}/api/auth/open-page?destination=https%3A%2F%2Fevil.example`, { headers: hostHeaders, redirect: "manual" });
+      expect(bad.status).toBe(400);
+    });
+  });
   it("rejects missing/tampered state without contacting the provider", async () => {
     await withServer(async base => {
       const attempt = createWebOAuthAttempt(request());
-      const params = callbackParams(new URL(attempt.redirectUri), attempt.state);
+      const redirect = new URL(attempt.redirectUri);
+      const params = callbackParams(redirect, attempt.state);
       for (const cookie of ["", `${OAUTH_STATE_COOKIE}=wrong`]) {
-        const r = await fetch(`${base}/api/oauth/callback?${params}`, { headers: { ...hostHeaders, Cookie: cookie } });
-        expect(r.status).toBe(400);
+        const r = await fetch(`${base}${redirect.pathname}?${params}`, { headers: { ...hostHeaders, Cookie: cookie }, redirect: "manual" });
+        expect(r.status).toBe(302);
+        expect(r.headers.get("location")).toContain("login=expired");
       }
       expect(sdk.exchangeCodeForToken).not.toHaveBeenCalled();
     });
@@ -125,9 +150,9 @@ describe("PromessaMS OAuth production regressions", () => {
       expect(bad.status).toBe(400); expect(sdk.exchangeCodeForToken).toHaveBeenCalledTimes(1);
     });
   });
-  it("preserves package, API origin, architecture and legacy deep links in build 18", () => {
+  it("preserves package, API origin, architecture and legacy deep links in build 19", () => {
     const config = fs.readFileSync("app.config.ts", "utf8");
-    expect(config).toContain("versionCode: 18"); expect(config).toContain('const rawBundleId = "promessams"');
+    expect(config).toContain("versionCode: 19"); expect(config).toContain('const rawBundleId = "promessams"');
     expect(config).toContain('const scheme = "promessams"'); expect(config).toContain(`const OAUTH_APP_SCHEME = "${OAUTH_APP_SCHEME}"`);
     expect(config).toContain("scheme: [scheme, OAUTH_APP_SCHEME]"); expect(config).toContain("newArchEnabled: true");
     expect(fs.readFileSync("eas.json", "utf8")).toContain(PUBLIC_SITE_ORIGIN);

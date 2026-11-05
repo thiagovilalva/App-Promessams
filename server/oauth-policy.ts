@@ -4,7 +4,7 @@ import { parse } from "cookie";
 import { OAUTH_APP_SCHEME, PUBLIC_SITE_ORIGIN } from "../shared/auth-config";
 
 export const OAUTH_STATE_COOKIE = "promessams_oauth_state";
-export const OAUTH_STATE_TTL_MS = 10 * 60 * 1000;
+export const OAUTH_STATE_TTL_MS = 30 * 60 * 1000;
 
 export function getOAuthWebOrigin(req: Request): string {
   // Production always stays on the existing published site, never a Metro URL.
@@ -26,8 +26,7 @@ export function getOAuthCallbackOrigin(req: Request): string {
 
 export function createWebOAuthAttempt(req: Request) {
   const nonce = randomBytes(32).toString("base64url");
-  const uri = new URL("/api/oauth/callback", getOAuthCallbackOrigin(req));
-  uri.searchParams.set("loginNonce", nonce);
+  const uri = new URL(`/api/oauth/callback/${nonce}`, getOAuthCallbackOrigin(req));
   const state = Buffer.from(uri.toString(), "utf8").toString("base64");
   return { redirectUri: uri.toString(), state, cookieValue: createHash("sha256").update(state).digest("hex") };
 }
@@ -42,14 +41,29 @@ export function decodeRedirectState(state: string): URL {
 export function validateWebOAuthAttempt(req: Request, state: string): boolean {
   try {
     const uri = decodeRedirectState(state);
-    if (uri.origin !== getOAuthCallbackOrigin(req) || uri.pathname !== "/api/oauth/callback") return false;
-    const nonce = uri.searchParams.get("loginNonce");
-    if (!nonce || nonce !== req.query.loginNonce) return false;
+    if (uri.origin !== getOAuthCallbackOrigin(req)) return false;
+    const nonce = req.params.loginNonce;
+    if (nonce) {
+      if (!/^[A-Za-z0-9_-]{43}$/.test(nonce) || uri.pathname !== `/api/oauth/callback/${nonce}` || uri.search) return false;
+    } else {
+      // Allow in-progress attempts initiated before this correction was published.
+      if (uri.pathname !== "/api/oauth/callback" || !uri.searchParams.get("loginNonce") || uri.searchParams.get("loginNonce") !== req.query.loginNonce) return false;
+    }
     const cookies = parse(req.headers.cookie || "");
     const actual = cookies[OAUTH_STATE_COOKIE] || "";
     const expected = createHash("sha256").update(state).digest("hex");
     return actual.length === expected.length && timingSafeEqual(Buffer.from(actual), Buffer.from(expected));
   } catch { return false; }
+}
+
+export function recoverWebOAuthState(req: Request): string | undefined {
+  // Some provider returns omit state. Recover it only from a random callback
+  // path AND the matching HttpOnly cookie, never from an untrusted redirect.
+  const nonce = req.params.loginNonce;
+  if (!nonce || !/^[A-Za-z0-9_-]{43}$/.test(nonce)) return undefined;
+  const uri = new URL(`/api/oauth/callback/${nonce}`, getOAuthCallbackOrigin(req));
+  const state = Buffer.from(uri.toString(), "utf8").toString("base64");
+  return validateWebOAuthAttempt(req, state) ? state : undefined;
 }
 
 export function validateNativeOAuthState(state: string): boolean {
