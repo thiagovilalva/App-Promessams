@@ -181,7 +181,7 @@ describe("requested product updates", () => {
     expect(home).toContain('import { Image } from "expo-image"');
     expect(home).toContain('cachePolicy="memory-disk"');
     expect(offers).toContain('import { Image } from "expo-image"');
-    expect(config).toContain("versionCode: 20");
+    expect(config).toContain("versionCode: 21");
     expect(config).toContain("enableMinifyInReleaseBuilds: true");
     expect(config).toContain("enableShrinkResourcesInReleaseBuilds: true");
     expect(read("lib/radio-provider.tsx")).not.toContain("useAudioPlayer");

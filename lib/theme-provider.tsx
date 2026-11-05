@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Appearance, View } from "react-native";
+import { Appearance, Platform, View } from "react-native";
 import { colorScheme as nativewindColorScheme, vars } from "nativewind";
 
 import { SchemeColors, type ColorScheme } from "@/constants/theme";
@@ -19,7 +19,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let active = true;
     // Public hosted pages receive only a non-sensitive theme preference.
-    const requested = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("theme") : null;
+    // React Native defines window as an alias for global, without location.
+    // Never interpret the existence of window as proof of a browser runtime.
+    const requested = Platform.OS === "web" && typeof window !== "undefined" && window.location
+      ? new URLSearchParams(window.location.search).get("theme")
+      : null;
     if (requested === "light" || requested === "dark") {
       setColorSchemeState(requested);
       void AsyncStorage.setItem("sementes:theme", requested);
@@ -34,7 +38,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const applyScheme = useCallback((scheme: ColorScheme) => {
     nativewindColorScheme.set(scheme);
     Appearance.setColorScheme?.(scheme);
-    if (typeof document !== "undefined") {
+    if (Platform.OS === "web" && typeof document !== "undefined") {
       const root = document.documentElement;
       root.dataset.theme = scheme;
       root.style.colorScheme = scheme;
