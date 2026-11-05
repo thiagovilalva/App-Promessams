@@ -37,6 +37,7 @@ const MAPPING: Record<string, MaterialIconName> = {
   "chevron.up": "expand-less",
   "auto-stories": "auto-stories",
   "groups": "groups",
+  "building.2.crop.circle": "church",
   "spa": "spa",
   "paperplane.fill": "send",
   "chevron.left.forwardslash.chevron.right": "code",

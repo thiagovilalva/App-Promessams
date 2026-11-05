@@ -115,6 +115,10 @@ describe("PromessaMS OAuth production regressions", () => {
       const good = await fetch(`${base}/api/auth/open-page?destination=%2Frelatorios`, { headers: { ...hostHeaders, Authorization: "Bearer synthetic-session-token" }, redirect: "manual" });
       expect(good.headers.get("location")).toBe(`${PUBLIC_SITE_ORIGIN}/relatorios`);
       expect(good.headers.get("set-cookie")).toContain("app_session_id=synthetic-session-token");
+      const dark = await fetch(`${base}/api/auth/open-page?destination=%2Frelatorios&theme=dark`, { headers: { ...hostHeaders, Authorization: "Bearer synthetic-session-token" }, redirect: "manual" });
+      expect(dark.headers.get("location")).toBe(`${PUBLIC_SITE_ORIGIN}/relatorios?theme=dark`);
+      const invalidTheme = await fetch(`${base}/api/auth/open-page?destination=%2Frelatorios&theme=evil`, { headers: { ...hostHeaders, Authorization: "Bearer synthetic-session-token" }, redirect: "manual" });
+      expect(invalidTheme.headers.get("location")).toBe(`${PUBLIC_SITE_ORIGIN}/relatorios`);
       const bad = await fetch(`${base}/api/auth/open-page?destination=https%3A%2F%2Fevil.example`, { headers: hostHeaders, redirect: "manual" });
       expect(bad.status).toBe(400);
     });

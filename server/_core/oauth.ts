@@ -171,7 +171,9 @@ export function registerOAuthRoutes(app: Express) {
     try {
       await sdk.authenticateRequest(req);
       res.cookie(COOKIE_NAME, auth.slice(7).trim(), { ...getSessionCookieOptions(req), maxAge: ONE_YEAR_MS });
-      res.redirect(302, `${getOAuthWebOrigin(req)}${destination}`);
+      const theme = req.query.theme;
+      const themeQuery = theme === "light" || theme === "dark" ? `?theme=${theme}` : "";
+      res.redirect(302, `${getOAuthWebOrigin(req)}${destination}${themeQuery}`);
     } catch { res.redirect(302, `${getOAuthWebOrigin(req)}/conta?login=expired`); }
   });
 

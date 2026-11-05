@@ -10,6 +10,7 @@ import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { registerRadioMusicRoutes } from "../radio-music";
+import { registerWebStatic } from "../web-static";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -109,8 +110,9 @@ async function startServer() {
 
   // The production container runs the API process, so explicitly serve the
   // Expo static export as the public website and SPA fallback.
-  app.use(express.static(webDist, { index: "index.html" }));
+  registerWebStatic(app, webDist);
   app.get("*", (_req, res) => {
+    res.setHeader("Cache-Control", "no-cache");
     res.sendFile(path.join(webDist, "index.html"));
   });
 

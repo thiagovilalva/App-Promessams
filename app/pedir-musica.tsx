@@ -343,7 +343,7 @@ export default function PedirMusicaScreen() {
                     },
                   ]}
                 >
-                  <Text style={styles.submitText}>
+                  <Text style={[styles.submitText, { color: colors.background }]}>
                     {sending ? "Enviando pedido..." : "Enviar pedido à rádio"}
                   </Text>
                 </Pressable>

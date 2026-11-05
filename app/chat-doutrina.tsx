@@ -3,33 +3,14 @@ import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import { copyChatResponse, shareChatResponse } from "@/lib/message-actions";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
 
 type Message = { role: "user" | "assistant"; content: string };
 const MAX_QUESTION_LENGTH = 10000;
-
-function escapeHtml(value: string) {
-  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
-
-function exportAnswer(content: string, format: "doc" | "pdf") {
-  if (Platform.OS !== "web") {
-    window.alert("A geração de arquivos está disponível no site. Abra o PromessaMS pelo navegador para baixar a resposta.");
-    return;
-  }
-  const html = `<html><head><meta charset="utf-8"><title>Resposta do Professor Doutrinário</title><style>body{font-family:Arial,sans-serif;line-height:1.6;max-width:800px;margin:40px auto;padding:0 24px;white-space:pre-wrap}h1{font-size:22px}</style></head><body><h1>Professor Doutrinário</h1>${escapeHtml(content).replace(/\n/g, "<br>")}</body></html>`;
-  if (format === "doc") {
-    const blob = new Blob([html], { type: "application/msword" });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a"); anchor.href = url; anchor.download = "resposta-professor-doutrinario.doc"; anchor.click(); URL.revokeObjectURL(url);
-    return;
-  }
-  const printWindow = window.open("", "_blank", "noopener,noreferrer");
-  if (!printWindow) { window.alert("Permita janelas pop-up para salvar a resposta em PDF."); return; }
-  printWindow.document.write(html); printWindow.document.close(); printWindow.focus(); printWindow.print();
-}
 
 const INTRO: Message = {
   role: "assistant",
@@ -89,7 +70,10 @@ export default function DoctrinalChatScreen() {
             {message.role === "assistant" && <View style={[styles.avatar, { backgroundColor: colors.primary }]}><Text style={styles.avatarText}>B</Text></View>}
             <View style={[styles.bubble, message.role === "user" ? { backgroundColor: colors.primary } : { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}>
               <Text selectable style={[styles.message, { color: message.role === "user" ? "#FFFFFF" : colors.foreground }]}>{message.content}</Text>
-              {message.role === "assistant" && index > 0 && <View style={styles.exportActions}><Pressable onPress={() => exportAnswer(message.content, "doc")} style={[styles.exportButton, { borderColor: colors.border }]}><Text style={[styles.exportText, { color: colors.primary }]}>Baixar DOC</Text></Pressable><Pressable onPress={() => exportAnswer(message.content, "pdf")} style={[styles.exportButton, { borderColor: colors.border }]}><Text style={[styles.exportText, { color: colors.primary }]}>Salvar PDF</Text></Pressable></View>}
+              {message.role === "assistant" && messages.length > 0 && <View style={styles.responseActions}>
+                <Pressable onPress={() => void copyChatResponse(message.content)} accessibilityRole="button" accessibilityLabel="Copiar resposta doutrinária" style={[styles.actionButton, { borderColor: colors.border }]}><IconSymbol name="doc.on.doc.fill" size={15} color={colors.primary} /><Text style={[styles.actionText, { color: colors.primary }]}>Copiar</Text></Pressable>
+                <Pressable onPress={() => void shareChatResponse(message.content, "Professor Doutrinário · PromessaMS")} accessibilityRole="button" accessibilityLabel="Compartilhar resposta doutrinária" style={[styles.actionButton, { borderColor: colors.border }]}><IconSymbol name="share" size={15} color={colors.primary} /><Text style={[styles.actionText, { color: colors.primary }]}>Compartilhar</Text></Pressable>
+              </View>}
             </View>
           </View>)}
           {mutation.isPending && <View style={styles.row}><View style={[styles.avatar, { backgroundColor: colors.primary }]}><Text style={styles.avatarText}>B</Text></View><View style={[styles.bubble, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}><ActivityIndicator color={colors.primary} /></View></View>}
@@ -118,12 +102,12 @@ const styles = StyleSheet.create({
   userRow: { alignSelf: "flex-end" },
   avatar: { width: 31, height: 31, borderRadius: 11, alignItems: "center", justifyContent: "center" },
   avatarText: { color: "#FFFFFF", fontSize: 15, fontWeight: "800" },
-  bubble: { borderRadius: 17, paddingHorizontal: 14, paddingVertical: 12, maxWidth: "100%" },
+  bubble: { flexShrink: 1, minWidth: 0, borderRadius: 17, paddingHorizontal: 14, paddingVertical: 12, maxWidth: "100%" },
   message: { fontSize: 15, lineHeight: 22 },
   composer: { borderWidth: 1, borderRadius: 17, minHeight: 54, flexDirection: "row", alignItems: "flex-end", padding: 7, marginBottom: 8 },
   input: { flex: 1, minHeight: 38, maxHeight: 120, paddingHorizontal: 9, paddingVertical: 8, fontSize: 15 },
   send: { width: 39, height: 39, borderRadius: 13, alignItems: "center", justifyContent: "center" },
   sendText: { color: "#FFFFFF", fontSize: 22, fontWeight: "800" },
-  limitHint: { fontSize: 10, lineHeight: 14, textAlign: "right", marginTop: 4, marginBottom: 4 }, exportActions: { flexDirection: "row", gap: 7, marginTop: 10, flexWrap: "wrap" }, exportButton: { borderWidth: 1, borderRadius: 9, paddingHorizontal: 9, paddingVertical: 6 }, exportText: { fontSize: 11, fontWeight: "800" },
+  limitHint: { fontSize: 10, lineHeight: 14, textAlign: "right", marginTop: 4, marginBottom: 4 }, responseActions: { flexDirection: "row", gap: 7, marginTop: 10, flexWrap: "wrap" }, actionButton: { flexDirection: "row", alignItems: "center", gap: 5, borderWidth: 1, borderRadius: 9, paddingHorizontal: 9, paddingVertical: 6 }, actionText: { fontSize: 11, fontWeight: "800" },
   pressed: { opacity: 0.78 },
 });

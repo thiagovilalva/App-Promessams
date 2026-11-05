@@ -13,17 +13,22 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  // The product currently ships a light-first visual system. Following a
-  // device dark-mode preference here used to mix NativeWind's light CSS
-  // variables with the dark runtime palette on mobile, hiding headings and
-  // helper text. Keep the palette consistent until an explicit theme switch
-  // is added to the UI.
+  // Light-first SSR; the persisted product choice drives both text and backgrounds.
   const [colorScheme, setColorSchemeState] = useState<ColorScheme>("light");
 
   useEffect(() => {
+    let active = true;
+    // Public hosted pages receive only a non-sensitive theme preference.
+    const requested = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("theme") : null;
+    if (requested === "light" || requested === "dark") {
+      setColorSchemeState(requested);
+      void AsyncStorage.setItem("sementes:theme", requested);
+      return () => { active = false; };
+    }
     AsyncStorage.getItem("sementes:theme").then((saved) => {
-      if (saved === "light" || saved === "dark") setColorSchemeState(saved);
-    });
+      if (active && (saved === "light" || saved === "dark")) setColorSchemeState(saved);
+    }).catch(() => undefined);
+    return () => { active = false; };
   }, []);
 
   const applyScheme = useCallback((scheme: ColorScheme) => {
@@ -32,6 +37,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (typeof document !== "undefined") {
       const root = document.documentElement;
       root.dataset.theme = scheme;
+      root.style.colorScheme = scheme;
       root.classList.toggle("dark", scheme === "dark");
       const palette = SchemeColors[scheme];
       Object.entries(palette).forEach(([token, value]) => {

@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
 
 import { ScreenContainer } from "@/components/screen-container";
@@ -27,7 +27,7 @@ export default function HomeScreen() {
           <View style={styles.topActions}><Pressable onPress={() => setColorScheme(colorScheme === "light" ? "dark" : "light")} style={[styles.themeButton, { borderColor: colors.border, backgroundColor: colors.surface }]} accessibilityLabel="Alternar modo claro e escuro"><Text style={[styles.themeButtonText, { color: colors.foreground }]}>{colorScheme === "light" ? "Escuro" : "Claro"}</Text></Pressable><Pressable onPress={() => router.push("/acessibilidade")} style={[styles.accessibilityButton, { borderColor: colors.border, backgroundColor: colors.surface }]} accessibilityRole="button" accessibilityLabel="Abrir acessibilidade"><IconSymbol name="accessibility" size={16} color={colors.foreground} /></Pressable></View>
         </View>
 
-        <View style={[styles.hero, { backgroundColor: colors.primary }]}>
+        <View style={[styles.hero, { backgroundColor: "#167C55" }]}>
           <View style={styles.heroGlow} />
           <Text style={styles.heroEyebrow}>MULTIPLICANDO VIDAS</Text>
           <Text style={styles.heroTitle}>Uma fé que cria raízes e dá fruto.</Text>
@@ -45,11 +45,16 @@ export default function HomeScreen() {
             <Text style={[styles.quickTitle, { color: colors.foreground }]}>Hinário HBJ</Text><Text style={[styles.quickText, { color: colors.muted }]}>Brados de Júbilo.</Text>
           </Pressable>
         </View>
-        <Pressable onPress={() => router.push("/chat-doutrina")} style={({ pressed }) => [styles.doctrineCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Abrir O Doutrinal">
-          <View style={[styles.iconBox, { backgroundColor: "#FFF4DD" }]}><IconSymbol name="book.open" size={22} color="#A76418" /></View>
-          <View style={styles.doctrineCopy}><Text style={[styles.quickTitle, { color: colors.foreground }]}>O Doutrinal</Text><Text style={[styles.quickText, { color: colors.muted }]}>Compreenda a doutrina da promessa aqui</Text></View>
-          <IconSymbol name="chevron.right" size={18} color={colors.primary} />
-        </Pressable>
+        <View style={[styles.quickGrid, styles.secondaryGrid]}>
+          <Pressable onPress={() => router.push("/chat-doutrina")} style={({ pressed }) => [styles.quickCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Abrir O Doutrinal">
+            <View style={[styles.iconBox, { backgroundColor: "#FFF4DD" }]}><IconSymbol name="book.open" size={22} color="#A76418" /></View>
+            <Text style={[styles.quickTitle, { color: colors.foreground }]}>O Doutrinal</Text><Text style={[styles.quickText, { color: colors.muted }]}>Compreenda a Doutrina.</Text>
+          </Pressable>
+          <Pressable onPress={() => Platform.OS === "web" ? router.push("/igrejas") : router.push({ pathname: "/pagina-web", params: { page: "igrejas", returnTo: "home" } })} style={({ pressed }) => [styles.quickCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Abrir endereços das igrejas">
+            <View style={[styles.iconBox, { backgroundColor: colors.primary + "18" }]}><IconSymbol name="building.2.crop.circle" size={24} color={colors.primary} /></View>
+            <Text style={[styles.quickTitle, { color: colors.foreground }]}>Igrejas</Text><Text style={[styles.quickText, { color: colors.muted }]}>Encontre endereços e localização.</Text>
+          </Pressable>
+        </View>
 
         <Text style={[styles.kicker, { color: colors.primary, marginTop: 26 }]}>O QUE NOS GUIA</Text>
         <Pressable onPress={() => router.push("/plano-biblico")} style={({ pressed }) => [styles.principle, { borderBottomColor: colors.border }, pressed && styles.pressed]}><View style={[styles.smallIcon, { backgroundColor: colors.primary + "18" }]}><IconSymbol name="auto-stories" size={20} color={colors.primary} /></View><View style={styles.principleBody}><Text style={[styles.principleTitle, { color: colors.foreground }]}>Devocionais</Text><Text style={[styles.principleText, { color: colors.muted }]}>Textos, contexto e aplicações para viver a missão.</Text></View><IconSymbol name="chevron.right" size={18} color={colors.primary} /></Pressable>
@@ -67,11 +72,11 @@ export default function HomeScreen() {
             <Text style={[styles.radioText, { color: colors.muted }]}>{radioError && !radioBuffering ? "Falha de conexão. Toque para tentar novamente." : radioBuffering ? "Conectando à transmissão..." : radioPlaying ? "Ao vivo agora" : "Toque para ouvir online"}</Text>
           </View>
           <Pressable onPress={toggleRadio} style={({ pressed }) => [styles.radioButton, { backgroundColor: colors.primary }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel={radioRequested ? "Parar Rádio da Promessa" : "Ouvir Rádio da Promessa"}>
-            <IconSymbol name={radioRequested ? "stop.fill" : "play.fill"} size={18} color="#FFFFFF" />
+            <IconSymbol name={radioRequested ? "stop.fill" : "play.fill"} size={18} color={colors.background} />
           </Pressable>
         </View>
         <Pressable onPress={() => router.push("/radio-promessa")} style={({ pressed }) => [styles.radioDetails, { borderColor: colors.primary, backgroundColor: colors.primary + "12" }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Abrir recursos da Rádio da Promessa">
-          <Text style={[styles.radioDetailsText, { color: colors.primary }]}>Programas, Igrejas e Comunidade</Text><Text style={[styles.radioDetailsArrow, { color: colors.primary }]}>›</Text>
+          <IconSymbol name="bubble.left.and.bubble.right.fill" size={22} color={colors.primary} /><Text style={[styles.radioDetailsText, { color: colors.primary }]}>Programas & Comunidade</Text><IconSymbol name="chevron.right" size={18} color={colors.primary} />
         </Pressable>
         <Pressable onPress={() => void Linking.openURL(`https://wa.me/5567999132610?text=${encodeURIComponent("Olá, Gostaria de conversar com a secretaria regional.")}`)} style={[styles.whatsappButton, { borderColor: "#25D366", backgroundColor: colors.surface }]} accessibilityRole="link" accessibilityLabel="Fale Com A Convenção pelo WhatsApp"><IconSymbol name="whatsapp" size={24} color="#128C49" /><Text style={[styles.whatsappText, { color: colors.foreground }]}>Fale Com A Convenção</Text></Pressable>
         <Pressable onPress={() => router.push("/conta")} accessibilityRole="button" style={[styles.accountLink, { borderColor: colors.border, backgroundColor: colors.surface }]}><Text style={[styles.accountLinkText, { color: colors.primary }]}>Entrar ou Criar Conta</Text><Text style={[styles.accountLinkHint, { color: colors.muted }]}>Guardar sua jornada e histórico</Text></Pressable>
@@ -102,6 +107,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 22, fontWeight: "800", letterSpacing: -0.4 },
   seeAll: { fontSize: 13, fontWeight: "700", marginBottom: 3 },
   quickGrid: { flexDirection: "row", gap: 12 },
+  secondaryGrid: { marginTop: 12 },
   quickCard: { flex: 1, borderRadius: 18, borderWidth: 1, padding: 14, minHeight: 146 },
   iconBox: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center", marginBottom: 13 },
   quickTitle: { fontSize: 15, fontWeight: "800", marginBottom: 5 },
@@ -133,8 +139,8 @@ const styles = StyleSheet.create({
   radioTitle: { fontSize: 14, fontWeight: "800", marginBottom: 3 },
   radioText: { fontSize: 11, lineHeight: 16 },
   radioButton: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
-  radioDetails: { minHeight: 66, gap: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderWidth: 1, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 11, marginTop: 8 },
-  radioDetailsText: { flex: 1, fontSize: 16, lineHeight: 23, fontWeight: "800" },
+  radioDetails: { minHeight: 50, gap: 10, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderWidth: 1, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9, marginTop: 8 },
+  radioDetailsText: { flex: 1, fontSize: 15, lineHeight: 21, fontWeight: "800" },
   radioDetailsArrow: { fontSize: 22, lineHeight: 22 },
   privacyLink: { alignItems: "center", marginTop: 16, padding: 6 },
   privacyText: { fontSize: 12, fontWeight: "800" },

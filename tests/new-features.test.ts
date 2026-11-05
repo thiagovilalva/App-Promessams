@@ -124,7 +124,8 @@ describe("requested product updates", () => {
     const pkg = JSON.parse(fs.readFileSync(path.join(process.cwd(), "package.json"), "utf8")) as { scripts: { build: string } };
     const server = read("server/_core/index.ts");
     expect(pkg.scripts.build).toContain("expo export --platform web --clear --output-dir web-dist");
-    expect(server).toContain("express.static(webDist");
+    expect(server).toContain("registerWebStatic(app, webDist)");
+    expect(read("server/web-static.ts")).toContain("express.static(webDist");
   });
   it("adds a separate doctrinal chat grounded in the institutional brochure", () => {
     const router = read("server/routers.ts");

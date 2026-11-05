@@ -4,12 +4,14 @@ import { ActivityIndicator, BackHandler, Linking, Platform, Pressable, StyleShee
 import { WebView, type WebViewNavigation } from "react-native-webview";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
+import { useThemeContext } from "@/lib/theme-provider";
 import { getSessionToken } from "@/lib/_core/auth";
 import { PUBLIC_SITE_ORIGIN } from "@/shared/auth-config";
 import { HOSTED_PAGES, isHostedPageKey } from "@/shared/hosted-pages";
 
 export default function HostedPageScreen() {
-  const colors = useColors(); const router = useRouter(); const { page } = useLocalSearchParams<{ page?: string }>();
+  const colors = useColors(); const router = useRouter(); const { page, returnTo } = useLocalSearchParams<{ page?: string; returnTo?: string }>();
+  const { colorScheme } = useThemeContext();
   const definition = page && isHostedPageKey(page) ? HOSTED_PAGES[page] : undefined;
   const webview = useRef<WebView>(null);
   const [source, setSource] = useState<{ uri: string; headers?: Record<string, string> }>();
@@ -20,18 +22,18 @@ export default function HostedPageScreen() {
     void (async () => {
       if (!definition) { setError("Página indisponível."); setLoading(false); return; }
       if (Platform.OS === "web") { router.replace(definition.path as never); return; }
-      const token = await getSessionToken();
+      const token = definition.requiresAuth ? await getSessionToken() : null;
       if (!active) return;
       if (definition.requiresAuth && !token) { router.replace("/conta"); return; }
       // A session cookie is established by the same-origin server, then the
       // WebView follows its redirect. Tokens never appear in URLs or injected JS.
       setSource(token && definition.requiresAuth ? {
-        uri: `${PUBLIC_SITE_ORIGIN}/api/auth/open-page?destination=${encodeURIComponent(definition.path)}`,
+        uri: `${PUBLIC_SITE_ORIGIN}/api/auth/open-page?destination=${encodeURIComponent(definition.path)}&theme=${colorScheme}`,
         headers: { Authorization: `Bearer ${token}` },
-      } : { uri: `${PUBLIC_SITE_ORIGIN}${definition.path}` });
+      } : { uri: `${PUBLIC_SITE_ORIGIN}${definition.path}?theme=${colorScheme}` });
     })();
     return () => { active = false; };
-  }, [definition, router, reloadKey]);
+  }, [definition, router, reloadKey, colorScheme]);
   useEffect(() => {
     if (Platform.OS !== "android") return;
     const sub = BackHandler.addEventListener("hardwareBackPress", () => { if (canGoBack) webview.current?.goBack(); else router.back(); return true; });
@@ -40,7 +42,7 @@ export default function HostedPageScreen() {
   const navigation = (event: WebViewNavigation) => { setCanGoBack(event.canGoBack); };
   return <ScreenContainer edges={["top", "bottom", "left", "right"]}>
     <View style={[styles.header, { borderColor: colors.border }]}>
-      <Pressable accessibilityRole="button" onPress={() => router.replace(page === "relatorios" ? "/conta" : "/radio-promessa")} style={styles.back}><Text style={[styles.link, { color: colors.primary }]}>Voltar</Text></Pressable>
+      <Pressable accessibilityRole="button" onPress={() => router.replace(page === "relatorios" ? "/conta" : returnTo === "home" ? "/" : "/radio-promessa")} style={styles.back}><Text style={[styles.link, { color: colors.primary }]}>Voltar</Text></Pressable>
       <Text style={[styles.title, { color: colors.foreground }]}>{definition?.title || "Página online"}</Text>
       <Pressable accessibilityRole="button" accessibilityLabel="Voltar à tela inicial" onPress={() => router.replace("/")} style={styles.back}><Text style={[styles.link, { color: colors.primary }]}>Início</Text></Pressable>
     </View>
