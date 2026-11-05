@@ -3,6 +3,8 @@ import type { Express, Request, Response } from "express";
 import { getUserByOpenId, upsertUser } from "../db";
 import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
+import { ENV } from "./env";
+import { createWebOAuthAttempt, getOAuthWebOrigin, OAUTH_STATE_COOKIE, OAUTH_STATE_TTL_MS, validateWebOAuthAttempt, validateNativeOAuthState } from "../oauth-policy";
 
 function getQueryParam(req: Request, key: string): string | undefined {
   const value = req.query[key];
@@ -62,36 +64,60 @@ function buildUserResponse(
 }
 
 export function registerOAuthRoutes(app: Express) {
+  app.use(["/api/oauth", "/api/auth"], (_req, res, next) => {
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader("Referrer-Policy", "no-referrer");
+    next();
+  });
+  app.get("/api/oauth/start", (req: Request, res: Response) => {
+    if (!ENV.appId) {
+      res.status(503).json({ error: "Login temporariamente indisponível." });
+      return;
+    }
+    const attempt = createWebOAuthAttempt(req);
+    res.cookie(OAUTH_STATE_COOKIE, attempt.cookieValue, { ...getSessionCookieOptions(req), sameSite: "lax", maxAge: OAUTH_STATE_TTL_MS });
+    const url = new URL("https://manus.im/app-auth");
+    url.searchParams.set("appId", ENV.appId);
+    url.searchParams.set("redirectUri", attempt.redirectUri);
+    url.searchParams.set("state", attempt.state);
+    url.searchParams.set("type", "signIn");
+    res.redirect(302, url.toString());
+  });
   app.get("/api/oauth/callback", async (req: Request, res: Response) => {
     const code = getQueryParam(req, "code");
     const state = getQueryParam(req, "state");
 
+    if (getQueryParam(req, "error")) {
+      res.clearCookie(OAUTH_STATE_COOKIE, getSessionCookieOptions(req));
+      res.redirect(302, `${getOAuthWebOrigin(req)}/conta?login=cancelled`);
+      return;
+    }
     if (!code || !state) {
       res.status(400).json({ error: "code and state are required" });
       return;
     }
+    if (!validateWebOAuthAttempt(req, state)) {
+      res.status(400).json({ error: "Esta tentativa de login expirou. Volte ao site e clique em Entrar novamente." });
+      return;
+    }
+    res.clearCookie(OAUTH_STATE_COOKIE, getSessionCookieOptions(req));
 
     try {
       const tokenResponse = await sdk.exchangeCodeForToken(code, state);
       const userInfo = await sdk.getUserInfo(tokenResponse.accessToken);
       await syncUser(userInfo);
       const sessionToken = await sdk.createSessionToken(userInfo.openId!, {
-        name: userInfo.name || "",
+        name: userInfo.name || "Participante",
         expiresInMs: ONE_YEAR_MS,
       });
 
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
-      // Redirect to the frontend URL (Expo web on port 8081)
-      // Cookie is set with parent domain so it works across both 3000 and 8081 subdomains
-      const frontendUrl =
-        process.env.EXPO_WEB_PREVIEW_URL ||
-        process.env.EXPO_PACKAGER_PROXY_URL ||
-        "http://localhost:8081";
-      res.redirect(302, frontendUrl);
+      // The deployed frontend shares the callback host, not the Metro server.
+      res.redirect(302, `${getOAuthWebOrigin(req)}/conta?login=success`);
     } catch (error) {
-      console.error("[OAuth] Callback failed", error);
+      console.error("[OAuth] Callback failed:", error instanceof Error ? error.name : "Unknown error");
       res.status(500).json({ error: "OAuth callback failed" });
     }
   });
@@ -104,6 +130,10 @@ export function registerOAuthRoutes(app: Express) {
       res.status(400).json({ error: "code and state are required" });
       return;
     }
+    if (!validateNativeOAuthState(state)) {
+      res.status(400).json({ error: "Retorno de login inválido. Atualize o PromessaMS para a versão mais recente." });
+      return;
+    }
 
     try {
       const tokenResponse = await sdk.exchangeCodeForToken(code, state);
@@ -111,7 +141,7 @@ export function registerOAuthRoutes(app: Express) {
       const user = await syncUser(userInfo);
 
       const sessionToken = await sdk.createSessionToken(userInfo.openId!, {
-        name: userInfo.name || "",
+        name: userInfo.name || "Participante",
         expiresInMs: ONE_YEAR_MS,
       });
 
@@ -123,7 +153,7 @@ export function registerOAuthRoutes(app: Express) {
         user: buildUserResponse(user),
       });
     } catch (error) {
-      console.error("[OAuth] Mobile exchange failed", error);
+      console.error("[OAuth] Mobile exchange failed:", error instanceof Error ? error.name : "Unknown error");
       res.status(500).json({ error: "OAuth mobile exchange failed" });
     }
   });

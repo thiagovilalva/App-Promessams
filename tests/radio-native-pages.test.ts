@@ -39,7 +39,7 @@ describe("radio directory and startup regressions", () => {
     const config = read("app.config.ts");
     const pkg = JSON.parse(read("package.json"));
     expect(config).toContain("newArchEnabled: true");
-    expect(config).toContain("versionCode: 17");
+    expect(config).toContain("versionCode: 18");
     expect(pkg.dependencies["expo-audio"]).toBeUndefined();
     expect(pkg.dependencies["expo-video"]).toBeUndefined();
   });

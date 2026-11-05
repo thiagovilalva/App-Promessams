@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { startOAuthLogin } from "@/constants/oauth";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/use-colors";
@@ -11,6 +11,7 @@ import { ScreenContainer } from "@/components/screen-container";
 export default function AccountScreen() {
   const colors = useColors();
   const router = useRouter();
+  const { login } = useLocalSearchParams<{ login?: string }>();
   const { user, loading, logout } = useAuth();
   const [historyCount, setHistoryCount] = useState(0);
   const history = trpc.history.list.useQuery(undefined, { enabled: Boolean(user), retry: false });
@@ -21,6 +22,7 @@ export default function AccountScreen() {
       <Text style={[styles.kicker, { color: colors.primary }]}>SUA JORNADA</Text>
       <Text style={[styles.title, { color: colors.foreground }]}>Conta e histórico</Text>
       <Text style={[styles.body, { color: colors.muted }]}>Entre com sua conta Manus para guardar suas conversas e continuar sua jornada em outro acesso.</Text>
+      {login === "cancelled" && !user && <Text style={[styles.body, { color: colors.muted }]}>O login foi cancelado. Você pode tentar novamente pelo botão Entrar.</Text>}
       {loading ? <ActivityIndicator color={colors.primary} /> : user ? <>
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.welcome, { color: colors.foreground }]}>Olá, {user.name || user.email || "participante"}.</Text><Text style={[styles.body, { color: colors.muted }]}>Este dispositivo tem {historyCount} pergunta(s) guardada(s). O histórico sincronizado aparece abaixo.</Text><Pressable onPress={() => void logout()} style={[styles.button, { backgroundColor: colors.border }]}><Text style={[styles.buttonText, { color: colors.foreground }]}>Sair da conta</Text></Pressable></View>
         <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Conversas salvas</Text>

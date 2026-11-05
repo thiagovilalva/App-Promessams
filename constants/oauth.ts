@@ -1,10 +1,10 @@
 import * as Linking from "expo-linking";
 import * as ReactNative from "react-native";
+import * as WebBrowser from "expo-web-browser";
+import { OAUTH_APP_SCHEME } from "@/shared/auth-config";
 
-// Must match the scheme declared in app.config.ts. The previous value was
-// derived from the old Projeto Sementes bundle ID, so Android could not route
-// the Manus OAuth callback back into the PromessaMS app.
-const schemeFromBundleId = "promessams";
+// The legacy app scheme remains registered, but OAuth needs Manus's prefix.
+const schemeFromBundleId = OAUTH_APP_SCHEME;
 
 const env = {
   portal: process.env.EXPO_PUBLIC_OAUTH_PORTAL_URL ?? "",
@@ -77,11 +77,14 @@ export const getRedirectUri = () => {
   } else {
     return Linking.createURL("/oauth/callback", {
       scheme: env.deepLinkScheme,
+      isTripleSlashed: true,
     });
   }
 };
 
 export const getLoginUrl = () => {
+  // The server creates the web attempt/cookie and chooses the public callback.
+  if (ReactNative.Platform.OS === "web") return `${getApiBaseUrl()}/api/oauth/start`;
   const redirectUri = getRedirectUri();
   const state = encodeState(redirectUri);
 
@@ -126,13 +129,12 @@ export async function startOAuthLogin(): Promise<string | null> {
   }
 
   try {
-    // canOpenURL is unreliable for HTTPS URLs on some Android releases and
-    // was causing the login button to do nothing. openURL is the correct
-    // operation here: the system browser handles the Manus HTTPS page and
-    // the final promessams:// callback returns to the app.
-    await Linking.openURL(loginUrl);
-  } catch (error) {
-    console.error("[OAuth] Failed to open login URL:", error);
+    const result = await WebBrowser.openAuthSessionAsync(loginUrl, getRedirectUri());
+    // Expo Router may already have seen the URL on Android; the callback uses
+    // a shared single-flight exchange so forwarding it cannot reuse the code.
+    if (result.type === "success") await Linking.openURL(result.url);
+  } catch {
+    console.error("[OAuth] Failed to open login window");
     ReactNative.Alert.alert("Não foi possível abrir o login", "Verifique sua conexão com a internet e tente novamente.");
   }
 

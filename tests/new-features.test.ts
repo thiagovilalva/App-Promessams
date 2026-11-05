@@ -150,13 +150,15 @@ describe("requested product updates", () => {
   it("routes Manus OAuth back to the PromessaMS app scheme", () => {
     const oauth = read("constants/oauth.ts");
     const config = read("app.config.ts");
-    expect(oauth).toContain('schemeFromBundleId = "promessams"');
+    expect(oauth).toContain("schemeFromBundleId = OAUTH_APP_SCHEME");
+    expect(read("shared/auth-config.ts")).toContain('OAUTH_APP_SCHEME = "manuspromessams"');
     expect(config).toContain('const scheme = "promessams"');
     expect(oauth).not.toContain("com.app.projetosementes");
   });
-  it("opens the Manus login URL directly on native platforms", () => {
+  it("opens a native auth session and forwards the successful return", () => {
     const oauth = read("constants/oauth.ts");
-    expect(oauth).toContain("Linking.openURL(loginUrl)");
+    expect(oauth).toContain("WebBrowser.openAuthSessionAsync(loginUrl, getRedirectUri())");
+    expect(oauth).toContain("Linking.openURL(result.url)");
     expect(oauth).not.toContain("const supported = await Linking.canOpenURL(loginUrl)");
   });
   it("keeps the account login actionable and reports OAuth failures", () => {
@@ -177,7 +179,7 @@ describe("requested product updates", () => {
     expect(home).toContain('import { Image } from "expo-image"');
     expect(home).toContain('cachePolicy="memory-disk"');
     expect(offers).toContain('import { Image } from "expo-image"');
-    expect(config).toContain("versionCode: 17");
+    expect(config).toContain("versionCode: 18");
     expect(config).toContain("enableMinifyInReleaseBuilds: true");
     expect(config).toContain("enableShrinkResourcesInReleaseBuilds: true");
     expect(read("lib/radio-provider.tsx")).not.toContain("useAudioPlayer");
