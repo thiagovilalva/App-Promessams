@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 
 import { SEMENTES_KNOWLEDGE } from "../shared/knowledge";
 import { buildBibleReferenceContext, buildLibraryContext } from "../shared/chat-library";
-import { buildDoctrinalContext, DOCTRINAL_STUDIES } from "../shared/doctrinal-knowledge";
+import { buildDoctrinalContext, buildDoctrinalFallback, DOCTRINAL_STUDIES } from "../shared/doctrinal-knowledge";
 import { fallbackAnswer, needsOnlineResearch } from "../shared/chat-fallback";
 import { COOKIE_NAME } from "../shared/const";
 import { createMaterial, getAllMaterials, getPublishedMaterials, getUserConversations, publishMaterial, saveConversation } from "./db";
@@ -174,8 +174,13 @@ export const appRouter = router({
   doctrinalChat: router({
     studies: publicProcedure.query(() => DOCTRINAL_STUDIES.map(({ number, title }) => ({ number, title }))),
     ask: publicProcedure.input(z.object({ messages: z.array(chatMessageSchema).min(1).max(20) })).mutation(async ({ ctx, input }) => {
+      const latestQuery = [...input.messages].reverse().find((message) => message.role === "user")?.content ?? "";
+      if (/^(olá|ola|oi|bom dia|boa tarde|boa noite)[!,.\s]*$/iu.test(latestQuery.trim())) {
+        const answer = "Olá! Seja bem-vindo ao Professor Doutrinário. Faça sua pergunta sobre qualquer um dos 31 pontos da doutrina bíblica da Igreja Adventista da Promessa, e eu ajudarei a estudar o tema com base nas Escrituras e em O Doutrinal.";
+        if (ctx.user) await saveConversation({ userId: ctx.user.id, title: "Doutrina: saudação", messages: JSON.stringify([...input.messages, { role: "assistant", content: answer }]) });
+        return { answer, source: "O Doutrinal — Editora Promessa, 2023" };
+      }
       try {
-        const latestQuery = [...input.messages].reverse().find((message) => message.role === "user")?.content ?? "";
         const doctrinalContext = buildDoctrinalContext(latestQuery);
         const messages = [
           {
@@ -184,7 +189,7 @@ export const appRouter = router({
           },
           ...input.messages.map((message) => ({ role: message.role as "user" | "assistant", content: message.content })),
         ];
-        const response = await invokeLLM({ model: "gpt-5-mini", messages, maxTokens: 6000 });
+        const response = await invokeLLM({ model: "gpt-5-mini", messages, maxTokens: 3200 });
         const answer = textFromContent(response.choices?.[0]?.message?.content) || "Não consegui formular uma resposta doutrinária agora. Consulte o estudo correspondente e converse com a liderança local.";
         if (ctx.user) {
           const safeMessages = [...input.messages, { role: "assistant" as const, content: answer }].map(({ role, content }) => ({ role, content }));
@@ -193,7 +198,7 @@ export const appRouter = router({
         return { answer, source: "O Doutrinal — Editora Promessa, 2023" };
       } catch (error) {
         console.error("[DoctrinalChat] LLM request failed:", error);
-        return { answer: "Não foi possível responder agora. Leia o estudo correspondente em O Doutrinal e procure a orientação do pastor ou da liderança local.", source: "O Doutrinal — Editora Promessa, 2023" };
+        return { answer: buildDoctrinalFallback(latestQuery), source: "O Doutrinal — Editora Promessa, 2023" };
       }
     }),
   }),
