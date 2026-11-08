@@ -8,7 +8,7 @@ describe("requested product updates", () => {
   it("formats PIX input as cents and removes the invitation from offers", () => {
     const source = read("app/(tabs)/ofertas.tsx");
     expect(source).toContain("Number(amountDigits) / 100");
-    expect(source).toContain("1000 = R$ 10,00");
+    expect(source).toContain("Digite somente números.");
     expect(source).toContain("react-native-qrcode-svg");
     expect(source).toContain("<QRCode value={payload}");
     expect(source).not.toContain("Junte-se ao Manus");

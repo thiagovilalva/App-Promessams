@@ -52,7 +52,7 @@ export default function HomeScreen() {
           </Pressable>
           <Pressable onPress={() => Platform.OS === "web" ? router.push("/igrejas") : router.push({ pathname: "/pagina-web", params: { page: "igrejas", returnTo: "home" } })} style={({ pressed }) => [styles.quickCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Abrir endereços das igrejas">
             <View style={[styles.iconBox, { backgroundColor: colors.primary + "18" }]}><IconSymbol name="building.2.crop.circle" size={24} color={colors.primary} /></View>
-            <Text style={[styles.quickTitle, { color: colors.foreground }]}>Igrejas</Text><Text style={[styles.quickText, { color: colors.muted }]}>Encontre endereços e localização.</Text>
+            <Text style={[styles.quickTitle, { color: colors.foreground }]}>Igrejas</Text><Text style={[styles.quickText, { color: colors.muted }]}>Endereços no MS</Text>
           </Pressable>
         </View>
 
@@ -79,7 +79,7 @@ export default function HomeScreen() {
           <IconSymbol name="bubble.left.and.bubble.right.fill" size={22} color={colors.primary} /><Text style={[styles.radioDetailsText, { color: colors.primary }]}>Programas & Comunidade</Text><IconSymbol name="chevron.right" size={18} color={colors.primary} />
         </Pressable>
         <Pressable onPress={() => void Linking.openURL(`https://wa.me/5567999132610?text=${encodeURIComponent("Olá, Gostaria de conversar com a secretaria regional.")}`)} style={[styles.whatsappButton, { borderColor: "#25D366", backgroundColor: colors.surface }]} accessibilityRole="link" accessibilityLabel="Fale Com A Convenção pelo WhatsApp"><IconSymbol name="whatsapp" size={24} color="#128C49" /><Text style={[styles.whatsappText, { color: colors.foreground }]}>Fale Com A Convenção</Text></Pressable>
-        <Pressable onPress={() => router.push("/conta")} accessibilityRole="button" style={[styles.accountLink, { borderColor: colors.border, backgroundColor: colors.surface }]}><Text style={[styles.accountLinkText, { color: colors.primary }]}>Entrar ou Criar Conta</Text><Text style={[styles.accountLinkHint, { color: colors.muted }]}>Guardar sua jornada e histórico</Text></Pressable>
+        <Pressable onPress={() => router.push("/conta")} accessibilityRole="button" style={[styles.accountLink, { borderColor: colors.border, backgroundColor: colors.surface }]}><Text style={[styles.accountLinkText, { color: colors.primary }]}>Entrar ou Criar Conta</Text></Pressable>
       </ScrollView>
     </ScreenContainer>
   );

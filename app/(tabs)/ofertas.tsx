@@ -44,14 +44,13 @@ export default function OfertasScreen() {
           <Text style={[styles.key, { color: colors.foreground }]}>{PIX_KEY}</Text>
           <Text style={[styles.helper, { color: colors.muted }]}>Valor opcional para personalizar o QR Code</Text>
           <View style={[styles.amountBox, { borderColor: colors.border }]}><Text style={[styles.currency, { color: colors.muted }]}>R$</Text><TextInput value={displayedAmount} onChangeText={(value) => setAmountDigits(value.replace(/\D/g, "").replace(/^0+(?=\d)/, "").slice(0, 12))} keyboardType="number-pad" placeholder="0,00" placeholderTextColor={colors.muted} style={[styles.amountInput, { color: colors.foreground }]} accessibilityLabel="Valor da oferta em reais" /></View>
-          <Text style={[styles.amountHint, { color: colors.muted }]}>Digite somente números: 1000 = R$ 10,00 · 500 = R$ 5,00 · 12020 = R$ 120,20</Text>
+          <Text style={[styles.amountHint, { color: colors.muted }]}>Digite somente números.</Text>
           <View style={styles.qrWrap}><QRCode value={payload} size={190} color="#173D2C" backgroundColor="#FFFFFF" quietZone={8} /><Text style={[styles.qrCaption, { color: colors.muted }]}>Aponte a câmera do banco para ofertar</Text></View>
           <Pressable onPress={() => copy(payload, "PIX Copia e Cola")} style={({ pressed }) => [styles.copyButton, { backgroundColor: copied ? "#E9F7F0" : colors.primary }, pressed && styles.pressed]}><IconSymbol name={copied ? "checkmark" : "qrcode"} size={17} color={copied ? "#167C55" : "#FFFFFF"} /><Text style={[styles.copyText, { color: copied ? "#167C55" : "#FFFFFF" }]}>{copied ? "Código copiado" : "Copiar PIX Copia e Cola"}</Text></Pressable>
           <Pressable onPress={() => copy(PIX_KEY, "Chave PIX")} style={({ pressed }) => [styles.keyButton, { borderColor: colors.border }, pressed && styles.pressed]}><IconSymbol name="doc.on.doc.fill" size={16} color={colors.primary} /><Text style={[styles.keyButtonText, { color: colors.foreground }]}>Copiar somente a chave</Text></Pressable>
         </View>
-        <View style={[styles.info, { backgroundColor: "#F8F7F4" }]}><IconSymbol name="info.circle.fill" size={18} color={colors.primary} /><Text style={[styles.infoText, { color: colors.muted }]}>Confira o nome do recebedor no seu banco antes de confirmar. O app não solicita senha, código de segurança ou dados do cartão.</Text></View>
         <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Transparência e segurança</Text>
-        <Text style={[styles.body, { color: colors.muted }]}>O QR Code e o código Copia e Cola são gerados localmente a partir da chave PIX informada pela Convenção. A confirmação acontece somente no aplicativo do seu banco.</Text>
+        <Text style={[styles.body, { color: colors.muted }]}>Confira o nome do recebedor antes de confirmar, O QR Code é gerado localmente, a confirmação dos valores só acontece no app seu banco.</Text>
       </ScrollView>
     </ScreenContainer>
   );
