@@ -19,4 +19,10 @@ describe("chat mobile reading experience", () => {
   it("removes the attachment hint from the chat page", () => {
     expect(source).not.toContain("Anexe imagens ou textos para pedir uma análise mais específica.");
   });
+
+  it("keeps the native composer above the Android keyboard", () => {
+    expect(source).toContain('behavior={Platform.OS === "ios" ? "padding" : "height"}');
+    expect(source).toContain('keyboardDidShow');
+    expect(source).toContain('onFocus={() => requestAnimationFrame');
+  });
 });

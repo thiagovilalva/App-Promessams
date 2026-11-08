@@ -45,7 +45,7 @@ describe("requested product updates", () => {
     expect(fs.existsSync(path.join(process.cwd(), "assets/documents/Ministerios_Regionais_Apresentacao_Completa_88_slides.pptx"))).toBe(true);
   });
   it("moves the chat composer with the Android keyboard", () => {
-    expect(read("app/(tabs)/chat.tsx")).toContain('behavior="padding"');
+    expect(read("app/(tabs)/chat.tsx")).toContain('behavior={Platform.OS === "ios" ? "padding" : "height"}');
     expect(read("app.config.ts")).toContain('softwareKeyboardLayoutMode: "resize"');
   });
   it("places WhatsApp and accessibility access on the home screen", () => {
