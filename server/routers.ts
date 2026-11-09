@@ -4,7 +4,7 @@ import { TRPCError } from "@trpc/server";
 import { SEMENTES_KNOWLEDGE } from "../shared/knowledge";
 import { buildBibleReferenceContext, buildLibraryContext } from "../shared/chat-library";
 import { buildDoctrinalContext, buildDoctrinalFallback, DOCTRINAL_STUDIES } from "../shared/doctrinal-knowledge";
-import { fallbackAnswer, needsOnlineResearch } from "../shared/chat-fallback";
+import { classifyChatComplexity, fallbackAnswer, needsOnlineResearch } from "../shared/chat-fallback";
 import { COOKIE_NAME } from "../shared/const";
 import { createMaterial, getAllMaterials, getPublishedMaterials, getUserConversations, publishMaterial, saveConversation } from "./db";
 import { storagePut } from "./storage";
@@ -103,12 +103,14 @@ export const appRouter = router({
     ask: publicProcedure.input(z.object({ messages: z.array(chatMessageSchema).min(1).max(20) })).mutation(async ({ ctx, input }) => {
       try {
         const databaseMaterials = await getPublishedMaterials();
-        const databaseKnowledge = databaseMaterials.length ? `\n\nMATERIAIS ADICIONAIS PUBLICADOS PELA EQUIPE:\n${databaseMaterials.map((item) => `\n## ${item.title}\n${item.summary ?? ""}\n${item.content.slice(0, 18000)}\nFonte: ${item.source ?? "não informada"}`).join("\n")}` : "";
         const latestUserQuery = [...input.messages].reverse().find((message) => message.role === "user")?.content ?? "";
+        const complexity = classifyChatComplexity(latestUserQuery);
+        const contextLimit = complexity === 1 ? 5000 : complexity === 2 ? 10000 : 16000;
+        const databaseKnowledge = databaseMaterials.length ? `\n\nMATERIAIS ADICIONAIS PUBLICADOS PELA EQUIPE:\n${databaseMaterials.map((item) => `\n## ${item.title}\n${item.summary ?? ""}\n${item.content.slice(0, complexity === 1 ? 4000 : complexity === 2 ? 8000 : 12000)}\nFonte: ${item.source ?? "não informada"}`).join("\n")}` : "";
         const libraryKnowledge = buildLibraryContext(latestUserQuery);
         const bibleReferenceKnowledge = await buildBibleReferenceContext(latestUserQuery);
         const messages = [
-        { role: "system" as const, content: `Você é o agente de orientação do aplicativo PromessaMS. Responda em português do Brasil, com tom humano, acolhedor, sereno e prático. Não diga que é uma IA de forma repetitiva. Use a base de conhecimento abaixo como prioridade. Cite referências bíblicas quando forem relevantes, sem inventar citações. Ajude o usuário a compreender, vivenciar, ensinar e desenvolver a Filosofia da Semente e o Projeto Sementes na igreja local. O Pão Diário na Missão, a Bíblia Livre (BLivre), o Hinário HBJ — Brados de Júbilo e a Apostila de Ministérios Regionais são fontes relacionadas e podem ser conectadas à aplicação da Filosofia e do Projeto. Quando usar um trecho, informe sua fonte. Faça perguntas de acompanhamento quando isso ajudar a transformar a reflexão em um próximo passo. Não substitua o pastor ou a liderança local em decisões sensíveis. Se recorrer à pesquisa online, diferencie claramente o que veio da base, o que é pesquisa e o que é sugestão.\n\nNEXO TEOLOGICO OBRIGATORIO: quando a pergunta relacionar fruto do Espírito, Espírito Santo, caráter, discipulado, maturidade ou frutificação com a Filosofia da Semente, não trate os temas como ideias isoladas. Explique que o Espírito Santo habita e transforma o discípulo que permanece em Cristo; por isso, o fruto do Espírito de Gálatas 5:22-23 é evidência de caráter formado pela graça, não resultado de esforço meramente humano. Conecte João 15:4-5, Gálatas 5:16, 22-25, Efésios 5:18 e Atos 1:8, distinguindo fruto (caráter e vida transformada) de dons, atividade ou números. Mostre que, na Filosofia da Semente, a Palavra é a semente, Cristo é o centro, o Espírito Santo capacita o crescimento e o discípulo frutifica em amor, santidade, serviço, cuidado e testemunho; o Projeto Sementes organiza esse processo em relações, discipulado, acompanhamento e multiplicação. Se o usuário sugerir que fruto é apenas desempenho ou resultado numérico, corrija cordialmente essa redução.\n\nEntregue respostas completas: não interrompa frases, listas ou etapas. Ao terminar todos os tópicos, acrescente exatamente o marcador [FIM].\n\n${SEMENTES_KNOWLEDGE}${databaseKnowledge}${libraryKnowledge}${bibleReferenceKnowledge}` },
+        { role: "system" as const, content: `Você é o agente de orientação do aplicativo PromessaMS. Responda em português do Brasil, com tom humano, acolhedor, sereno e prático. Use a base institucional como autoridade principal e nunca permita que uma pesquisa externa a contradiga. Nível de profundidade desta pergunta: ${complexity}/3. No nível 1, responda de forma curta e direta; no nível 2, conecte mais pontos da base e ofereça aplicação; no nível 3, desenvolva uma resposta completa, compare argumentos e use pesquisa externa apenas para reforçar ou contextualizar a base, identificando claramente as fontes. Cite referências bíblicas quando forem relevantes, sem inventar citações. Ajude o usuário a compreender, vivenciar, ensinar e desenvolver a Filosofia da Semente e o Projeto Sementes na igreja local. O Pão Diário na Missão, a Bíblia Livre (BLivre), o Hinário HBJ — Brados de Júbilo e a Apostila de Ministérios Regionais são fontes relacionadas e podem ser conectadas à aplicação da Filosofia e do Projeto. Não substitua o pastor ou a liderança local em decisões sensíveis.\n\nNEXO TEOLOGICO OBRIGATORIO: quando a pergunta relacionar fruto do Espírito, Espírito Santo, caráter, discipulado, maturidade ou frutificação com a Filosofia da Semente, não trate os temas como ideias isoladas. Explique que o Espírito Santo habita e transforma o discípulo que permanece em Cristo; por isso, o fruto do Espírito de Gálatas 5:22-23 é evidência de caráter formado pela graça, não resultado de esforço meramente humano. Conecte João 15:4-5, Gálatas 5:16, 22-25, Efésios 5:18 e Atos 1:8, distinguindo fruto (caráter e vida transformada) de dons, atividade ou números. Mostre que, na Filosofia da Semente, a Palavra é a semente, Cristo é o centro, o Espírito Santo capacita o crescimento e o discípulo frutifica em amor, santidade, serviço, cuidado e testemunho; o Projeto Sementes organiza esse processo em relações, discipulado, acompanhamento e multiplicação. Se o usuário sugerir que fruto é apenas desempenho ou resultado numérico, corrija cordialmente essa redução.\n\nEntregue respostas completas no nível 2 ou 3, sem interromper frases, listas ou etapas.\n\n${SEMENTES_KNOWLEDGE.slice(0, contextLimit)}${databaseKnowledge}${libraryKnowledge}${bibleReferenceKnowledge}` },
         ...input.messages.map((message) => {
           const attachments = message.attachments ?? [];
           const attachmentText = attachments.filter((item) => item.text).map((item) => `\n\nArquivo ${item.name}:\n${item.text}`).join("");
@@ -121,7 +123,7 @@ export const appRouter = router({
         }),
         ];
 
-        const shouldResearch = needsOnlineResearch(input.messages[input.messages.length - 1]?.content ?? "");
+        const shouldResearch = complexity === 3 || needsOnlineResearch(latestUserQuery);
         const persist = async (answer: string) => {
           if (!ctx.user) return;
           const safeMessages = [...input.messages, { role: "assistant" as const, content: answer }].map(({ role, content, attachments }) => ({ role, content, attachments: attachments?.map(({ name, mimeType, text }) => ({ name, mimeType, text })) }));
@@ -144,7 +146,7 @@ export const appRouter = router({
         const first = await invokeLLM({
         model: "gpt-5-mini",
         messages,
-        maxTokens: 2200,
+        maxTokens: complexity === 1 ? 1200 : complexity === 2 ? 2200 : 3600,
         ...(shouldResearch ? { tools: [{ type: "function" as const, function: { name: "search_online", description: "Pesquisar na internet para complementar uma pergunta que pede informação atual.", parameters: { type: "object", properties: { query: { type: "string", description: "Consulta curta em português" } }, required: ["query"] } } }], toolChoice: "auto" as const } : {}),
         });
         const firstChoice = first.choices?.[0] as { message?: unknown; finish_reason?: string } | undefined;
@@ -155,7 +157,7 @@ export const appRouter = router({
           try { args = JSON.parse(call.function.arguments || "{}"); } catch { args = {}; }
           return args.query ? searchOnline(args.query) : "Consulta inválida.";
           }));
-          const second = await invokeLLM({ model: "gpt-5-mini", messages: [...messages, { role: "user" as const, content: `A pesquisa online solicitada retornou o seguinte material. Use-o apenas como complemento, avalie sua confiabilidade e não invente fatos. Entregue uma resposta completa, sem interromper frases ou listas no meio; se ficar longa, conclua todos os tópicos antes de terminar:\n\n${research.join("\n\n")}` }], maxTokens: 2200 });
+          const second = await invokeLLM({ model: "gpt-5-mini", messages: [...messages, { role: "user" as const, content: `A pesquisa online retornou este material. Use-o somente para contextualizar e fortalecer a base institucional; descarte qualquer trecho que contradiga a base. Identifique no texto o que é fonte externa e o que é aplicação.\n\n${research.join("\n\n")}` }], maxTokens: complexity === 1 ? 1200 : complexity === 2 ? 2200 : 3600 });
           const answer = await completeAnswer(textFromContent(second.choices?.[0]?.message?.content) || fallbackAnswer(input.messages[input.messages.length - 1]?.content ?? ""));
           await persist(answer);
           return { answer, researched: true };
@@ -181,16 +183,38 @@ export const appRouter = router({
         return { answer, source: "O Doutrinal — Editora Promessa, 2023" };
       }
       try {
-        const doctrinalContext = buildDoctrinalContext(latestQuery);
+        const complexity = classifyChatComplexity(latestQuery);
+        const doctrinalContext = complexity === 1
+          ? buildDoctrinalContext(latestQuery, 2, 5000)
+          : complexity === 2
+            ? buildDoctrinalContext(latestQuery, 5, 8000)
+            : buildDoctrinalContext(latestQuery, 8, 10000);
         const messages = [
           {
             role: "system" as const,
-            content: `Você é o Professor Doutrinário do aplicativo PromessaMS. Responda em português do Brasil com clareza, reverência, firmeza bíblica, humildade pastoral e linguagem acessível. Sua base prioritária é O Doutrinal: Nossa crença ponto a ponto, da Editora Promessa, validado pela Comissão Teológica e pela Câmara Teológica da Igreja Adventista da Promessa. Explique os 31 pontos doutrinários com fundamentação bíblica e contexto histórico, sem inventar posições oficiais, citações ou referências. Diferencie o texto bíblico, o ensino doutrinário da Promessa, o contexto histórico e a aplicação prática. Não concorde automaticamente com a afirmação do usuário: quando ela contrariar a Bíblia ou a doutrina apresentada na base, diga com respeito e clareza que há um equívoco, explique por que a posição é inadequada e conduza a pessoa passo a passo à compreensão da doutrina bíblica ensinada pela Igreja Adventista da Promessa. Confronte o erro com a verdade, nunca a pessoa; evite humilhação, agressividade, condenação ou disputa. Quando houver questão pastoral, disciplina eclesiástica ou situação institucional sensível, recomende diálogo com o pastor ou liderança local. Não use pesquisa online para alterar a doutrina institucional. Cite estudos e referências bíblicas relevantes. Entregue respostas completas, sem cortar frases, listas ou conclusões; desenvolva todos os pontos necessários para que o usuário consiga ler e compreender a resposta.\n\nCONTEXTO DOS ESTUDOS:\n${doctrinalContext}`,
+            content: `Você é o Professor Doutrinário do aplicativo PromessaMS. Responda em português do Brasil com clareza, reverência, firmeza bíblica, humildade pastoral e linguagem acessível. Profundidade da pergunta: nível ${complexity}/3. No nível 1, seja direto e use o estudo mais relevante; no nível 2, conecte vários estudos e referências; no nível 3, desenvolva uma análise completa e use pesquisa externa apenas para contextualizar ou fortalecer O Doutrinal, nunca para contradizê-lo. Sua base prioritária é O Doutrinal: Nossa crença ponto a ponto, da Editora Promessa, validado pela Comissão Teológica e pela Câmara Teológica da Igreja Adventista da Promessa. Explique os 31 pontos doutrinários com fundamentação bíblica e contexto histórico, sem inventar posições oficiais, citações ou referências. Diferencie o texto bíblico, o ensino doutrinário da Promessa, o contexto histórico e a aplicação prática. Não concorde automaticamente com a afirmação do usuário: quando ela contrariar a Bíblia ou a doutrina apresentada na base, diga com respeito e clareza que há um equívoco, explique por que a posição é inadequada e conduza a pessoa passo a passo à compreensão da doutrina bíblica ensinada pela Igreja Adventista da Promessa. Confronte o erro com a verdade, nunca a pessoa; evite humilhação, agressividade, condenação ou disputa. Quando houver questão pastoral, disciplina eclesiástica ou situação institucional sensível, recomende diálogo com o pastor ou liderança local. Cite estudos e referências bíblicas relevantes.\n\nCONTEXTO DOS ESTUDOS:\n${doctrinalContext}`,
           },
           ...input.messages.map((message) => ({ role: message.role as "user" | "assistant", content: message.content })),
         ];
-        const response = await invokeLLM({ model: "gpt-5-mini", messages, maxTokens: 3200 });
-        const answer = textFromContent(response.choices?.[0]?.message?.content) || "Não consegui formular uma resposta doutrinária agora. Consulte o estudo correspondente e converse com a liderança local.";
+        const shouldResearch = complexity === 3 || needsOnlineResearch(latestQuery);
+        const response = await invokeLLM({
+          model: "gpt-5-mini",
+          messages,
+          maxTokens: complexity === 1 ? 1200 : complexity === 2 ? 2400 : 3600,
+          ...(shouldResearch ? { tools: [{ type: "function" as const, function: { name: "search_online", description: "Pesquisar contexto externo para reforçar a doutrina sem alterá-la.", parameters: { type: "object", properties: { query: { type: "string", description: "Consulta curta em português" } }, required: ["query"] } } }], toolChoice: "auto" as const } : {}),
+        });
+        const responseMessage = response.choices?.[0]?.message as { content?: unknown; tool_calls?: Array<{ function: { arguments: string } }> } | undefined;
+        let answerText = textFromContent(responseMessage?.content);
+        if (responseMessage?.tool_calls?.length) {
+          const research = await Promise.all(responseMessage.tool_calls.map(async (call) => {
+            let args: { query?: string } = {};
+            try { args = JSON.parse(call.function.arguments || "{}"); } catch { args = {}; }
+            return args.query ? searchOnline(args.query) : "Consulta externa inválida.";
+          }));
+          const researched = await invokeLLM({ model: "gpt-5-mini", messages: [...messages, { role: "assistant" as const, content: answerText || "Analise a pergunta com base nos estudos." }, { role: "user" as const, content: `Material externo para apoio: use apenas o que for compatível com O Doutrinal, descarte contradições e sinalize que é contexto externo. Conclua a resposta com base doutrinária:\n\n${research.join("\n\n")}` }], maxTokens: 3600 });
+          answerText = textFromContent(researched.choices?.[0]?.message?.content);
+        }
+        const answer = answerText || buildDoctrinalFallback(latestQuery);
         if (ctx.user) {
           const safeMessages = [...input.messages, { role: "assistant" as const, content: answer }].map(({ role, content }) => ({ role, content }));
           await saveConversation({ userId: ctx.user.id, title: `Doutrina: ${latestQuery.slice(0, 70) || "estudo bíblico"}`, messages: JSON.stringify(safeMessages) });

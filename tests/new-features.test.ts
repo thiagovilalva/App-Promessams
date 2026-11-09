@@ -142,7 +142,7 @@ describe("requested product updates", () => {
   });
   it("answers a doctrinal greeting without depending on the LLM", () => {
     expect(read("server/routers.ts")).toContain("Seja bem-vindo ao Professor Doutrinário");
-    expect(read("server/routers.ts")).toContain('maxTokens: 3200');
+    expect(read("server/routers.ts")).toContain('maxTokens: complexity === 1 ? 1200 : complexity === 2 ? 2400 : 3600');
   });
   it("keeps native chat on the stable public API without Android 15 boot audio services", () => {
     const oauth = read("constants/oauth.ts");

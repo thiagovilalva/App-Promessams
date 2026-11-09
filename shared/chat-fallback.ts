@@ -2,6 +2,17 @@ export function needsOnlineResearch(text: string) {
   return /\b(hoje|agora|atual|atualizado|notícia|noticias|lei|legislação|legislacao|estatuto vigente|pesquise|pesquisa na internet|internet|fonte externa)\b/i.test(text);
 }
 
+export type ChatComplexity = 1 | 2 | 3;
+
+export function classifyChatComplexity(text: string): ChatComplexity {
+  const value = text.trim();
+  const complexSignals = /\b(compare|analise|analise|argumente|justifique|passo a passo|plano|estratégia|estrategia|implementar|implantar|vários|varios|diferentes|profundamente|fundamente|fontes|pesquise|internet|atual|caso complexo)\b/i;
+  const mediumSignals = /\b(como|por que|porque|relação|relacao|diferença|diferenca|aplicar|orientar|ensinar|formar|liderança|lideranca|discipulado)\b/i;
+  if (needsOnlineResearch(value) || complexSignals.test(value) || value.length > 700 || (value.match(/[?]/g) ?? []).length >= 2) return 3;
+  if (mediumSignals.test(value) || value.length > 180 || value.includes("\n")) return 2;
+  return 1;
+}
+
 export function fallbackAnswer(text: string) {
   if (/fruto.*espírito|fruto.*espirito|espírito.*fruto|espirito.*fruto|frutifica|frutificar/i.test(text)) {
     return "Sim. Há uma ligação direta, mas é importante distingui-la corretamente. O Espírito Santo habita e transforma o discípulo que permanece em Cristo; por isso, o fruto do Espírito — amor, alegria, paz, paciência, benignidade, bondade, fidelidade, mansidão e domínio próprio — é caráter formado pela graça, conforme Gálatas 5:22-23, e não simples esforço humano nem contagem de resultados. Jesus relaciona permanência nele e frutificação em João 15:4-5, e a Filosofia da Semente expressa essa mesma dinâmica: a Palavra é a semente, Cristo é o centro, o Espírito Santo capacita o crescimento e o discípulo passa a frutificar em amor, santidade, serviço, cuidado e testemunho. O Projeto Sementes organiza isso na prática por meio de relacionamentos, discipulado, acompanhamento e multiplicação saudável. Assim, frutificar não significa apenas fazer mais atividades; significa tornar-se semelhante a Cristo e, a partir dessa transformação, servir e ajudar outras pessoas a crescerem.\n\nLeia também Gálatas 5:16-25 e João 15:1-8 em oração e pergunte: que fruto do Espírito precisa amadurecer em mim para que minha presença missionária seja mais fiel a Cristo?";

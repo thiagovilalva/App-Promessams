@@ -6,7 +6,7 @@ export const DOCTRINAL_STUDIES: DoctrinalStudy[] = [{"number":1,"title":"A Bíbl
 
 const normalize = (value: string) => value.toLocaleLowerCase("pt-BR").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-export function buildDoctrinalContext(query: string, limit = 3) {
+export function buildDoctrinalContext(query: string, limit = 3, excerptLength = 7000) {
   const terms = normalize(query).split(/[^a-z0-9]+/).filter((term) => term.length >= 4);
   const ranked = DOCTRINAL_STUDIES.map((study) => {
     const haystack = normalize(`${study.title} ${study.text}`);
@@ -15,7 +15,7 @@ export function buildDoctrinalContext(query: string, limit = 3) {
   }).sort((a, b) => b.score - a.score);
   const selected = ranked.filter(({ score }) => score > 0).slice(0, limit);
   const fallback = selected.length ? selected : ranked.slice(0, 2);
-  return fallback.map(({ study }) => `\n## Estudo ${study.number} — ${study.title}\n${study.text.slice(0, 7000)}\nFonte: O Doutrinal, Editora Promessa, 2023.`).join("\n");
+  return fallback.map(({ study }) => `\n## Estudo ${study.number} — ${study.title}\n${study.text.slice(0, excerptLength)}\nFonte: O Doutrinal, Editora Promessa, 2023.`).join("\n");
 }
 
 export function buildDoctrinalFallback(query: string) {
