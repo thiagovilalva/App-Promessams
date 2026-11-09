@@ -197,10 +197,11 @@ export const appRouter = router({
           ...input.messages.map((message) => ({ role: message.role as "user" | "assistant", content: message.content })),
         ];
         const shouldResearch = complexity === 3 || needsOnlineResearch(latestQuery);
+        const outputLimit = complexity === 1 ? 1800 : complexity === 2 ? 4200 : 6500;
         const response = await invokeLLM({
           model: "gpt-5-mini",
           messages,
-          maxTokens: complexity === 1 ? 1200 : complexity === 2 ? 2400 : 3600,
+          maxTokens: outputLimit,
           ...(shouldResearch ? { tools: [{ type: "function" as const, function: { name: "search_online", description: "Pesquisar contexto externo para reforçar a doutrina sem alterá-la.", parameters: { type: "object", properties: { query: { type: "string", description: "Consulta curta em português" } }, required: ["query"] } } }], toolChoice: "auto" as const } : {}),
         });
         const responseMessage = response.choices?.[0]?.message as { content?: unknown; tool_calls?: Array<{ function: { arguments: string } }> } | undefined;
@@ -211,10 +212,31 @@ export const appRouter = router({
             try { args = JSON.parse(call.function.arguments || "{}"); } catch { args = {}; }
             return args.query ? searchOnline(args.query) : "Consulta externa inválida.";
           }));
-          const researched = await invokeLLM({ model: "gpt-5-mini", messages: [...messages, { role: "assistant" as const, content: answerText || "Analise a pergunta com base nos estudos." }, { role: "user" as const, content: `Material externo para apoio: use apenas o que for compatível com O Doutrinal, descarte contradições e sinalize que é contexto externo. Conclua a resposta com base doutrinária:\n\n${research.join("\n\n")}` }], maxTokens: 3600 });
+          const researched = await invokeLLM({ model: "gpt-5-mini", messages: [...messages, { role: "assistant" as const, content: answerText || "Analise a pergunta com base nos estudos." }, { role: "user" as const, content: `Material externo para apoio: use apenas o que for compatível com O Doutrinal, descarte contradições e sinalize que é contexto externo. Conclua a resposta com base doutrinária:\n\n${research.join("\n\n")}` }], maxTokens: outputLimit });
           answerText = textFromContent(researched.choices?.[0]?.message?.content);
         }
-        const answer = answerText || buildDoctrinalFallback(latestQuery);
+        const looksIncomplete = (value: string) => {
+          const trimmed = value.trim();
+          if (!trimmed) return true;
+          if (/[.!?…»”)]$/u.test(trimmed)) return false;
+          return /(?:\b(base|ofertar|ofertas|oferta|dízimo|dízimos|motivo|finalidade|igreja|Deus|Bíblia|Jesus|Espírito|segundo|terceiro|e|ou|para|com|de|da|do|em|no|na|que|como|porque|por)\s*)$/iu.test(trimmed) || /(?:^|\n)\s*(?:[-•*]|\d+[.)])\s+[^\n]*$/u.test(trimmed);
+        };
+        const completeDoctrinalAnswer = async (draft: string) => {
+          let answer = draft.trim();
+          if (!answer) return buildDoctrinalFallback(latestQuery);
+          for (let attempt = 0; attempt < 3 && looksIncomplete(answer); attempt += 1) {
+            const continuation = await invokeLLM({
+              model: "gpt-5-mini",
+              messages: [...messages, { role: "assistant" as const, content: answer }, { role: "user" as const, content: "A resposta foi interrompida antes de terminar. Continue exatamente do ponto em que parou, sem repetir o texto anterior. Complete a frase, todos os itens da lista e a conclusão. Entregue somente a continuação." }],
+              maxTokens: 2200,
+            });
+            const continuationText = textFromContent(continuation.choices?.[0]?.message?.content).trim();
+            if (!continuationText) break;
+            answer = `${answer}\n\n${continuationText}`;
+          }
+          return answer;
+        };
+        const answer = await completeDoctrinalAnswer(answerText || buildDoctrinalFallback(latestQuery));
         if (ctx.user) {
           const safeMessages = [...input.messages, { role: "assistant" as const, content: answer }].map(({ role, content }) => ({ role, content }));
           await saveConversation({ userId: ctx.user.id, title: `Doutrina: ${latestQuery.slice(0, 70) || "estudo bíblico"}`, messages: JSON.stringify(safeMessages) });

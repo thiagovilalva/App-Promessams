@@ -154,9 +154,9 @@ describe("PromessaMS OAuth production regressions", () => {
       expect(bad.status).toBe(400); expect(sdk.exchangeCodeForToken).toHaveBeenCalledTimes(1);
     });
   });
-  it("preserves package, API origin, architecture and legacy deep links in build 21", () => {
+  it("preserves package, API origin, architecture and legacy deep links in build 22", () => {
     const config = fs.readFileSync("app.config.ts", "utf8");
-    expect(config).toContain("versionCode: 21"); expect(config).toContain('const rawBundleId = "promessams"');
+    expect(config).toContain("versionCode: 22"); expect(config).toContain('const rawBundleId = "promessams"');
     expect(config).toContain('const scheme = "promessams"'); expect(config).toContain(`const OAUTH_APP_SCHEME = "${OAUTH_APP_SCHEME}"`);
     expect(config).toContain("scheme: [scheme, OAUTH_APP_SCHEME]"); expect(config).toContain("newArchEnabled: true");
     expect(fs.readFileSync("eas.json", "utf8")).toContain(PUBLIC_SITE_ORIGIN);

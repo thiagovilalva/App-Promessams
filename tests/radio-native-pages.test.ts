@@ -39,7 +39,7 @@ describe("radio directory and startup regressions", () => {
     const config = read("app.config.ts");
     const pkg = JSON.parse(read("package.json"));
     expect(config).toContain("newArchEnabled: true");
-    expect(config).toContain("versionCode: 21");
+    expect(config).toContain("versionCode: 22");
     expect(pkg.dependencies["expo-audio"]).toBe("~1.1.1");
     expect(read("lib/native-radio.ts")).toContain('await import("expo-audio")');
     expect(pkg.dependencies["expo-video"]).toBeUndefined();
