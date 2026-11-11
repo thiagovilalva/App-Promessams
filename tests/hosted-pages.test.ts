@@ -11,7 +11,8 @@ describe("hosted reports and updated home", () => {
   });
   it("shows reports only after login and has a route back to Home", () => {
     const account = read("app/conta.tsx");
-    expect(account).toContain("{user && <Pressable"); expect(account).toContain("RELATÓRIOS");
+    expect(account).toContain("Conta e histórico");
+    expect(read("app/admin.tsx")).toContain("Relatórios administrativos");
     expect(account).toContain('accessibilityLabel="Voltar à tela inicial"');
     expect(read("server/routers.ts")).toContain("list: adminProcedure.query(() => getConversationReport())");
   });
