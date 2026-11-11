@@ -146,19 +146,32 @@ function classifyReportSubject(value: string, chatTopic: string) {
       });
     });
     if (matched) return `Estudo ${matched.number} — ${matched.title}`;
-    return "Outros assuntos doutrinários";
+    return "Sem referência à base doutrinária";
+  }
+  if (chatTopic === "Administração da Igreja") {
+    const groups: Array<[string, string[]]> = [
+      ["Estatuto e personalidade jurídica", ["estatuto", "cnpj", "personalidade juridica", "personalidade jurídica", "sede"]],
+      ["Manual da Igreja e funcionamento local", ["manual da igreja", "conselho local", "assembleia", "assembléia", "membro", "ministro"]],
+      ["Código de Ética Pastoral", ["codigo de etica", "código de ética", "etica pastoral", "ética pastoral", "denuncia", "denúncia"]],
+      ["Convenção Regional e regimentos", ["convencao regional", "convenção regional", "regimento", "diretoria regional", "junta regional"]],
+      ["Regulamento eleitoral", ["eleicao", "eleição", "votar", "voto", "eleitoral", "candidato"]],
+      ["Finanças, dízimos e ofertas", ["financeiro", "financas", "finanças", "dizimo", "dízimo", "oferta", "orcamento", "orçamento", "conta bancaria", "conta bancária"]],
+      ["Membros, disciplina e direitos", ["disciplina", "desligamento", "exclusao", "exclusão", "direitos", "deveres", "transferencia", "transferência"]],
+      ["Liderança e ministérios", ["pastor", "presbitero", "presbítero", "diacono", "diácono", "ministerio", "ministério", "lideranca", "liderança"]],
+    ];
+    return groups.find(([_, terms]) => terms.some((term) => text.includes(normalizeReportText(term))))?.[0] ?? "Sem referência à base administrativa";
   }
   const groups: Array<[string, string[]]> = [
-    ["Ofertas e dízimos", ["oferta", "ofertar", "dízimo", "dizimo", "primícia", "primicia"]],
-    ["Doutrina e Bíblia", ["doutrina", "doutrinal", "bíblia", "biblia", "crença", "crenca", "batismo", "salvação", "salvacao"]],
-    ["Espírito Santo e discipulado", ["espírito", "espirito", "fruto", "discipulado", "santidade", "dons"]],
-    ["Evangelização e missão", ["missão", "missao", "evangel", "testemunho", "mission", "multiplica"]],
-    ["Igreja local e liderança", ["pastor", "liderança", "lideranca", "igreja", "conselho", "ministério", "ministerio"]],
-    ["Projeto Sementes e filosofia", ["sementes", "semente", "filosofia", "projeto", "célula", "celula", "grupo"]],
-    ["Regulamentos e administração", ["estatuto", "regulamento", "regimento", "cnpj", "admin", "eleição", "eleicao"]],
-    ["Bíblia e devocionais", ["versículo", "versiculo", "capítulo", "capitulo", "devocional", "pão diário", "pao diario"]],
+    ["Filosofia da Semente", ["filosofia da semente", "semente", "cristocentrismo", "palavra como semente", "modo missao", "modo missão"]],
+    ["Jornada do semeador e acolhimento", ["jornada", "acolhimento", "campanha de oracao", "campanha de oração", "relacionamento", "primeiro contato"]],
+    ["Discipulado e cuidado contínuo", ["discipulado", "discipulo", "discípulo", "cuidado", "integracao", "integração", "grupo de apoio"]],
+    ["Liderança e formação", ["lideranca", "liderança", "formacao de lideres", "formação de líderes", "mentoria", "equipes"]],
+    ["Multiplicação e missão", ["multiplicacao", "multiplicação", "missao", "missão", "evangelizacao", "evangelização", "enviado"]],
+    ["Igreja Viva e território", ["igreja viva", "territorio", "território", "cidade", "bairro", "contextualizacao", "contextualização"]],
+    ["Ministérios Regionais", ["ministerios regionais", "ministérios regionais", "regional", "diretoria regional", "capacitacao", "capacitação"]],
+    ["Bíblia, oração e devocionais", ["biblia", "bíblia", "versiculo", "versículo", "oracao", "oração", "devocional", "pao diario", "pão diário"]],
   ];
-  return groups.find(([_, terms]) => terms.some((term) => text.includes(term)))?.[0] ?? "Outros assuntos";
+  return groups.find(([_, terms]) => terms.some((term) => text.includes(normalizeReportText(term))))?.[0] ?? "Sem referência à base temática";
 }
 
 export async function getConversationReport(filter: { from?: Date; to?: Date } = {}) {
