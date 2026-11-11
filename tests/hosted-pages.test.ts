@@ -13,7 +13,7 @@ describe("hosted reports and updated home", () => {
     const account = read("app/conta.tsx");
     expect(account).toContain("{user && <Pressable"); expect(account).toContain("RELATÓRIOS");
     expect(account).toContain('accessibilityLabel="Voltar à tela inicial"');
-    expect(read("server/routers.ts")).toContain("list: protectedProcedure.query(() => []");
+    expect(read("server/routers.ts")).toContain("list: adminProcedure.query(() => getConversationReport())");
   });
   it("loads native hosted pages without bearer tokens in URLs or scripts", () => {
     const page = read("app/pagina-web.tsx");

@@ -34,7 +34,7 @@ export default function HomeScreen() {
           <Text style={styles.heroText}>Aprenda, reflita e encontre próximos passos para viver a missão de Jesus na igreja local.</Text>
         </View>
 
-        <Pressable onPress={() => router.push("/chat")} accessibilityRole="button" accessibilityLabel="Comece por aqui: conversar com o Guia Sementes" style={({ pressed }) => [styles.sectionHeader, pressed && styles.pressed]}><View><Text style={[styles.kicker, { color: colors.primary }]}>COMECE POR AQUI</Text><Text style={[styles.sectionTitle, { color: colors.foreground }]}>Uma jornada simples</Text></View><IconSymbol name="chevron.right" size={28} color={colors.primary} /></Pressable>
+        <Pressable onPress={() => router.push({ pathname: "/chat", params: { topic: "seeds" } })} accessibilityRole="button" accessibilityLabel="Comece por aqui: conversar sobre Filosofia e Projeto Sementes" style={({ pressed }) => [styles.sectionHeader, pressed && styles.pressed]}><View><Text style={[styles.kicker, { color: colors.primary }]}>COMECE POR AQUI</Text><Text style={[styles.sectionTitle, { color: colors.foreground }]}>Uma jornada simples</Text></View><IconSymbol name="chevron.right" size={28} color={colors.primary} /></Pressable>
         <View style={styles.quickGrid}>
           <Pressable onPress={() => router.push("/biblia-livre")} style={({ pressed }) => [styles.quickCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Abrir Bíblia Livre">
             <View style={[styles.iconBox, { backgroundColor: "#E9F7F0" }]}><IconSymbol name="book.closed.fill" size={22} color="#167C55" /></View>
@@ -46,7 +46,7 @@ export default function HomeScreen() {
           </Pressable>
         </View>
         <View style={[styles.quickGrid, styles.secondaryGrid]}>
-          <Pressable onPress={() => router.push("/chat-doutrina")} style={({ pressed }) => [styles.quickCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Abrir O Doutrinal">
+          <Pressable onPress={() => router.push({ pathname: "/chat", params: { topic: "doctrinal" } })} style={({ pressed }) => [styles.quickCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Abrir O Doutrinal">
             <View style={[styles.iconBox, { backgroundColor: "#FFF4DD" }]}><IconSymbol name="book.open" size={22} color="#A76418" /></View>
             <Text style={[styles.quickTitle, { color: colors.foreground }]}>O Doutrinal</Text><Text style={[styles.quickText, { color: colors.muted }]}>Compreenda a Doutrina.</Text>
           </Pressable>

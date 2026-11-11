@@ -13,7 +13,7 @@ describe("chat mobile reading experience", () => {
 
   it("offers local conversation deletion without requiring authentication", () => {
     expect(source).toContain("Apagar conversa");
-    expect(source).toContain('AsyncStorage.removeItem("sementes:chat")');
+    expect(source).toContain("AsyncStorage.removeItem(storageKey)");
   });
 
   it("removes the attachment hint from the chat page", () => {

@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { Conversation, InsertConversation, InsertMaterial, InsertUser, conversations, materials, users } from "../drizzle/schema";
 import { ENV } from "./_core/env";
@@ -95,4 +95,31 @@ export async function getUserConversations(userId: number): Promise<Conversation
   const db = await getDb();
   if (!db) return [];
   return db.select().from(conversations).where(eq(conversations.userId, userId)).orderBy(desc(conversations.updatedAt)).limit(30);
+}
+
+export async function deleteUserConversation(userId: number, conversationId: number) {
+  const db = await getDb();
+  if (!db) return false;
+  await db.delete(conversations).where(and(eq(conversations.id, conversationId), eq(conversations.userId, userId)));
+  return true;
+}
+
+export async function deleteAllUserConversations(userId: number) {
+  const db = await getDb();
+  if (!db) return false;
+  await db.delete(conversations).where(eq(conversations.userId, userId));
+  return true;
+}
+
+export async function getConversationReport() {
+  const db = await getDb();
+  if (!db) return { totalConversations: 0, topics: [] as Array<{ topic: string; count: number }> };
+  const rows = await db.select({ title: conversations.title, messages: conversations.messages }).from(conversations).orderBy(desc(conversations.updatedAt)).limit(5000);
+  const counts = new Map<string, number>();
+  for (const row of rows) {
+    const title = row.title.toLowerCase();
+    const topic = title.startsWith("doutrina:") ? "Professor Doutrinário" : title.startsWith("adm:") ? "Administração da Igreja" : "Filosofia e Projeto Sementes";
+    counts.set(topic, (counts.get(topic) ?? 0) + 1);
+  }
+  return { totalConversations: rows.length, topics: [...counts.entries()].map(([topic, count]) => ({ topic, count })).sort((a, b) => b.count - a.count) };
 }

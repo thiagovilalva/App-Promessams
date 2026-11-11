@@ -53,7 +53,7 @@ describe("requested product updates", () => {
     expect(source).toContain("wa.me/5567999132610");
     expect(source).toContain("/acessibilidade");
     expect(source).toContain("accessibility");
-    expect(source).toContain("Comece por aqui: conversar com o Guia Sementes");
+    expect(source).toContain("Comece por aqui: conversar sobre Filosofia e Projeto Sementes");
     expect(source).toContain(">Bíblia</Text>");
     expect(source).toContain("Acesse a palavra de Deus aqui");
     expect(source).not.toContain("/politica-privacidade");
@@ -187,7 +187,7 @@ describe("requested product updates", () => {
     expect(home).toContain('import { Image } from "expo-image"');
     expect(home).toContain('cachePolicy="memory-disk"');
     expect(offers).toContain('import { Image } from "expo-image"');
-    expect(config).toContain("versionCode: 22");
+    expect(config).toContain("versionCode: 23");
     expect(config).toContain("enableMinifyInReleaseBuilds: true");
     expect(config).toContain("enableShrinkResourcesInReleaseBuilds: true");
     expect(read("lib/radio-provider.tsx")).not.toContain("useAudioPlayer");

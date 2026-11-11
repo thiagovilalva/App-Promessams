@@ -5,8 +5,9 @@ import { SEMENTES_KNOWLEDGE } from "../shared/knowledge";
 import { buildBibleReferenceContext, buildLibraryContext } from "../shared/chat-library";
 import { buildDoctrinalContext, buildDoctrinalFallback, DOCTRINAL_STUDIES } from "../shared/doctrinal-knowledge";
 import { classifyChatComplexity, fallbackAnswer, needsOnlineResearch } from "../shared/chat-fallback";
+import { ADMIN_LEVELS, ADMIN_SOURCE_NOTE, buildAdminContext, type AdminLevel } from "../shared/admin-knowledge";
 import { COOKIE_NAME } from "../shared/const";
-import { createMaterial, getAllMaterials, getPublishedMaterials, getUserConversations, publishMaterial, saveConversation } from "./db";
+import { createMaterial, deleteAllUserConversations, deleteUserConversation, getAllMaterials, getConversationReport, getPublishedMaterials, getUserConversations, publishMaterial, saveConversation } from "./db";
 import { storagePut } from "./storage";
 import { invokeLLM } from "./_core/llm";
 import { ENV } from "./_core/env";
@@ -94,10 +95,11 @@ export const appRouter = router({
   }),
   history: router({
     list: protectedProcedure.query(({ ctx }) => getUserConversations(ctx.user.id)),
+    delete: protectedProcedure.input(z.object({ conversationId: z.number().int().positive() })).mutation(({ ctx, input }) => deleteUserConversation(ctx.user.id, input.conversationId)),
+    deleteAll: protectedProcedure.mutation(({ ctx }) => deleteAllUserConversations(ctx.user.id)),
   }),
   reports: router({
-    // Content will be published online; this area intentionally starts empty.
-    list: protectedProcedure.query(() => [] as Array<{ id: number; title: string; content: string }>),
+    list: adminProcedure.query(() => getConversationReport()),
   }),
   chat: router({
     ask: publicProcedure.input(z.object({ messages: z.array(chatMessageSchema).min(1).max(20) })).mutation(async ({ ctx, input }) => {
@@ -245,6 +247,27 @@ export const appRouter = router({
       } catch (error) {
         console.error("[DoctrinalChat] LLM request failed:", error);
         return { answer: buildDoctrinalFallback(latestQuery), source: "O Doutrinal — Editora Promessa, 2023" };
+      }
+    }),
+  }),
+  adminChat: router({
+    levels: publicProcedure.query(() => Object.entries(ADMIN_LEVELS).map(([value, item]) => ({ value: Number(value) as AdminLevel, label: item.label, documents: item.documents.map((key) => ({ key, title: key === "localSemCnpj" ? "Regulamento das IAPs Locais" : key })) }))),
+    ask: publicProcedure.input(z.object({ level: z.union([z.literal(1), z.literal(2), z.literal(3)]), messages: z.array(chatMessageSchema).min(1).max(20) })).mutation(async ({ ctx, input }) => {
+      const latestQuery = [...input.messages].reverse().find((message) => message.role === "user")?.content ?? "";
+      const context = buildAdminContext(input.level, latestQuery, classifyChatComplexity(latestQuery) === 3 ? 36000 : 22000);
+      const levelLabel = ADMIN_LEVELS[input.level].label;
+      try {
+        const response = await invokeLLM({ model: "gpt-5-mini", messages: [
+          { role: "system", content: `Você é o Chat ADM da Igreja do PromessaMS. Atenda exclusivamente a área ${levelLabel}. Responda em português claro, direto e prudente. Baseie a resposta somente nos documentos administrativos abaixo. Sempre cite o nome do documento e, quando identificável, artigo, capítulo ou seção; também informe as páginas do PDF quando útil. Não invente artigos. Se a informação não estiver nos documentos, diga isso claramente e recomende consultar a liderança competente. Não transforme a resposta em aconselhamento jurídico definitivo. Os documentos institucionais podem ser conferidos em promessistas.org. Fonte: ${ADMIN_SOURCE_NOTE}.\n\n${context}` },
+          ...input.messages.map((message) => ({ role: message.role as "user" | "assistant", content: message.content })),
+        ], maxTokens: classifyChatComplexity(latestQuery) === 3 ? 5000 : 2800 });
+        const answer = textFromContent(response.choices?.[0]?.message?.content) || "Não encontrei uma orientação suficiente nos documentos selecionados. Consulte a liderança regional.";
+        if (ctx.user) await saveConversation({ userId: ctx.user.id, title: `ADM: ${levelLabel}: ${latestQuery.slice(0, 60) || "consulta"}`, messages: JSON.stringify([...input.messages, { role: "assistant", content: answer }]) });
+        return { answer, level: input.level, source: ADMIN_SOURCE_NOTE };
+      } catch (error) {
+        console.error("[AdminChat] LLM request failed:", error);
+        const answer = `Não foi possível concluir a consulta agora. Verifique os documentos da opção ${input.level} em promessistas.org ou procure a liderança competente.`;
+        return { answer, level: input.level, source: ADMIN_SOURCE_NOTE };
       }
     }),
   }),

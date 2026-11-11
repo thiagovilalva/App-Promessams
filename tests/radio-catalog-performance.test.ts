@@ -100,9 +100,10 @@ describe("persistent radio catalog performance", () => {
 
   it("returns 304 for an unchanged cached catalog without contacting upstream", async () => {
     const upstream = vi.fn<typeof fetch>();
+    const freshSnapshot = { ...snapshot, updatedAt: new Date().toISOString() };
     await withServer(
       upstream as unknown as typeof fetch,
-      snapshot,
+      freshSnapshot,
       async (base) => {
         const first = await fetch(`${base}/api/radio-music/catalog`);
         expect(first.status).toBe(200);
