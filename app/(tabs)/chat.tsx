@@ -52,6 +52,19 @@ export default function ChatScreen() {
   const doctrinalMutation = trpc.doctrinalChat.ask.useMutation();
   const adminMutation = trpc.adminChat.ask.useMutation();
 
+  const requestedMode = params.topic === "doctrinal" ? "doctrinal" : params.topic === "seeds" ? "seeds" : undefined;
+
+  // The Chat tab can remain mounted while the user returns Home. React Router
+  // updates the params, but a useState initializer runs only once; synchronize
+  // the selected topic so Home shortcuts always open the requested chat.
+  useEffect(() => {
+    if (!requestedMode) return;
+    setMode(requestedMode);
+    setAdminLevel(null);
+    setInput("");
+    setAttachments([]);
+  }, [requestedMode]);
+
   const storageKey = mode === "doctrinal" ? "promessams:doctrinal-chat" : mode === "admin" ? `promessams:admin-chat-${adminLevel ?? "menu"}` : "sementes:chat";
   useEffect(() => { if (mode === "menu") return; AsyncStorage.getItem(storageKey).then((value) => { if (value) setMessages(JSON.parse(value)); else setMessages([]); }); }, [mode, storageKey]);
   useEffect(() => { if (messages.length && mode !== "menu") void AsyncStorage.setItem(storageKey, JSON.stringify(messages.slice(-30))); }, [messages, mode, storageKey]);

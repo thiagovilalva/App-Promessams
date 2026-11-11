@@ -61,6 +61,14 @@ describe("requested product updates", () => {
     expect(source).not.toContain("Conteúdo de trabalho da Convenção");
     expect(source).not.toContain(">Ver tudo</Text>");
   });
+  it("opens the selected unified chat directly from the home shortcuts", () => {
+    const home = read("app/(tabs)/index.tsx");
+    const chat = read("app/(tabs)/chat.tsx");
+    expect(home).toContain('params: { topic: "seeds" }');
+    expect(home).toContain('params: { topic: "doctrinal" }');
+    expect(chat).toContain("const requestedMode = params.topic === \"doctrinal\" ? \"doctrinal\" : params.topic === \"seeds\" ? \"seeds\" : undefined");
+    expect(chat).toContain("setMode(requestedMode)");
+  });
   it("adds the Promessa radio player above the WhatsApp contact", () => {
     const source = read("app/(tabs)/index.tsx");
     expect(source).toContain("Rádio da Promessa");
