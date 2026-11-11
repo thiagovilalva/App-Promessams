@@ -99,7 +99,20 @@ export const appRouter = router({
     deleteAll: protectedProcedure.mutation(({ ctx }) => deleteAllUserConversations(ctx.user.id)),
   }),
   reports: router({
-    list: adminProcedure.query(() => getConversationReport()),
+    list: adminProcedure.input(z.object({ period: z.enum(["all", "7", "30", "90", "custom"]).default("all"), from: z.string().optional(), to: z.string().optional() }).optional()).query(({ input }) => {
+      const value = input ?? { period: "all" as const };
+      const now = new Date();
+      let from: Date | undefined;
+      let to: Date | undefined;
+      if (value.period === "7" || value.period === "30" || value.period === "90") {
+        from = new Date(now);
+        from.setDate(from.getDate() - Number(value.period));
+      } else if (value.period === "custom") {
+        if (value.from && /^\d{4}-\d{2}-\d{2}$/.test(value.from)) from = new Date(`${value.from}T00:00:00.000Z`);
+        if (value.to && /^\d{4}-\d{2}-\d{2}$/.test(value.to)) to = new Date(`${value.to}T23:59:59.999Z`);
+      }
+      return getConversationReport({ from, to });
+    }),
   }),
   chat: router({
     ask: publicProcedure.input(z.object({ messages: z.array(chatMessageSchema).min(1).max(20) })).mutation(async ({ ctx, input }) => {

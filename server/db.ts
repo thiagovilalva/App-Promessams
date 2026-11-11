@@ -1,7 +1,8 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, gte, lte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { Conversation, InsertConversation, InsertMaterial, InsertUser, conversations, materials, users } from "../drizzle/schema";
 import { ENV } from "./_core/env";
+import { DOCTRINAL_STUDIES } from "../shared/doctrinal-knowledge";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -111,8 +112,42 @@ export async function deleteAllUserConversations(userId: number) {
   return true;
 }
 
-function classifyReportSubject(value: string) {
-  const text = value.toLocaleLowerCase("pt-BR");
+function normalizeReportText(value: string) {
+  return value.toLocaleLowerCase("pt-BR").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+function classifyReportSubject(value: string, chatTopic: string) {
+  const text = normalizeReportText(value);
+  if (chatTopic === "Professor Doutrinário") {
+    const aliases: Array<[number, string[]]> = [
+      [18, ["sabado", "sábado", "dia de descanso", "quarto mandamento"]],
+      [20, ["dizimo", "dízimo", "oferta", "ofertar", "ofertas", "primicia", "primícia", "manutencao da obra"]],
+      [9, ["batismo no espirito", "batismo no espírito", "espirito santo", "espírito santo"]],
+      [10, ["dom espiritual", "dons espirituais", "dom de cura", "profecia"]],
+      [11, ["evangelizacao", "evangelização", "discipulado", "fazer discípulos", "fazer discipulos"]],
+      [17, ["dez mandamentos", "mandamentos", "lei de deus"]],
+      [19, ["lei cerimonial", "leis cerimoniais", "distincao das leis", "distinção das leis"]],
+      [26, ["segunda vinda", "volta de jesus", "volta de cristo"]],
+      [29, ["juizo final", "juízo final", "julgamento final"]],
+      [22, ["casamento", "familia", "família", "lar"]],
+      [15, ["oracao", "oração", "orar"]],
+      [5, ["salvador", "mediador", "divindade de jesus", "jesus cristo"]],
+    ];
+    const alias = aliases.find(([_, terms]) => terms.some((term) => text.includes(normalizeReportText(term))));
+    if (alias) {
+      const study = DOCTRINAL_STUDIES.find((item) => item.number === alias[0]);
+      return `Estudo ${alias[0]} — ${study?.title ?? "Ponto doutrinário"}`;
+    }
+    const matched = DOCTRINAL_STUDIES.find((study) => {
+      const terms = [study.title, ...study.keywords];
+      return terms.some((term) => {
+        const normalized = normalizeReportText(term);
+        return normalized.length >= 5 && text.includes(normalized);
+      });
+    });
+    if (matched) return `Estudo ${matched.number} — ${matched.title}`;
+    return "Outros assuntos doutrinários";
+  }
   const groups: Array<[string, string[]]> = [
     ["Ofertas e dízimos", ["oferta", "ofertar", "dízimo", "dizimo", "primícia", "primicia"]],
     ["Doutrina e Bíblia", ["doutrina", "doutrinal", "bíblia", "biblia", "crença", "crenca", "batismo", "salvação", "salvacao"]],
@@ -126,10 +161,13 @@ function classifyReportSubject(value: string) {
   return groups.find(([_, terms]) => terms.some((term) => text.includes(term)))?.[0] ?? "Outros assuntos";
 }
 
-export async function getConversationReport() {
+export async function getConversationReport(filter: { from?: Date; to?: Date } = {}) {
   const db = await getDb();
   if (!db) return { totalConversations: 0, topics: [] as Array<{ topic: string; count: number; subjects: Array<{ subject: string; count: number }> }> };
-  const rows = await db.select({ title: conversations.title, messages: conversations.messages }).from(conversations).orderBy(desc(conversations.updatedAt)).limit(5000);
+  const conditions = [];
+  if (filter.from) conditions.push(gte(conversations.updatedAt, filter.from));
+  if (filter.to) conditions.push(lte(conversations.updatedAt, filter.to));
+  const rows = await db.select({ title: conversations.title, messages: conversations.messages, updatedAt: conversations.updatedAt }).from(conversations).where(conditions.length ? and(...conditions) : undefined).orderBy(desc(conversations.updatedAt)).limit(5000);
   const counts = new Map<string, number>();
   const subjects = new Map<string, Map<string, number>>();
   for (const row of rows) {
@@ -140,7 +178,7 @@ export async function getConversationReport() {
       const messages = JSON.parse(row.messages) as Array<{ role?: string; content?: string }>;
       const bucket = subjects.get(topic) ?? new Map<string, number>();
       for (const message of messages.filter((item) => item.role === "user" && typeof item.content === "string")) {
-        const subject = classifyReportSubject(message.content ?? "");
+        const subject = classifyReportSubject(message.content ?? "", topic);
         bucket.set(subject, (bucket.get(subject) ?? 0) + 1);
       }
       subjects.set(topic, bucket);

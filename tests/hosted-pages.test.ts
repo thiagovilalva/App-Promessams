@@ -14,7 +14,7 @@ describe("hosted reports and updated home", () => {
     expect(account).toContain("Conta e histórico");
     expect(read("app/admin.tsx")).toContain("Relatórios administrativos");
     expect(account).toContain('accessibilityLabel="Voltar à tela inicial"');
-    expect(read("server/routers.ts")).toContain("list: adminProcedure.query(() => getConversationReport())");
+    expect(read("server/routers.ts")).toContain("list: adminProcedure.input");
   });
   it("loads native hosted pages without bearer tokens in URLs or scripts", () => {
     const page = read("app/pagina-web.tsx");
