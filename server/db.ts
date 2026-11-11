@@ -111,15 +111,40 @@ export async function deleteAllUserConversations(userId: number) {
   return true;
 }
 
+function classifyReportSubject(value: string) {
+  const text = value.toLocaleLowerCase("pt-BR");
+  const groups: Array<[string, string[]]> = [
+    ["Ofertas e dízimos", ["oferta", "ofertar", "dízimo", "dizimo", "primícia", "primicia"]],
+    ["Doutrina e Bíblia", ["doutrina", "doutrinal", "bíblia", "biblia", "crença", "crenca", "batismo", "salvação", "salvacao"]],
+    ["Espírito Santo e discipulado", ["espírito", "espirito", "fruto", "discipulado", "santidade", "dons"]],
+    ["Evangelização e missão", ["missão", "missao", "evangel", "testemunho", "mission", "multiplica"]],
+    ["Igreja local e liderança", ["pastor", "liderança", "lideranca", "igreja", "conselho", "ministério", "ministerio"]],
+    ["Projeto Sementes e filosofia", ["sementes", "semente", "filosofia", "projeto", "célula", "celula", "grupo"]],
+    ["Regulamentos e administração", ["estatuto", "regulamento", "regimento", "cnpj", "admin", "eleição", "eleicao"]],
+    ["Bíblia e devocionais", ["versículo", "versiculo", "capítulo", "capitulo", "devocional", "pão diário", "pao diario"]],
+  ];
+  return groups.find(([_, terms]) => terms.some((term) => text.includes(term)))?.[0] ?? "Outros assuntos";
+}
+
 export async function getConversationReport() {
   const db = await getDb();
-  if (!db) return { totalConversations: 0, topics: [] as Array<{ topic: string; count: number }> };
+  if (!db) return { totalConversations: 0, topics: [] as Array<{ topic: string; count: number; subjects: Array<{ subject: string; count: number }> }> };
   const rows = await db.select({ title: conversations.title, messages: conversations.messages }).from(conversations).orderBy(desc(conversations.updatedAt)).limit(5000);
   const counts = new Map<string, number>();
+  const subjects = new Map<string, Map<string, number>>();
   for (const row of rows) {
     const title = row.title.toLowerCase();
     const topic = title.startsWith("doutrina:") ? "Professor Doutrinário" : title.startsWith("adm:") ? "Administração da Igreja" : "Filosofia e Projeto Sementes";
     counts.set(topic, (counts.get(topic) ?? 0) + 1);
+    try {
+      const messages = JSON.parse(row.messages) as Array<{ role?: string; content?: string }>;
+      const bucket = subjects.get(topic) ?? new Map<string, number>();
+      for (const message of messages.filter((item) => item.role === "user" && typeof item.content === "string")) {
+        const subject = classifyReportSubject(message.content ?? "");
+        bucket.set(subject, (bucket.get(subject) ?? 0) + 1);
+      }
+      subjects.set(topic, bucket);
+    } catch { /* Conversas antigas sem JSON válido não entram no detalhamento. */ }
   }
-  return { totalConversations: rows.length, topics: [...counts.entries()].map(([topic, count]) => ({ topic, count })).sort((a, b) => b.count - a.count) };
+  return { totalConversations: rows.length, topics: [...counts.entries()].map(([topic, count]) => ({ topic, count, subjects: [...(subjects.get(topic) ?? new Map()).entries()].map(([subject, subjectCount]) => ({ subject, count: subjectCount })).sort((a, b) => b.count - a.count) })).sort((a, b) => b.count - a.count) };
 }

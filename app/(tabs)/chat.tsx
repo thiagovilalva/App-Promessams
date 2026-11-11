@@ -62,7 +62,7 @@ export default function ChatScreen() {
     return () => subscription.remove();
   }, []);
 
-  const visibleMessages = useMemo(() => messages.length ? messages : [{ role: "assistant" as const, content: mode === "doctrinal" ? "Olá! Sou o Professor Doutrinário. Faça sua pergunta sobre qualquer um dos 31 pontos da doutrina bíblica da Igreja Adventista da Promessa." : mode === "admin" ? (adminLevel ? "Estou pronto para te ajudar. Escreva qual é a sua dúvida; responderei com base nos documentos administrativos do nível selecionado." : "Escolha um nível administrativo para iniciar a conversa.") : mode === "seeds" ? "Olá! Posso te ajudar na compreensão da filosofia, encontrando os caminhos práticos para vivê-la. Por onde quer começar?" : "Escolha um dos temas abaixo para iniciar a conversa." }], [messages, mode, adminLevel]);
+  const visibleMessages = useMemo(() => mode === "menu" ? [] : messages.length ? messages : [{ role: "assistant" as const, content: mode === "doctrinal" ? "Olá! Sou o Professor Doutrinário. Faça sua pergunta sobre qualquer um dos 31 pontos da doutrina bíblica da Igreja Adventista da Promessa." : mode === "admin" ? (adminLevel ? "Estou pronto para te ajudar. Escreva qual é a sua dúvida; responderei com base nos documentos administrativos do nível selecionado." : "Escolha um nível administrativo para iniciar a conversa.") : "Olá! Posso te ajudar na compreensão da filosofia, encontrando os caminhos práticos para vivê-la. Por onde quer começar?" }], [messages, mode, adminLevel]);
 
   function chooseMode(next: Exclude<ChatMode, "menu">) { setMessages([]); setInput(""); setAttachments([]); setAdminLevel(null); setMode(next); }
 
