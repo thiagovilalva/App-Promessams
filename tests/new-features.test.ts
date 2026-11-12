@@ -195,7 +195,7 @@ describe("requested product updates", () => {
     expect(home).toContain('import { Image } from "expo-image"');
     expect(home).toContain('cachePolicy="memory-disk"');
     expect(offers).toContain('import { Image } from "expo-image"');
-    expect(config).toContain("versionCode: 23");
+    expect(config).toContain("versionCode: 24");
     expect(config).toContain("enableMinifyInReleaseBuilds: true");
     expect(config).toContain("enableShrinkResourcesInReleaseBuilds: true");
     expect(read("lib/radio-provider.tsx")).not.toContain("useAudioPlayer");
@@ -310,5 +310,20 @@ describe("requested product updates", () => {
     const phrase = normalize("o cordeiro de Deus que tira o pecado do mundo");
     const match = index.books.flatMap((book: any) => book.chapters.flatMap(([chapter, verses]: [number, Array<[number, string]>]) => verses.map(([verse, text]) => ({ book: book.name, chapter, verse, text })))).find((item: any) => normalize(item.text).includes(phrase));
     expect(match).toMatchObject({ book: "João", chapter: 1, verse: 29 });
+  });
+});
+
+describe("Android release optimization", () => {
+  it("keeps R8, resource shrinking and PNG crunching enabled", () => {
+    const config = read("app.config.ts");
+    const plugin = read("plugins/with-release-optimization.cjs");
+    expect(config).toContain('versionCode: 24');
+    expect(config).toContain('"./plugins/with-release-optimization.cjs"');
+    expect(config).toContain('enableMinifyInReleaseBuilds: true');
+    expect(config).toContain('enableShrinkResourcesInReleaseBuilds: true');
+    expect(config).toContain('enablePngCrunchInReleaseBuilds: true');
+    expect(plugin).toContain('android.enableMinifyInReleaseBuilds');
+    expect(plugin).toContain('android.enableShrinkResourcesInReleaseBuilds');
+    expect(plugin).toContain('android.enablePngCrunchInReleaseBuilds');
   });
 });
