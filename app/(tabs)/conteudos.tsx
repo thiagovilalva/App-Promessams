@@ -14,7 +14,7 @@ import { trpc } from "@/lib/trpc";
 import { getApiBaseUrl } from "@/constants/oauth";
 import { CONTENT_MODULES, type ContentModule } from "@/shared/knowledge";
 import { mergeRemoteMaterials, REMOTE_MATERIALS_CACHE_KEY, REMOTE_MATERIALS_SYNC_KEY, type RemoteMaterial } from "@/shared/remote-content";
-import { contentText, makeTextPdf, type ContentExportFormat } from "@/lib/content-export";
+import { contentText, makeTextPdf, makeTextPdfBytes, type ContentExportFormat } from "@/lib/content-export";
 
 export default function ConteudosScreen() {
   const colors = useColors();
@@ -49,9 +49,10 @@ export default function ConteudosScreen() {
   const visibleModules = useMemo(() => CONTENT_MODULES.filter((item) => section === "filosofia" ? ["filosofia", "distincao", "principios", "lideranca", "filosofia-cristocentrismo", "filosofia-palavra", "filosofia-oracao", "filosofia-relacionamentos", "filosofia-todos-enviados", "filosofia-multiplicacao", "filosofia-contextualizacao", "documento-integral"].includes(item.id) : section === "projeto" ? ["projeto-acolhimento", "jornada", "projeto-discipulados", "projeto-equipes", "igreja-viva", "projeto-cuidado", "projeto-integracao", "projeto-formacao", "projeto-avaliacao", "projeto-multiplicacao", "projeto-territorio", "projeto-documento-integral"].includes(item.id) : ["ministerios-fundamento", "ministerios-alinhamento", "ministerios-principios", "ministerios-governanca", "ministerios-ciclo", "ministerios-areas", "ministerios-capacitacao", "ministerios-mentoria", "ministerios-seguranca", "ministerios-indicadores", "ministerios-apresentacao-integral", "ministerios-documento-integral"].includes(item.id)), [section]);
 
   const sectionInfo = {
-    filosofia: { name: "filosofia-da-semente", label: "Filosofia da Semente", ids: ["filosofia", "distincao", "principios", "lideranca", "filosofia-cristocentrismo", "filosofia-palavra", "filosofia-oracao", "filosofia-relacionamentos", "filosofia-todos-enviados", "filosofia-multiplicacao", "filosofia-contextualizacao", "documento-integral"] },
-    projeto: { name: "projeto-sementes", label: "Projeto Sementes", ids: ["projeto-acolhimento", "jornada", "projeto-discipulados", "projeto-equipes", "igreja-viva", "projeto-cuidado", "projeto-integracao", "projeto-formacao", "projeto-avaliacao", "projeto-multiplicacao", "projeto-territorio", "projeto-documento-integral"] },
-    ministerios: { name: "ministerios-regionais", label: "Ministérios Regionais", ids: ["ministerios-fundamento", "ministerios-alinhamento", "ministerios-principios", "ministerios-governanca", "ministerios-ciclo", "ministerios-areas", "ministerios-capacitacao", "ministerios-mentoria", "ministerios-seguranca", "ministerios-indicadores", "ministerios-apresentacao-integral", "ministerios-documento-integral"] },
+    filosofia: { name: "filosofia-da-semente", label: "Filosofia da Semente", ids: ["documento-integral", "filosofia", "distincao", "principios", "lideranca", "filosofia-cristocentrismo", "filosofia-palavra", "filosofia-oracao", "filosofia-relacionamentos", "filosofia-todos-enviados", "filosofia-multiplicacao", "filosofia-contextualizacao"] },
+    projeto: { name: "projeto-sementes", label: "Projeto Sementes", ids: ["projeto-documento-integral", "projeto-acolhimento", "jornada", "projeto-discipulados", "projeto-equipes", "igreja-viva", "projeto-cuidado", "projeto-integracao", "projeto-formacao", "projeto-avaliacao", "projeto-multiplicacao", "projeto-territorio"] },
+    // Ordem editorial solicitada: fundamento, apostila, apresentação e tópicos 02–10.
+    ministerios: { name: "ministerios-regionais", label: "Ministérios Regionais", ids: ["ministerios-fundamento", "ministerios-documento-integral", "ministerios-apresentacao-integral", "ministerios-alinhamento", "ministerios-principios", "ministerios-governanca", "ministerios-ciclo", "ministerios-areas", "ministerios-capacitacao", "ministerios-mentoria", "ministerios-seguranca", "ministerios-indicadores"] },
   } as const;
 
   async function exportSelectedContent(format: ContentExportFormat) {
@@ -63,7 +64,7 @@ export default function ConteudosScreen() {
     setFormatPickerOpen(false);
     await AsyncStorage.setItem(`sementes:conteudos:${section}`, JSON.stringify(items));
     if (Platform.OS === "web") {
-      const blob = new Blob([format === "pdf" ? makeTextPdf(group.label, text) : text], { type: format === "pdf" ? "application/pdf" : "text/plain;charset=utf-8" });
+      const blob = new Blob([format === "pdf" ? makeTextPdfBytes(group.label, text) : text], { type: format === "pdf" ? "application/pdf" : "text/plain;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a"); anchor.href = url; anchor.download = fileName; anchor.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
@@ -71,7 +72,17 @@ export default function ConteudosScreen() {
       const directory = FileSystem.documentDirectory;
       if (!directory) { Alert.alert("Não foi possível salvar", "O armazenamento local não está disponível neste dispositivo."); return; }
       const uri = `${directory}${fileName}`;
-      await FileSystem.writeAsStringAsync(uri, format === "pdf" ? makeTextPdf(group.label, text) : text, { encoding: FileSystem.EncodingType.UTF8 });
+      if (format === "pdf") {
+        // PDF usa WinAnsi; Base64 evita que o UTF-8 corrompa acentos no Android.
+        const bytes = makeTextPdfBytes(group.label, text);
+        let binary = "";
+        for (let index = 0; index < bytes.length; index += 0x8000) binary += String.fromCharCode(...bytes.subarray(index, index + 0x8000));
+        const encoded = typeof btoa === "function" ? btoa(binary) : globalThis.Buffer?.from(binary, "binary").toString("base64");
+        if (!encoded) throw new Error("Não foi possível codificar o PDF neste dispositivo.");
+        await FileSystem.writeAsStringAsync(uri, encoded, { encoding: FileSystem.EncodingType.Base64 });
+      } else {
+        await FileSystem.writeAsStringAsync(uri, text, { encoding: FileSystem.EncodingType.UTF8 });
+      }
       if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(uri, { mimeType: format === "pdf" ? "application/pdf" : "text/plain", dialogTitle: `Salvar ${group.label}` });
     }
     setSaved(true);
