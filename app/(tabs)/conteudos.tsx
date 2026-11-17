@@ -1,6 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Clipboard from "expo-clipboard";
+import * as FileSystem from "expo-file-system/legacy";
 import { Image } from "expo-image";
+import * as Sharing from "expo-sharing";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Linking, Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 
@@ -12,6 +14,7 @@ import { trpc } from "@/lib/trpc";
 import { getApiBaseUrl } from "@/constants/oauth";
 import { CONTENT_MODULES, type ContentModule } from "@/shared/knowledge";
 import { mergeRemoteMaterials, REMOTE_MATERIALS_CACHE_KEY, REMOTE_MATERIALS_SYNC_KEY, type RemoteMaterial } from "@/shared/remote-content";
+import { contentText, makeTextPdf, type ContentExportFormat } from "@/lib/content-export";
 
 export default function ConteudosScreen() {
   const colors = useColors();
@@ -19,6 +22,7 @@ export default function ConteudosScreen() {
   const [selected, setSelected] = useState<ContentModule | null>(null);
   const [section, setSection] = useState<"filosofia" | "projeto" | "ministerios">("filosofia");
   const [saved, setSaved] = useState(false);
+  const [formatPickerOpen, setFormatPickerOpen] = useState(false);
   const [cachedMaterials, setCachedMaterials] = useState<RemoteMaterial[]>([]);
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
   const materialsQuery = trpc.materials.list.useQuery();
@@ -44,23 +48,34 @@ export default function ConteudosScreen() {
   }, [materialsQuery.data]);
   const visibleModules = useMemo(() => CONTENT_MODULES.filter((item) => section === "filosofia" ? ["filosofia", "distincao", "principios", "lideranca", "filosofia-cristocentrismo", "filosofia-palavra", "filosofia-oracao", "filosofia-relacionamentos", "filosofia-todos-enviados", "filosofia-multiplicacao", "filosofia-contextualizacao", "documento-integral"].includes(item.id) : section === "projeto" ? ["projeto-acolhimento", "jornada", "projeto-discipulados", "projeto-equipes", "igreja-viva", "projeto-cuidado", "projeto-integracao", "projeto-formacao", "projeto-avaliacao", "projeto-multiplicacao", "projeto-territorio", "projeto-documento-integral"].includes(item.id) : ["ministerios-fundamento", "ministerios-alinhamento", "ministerios-principios", "ministerios-governanca", "ministerios-ciclo", "ministerios-areas", "ministerios-capacitacao", "ministerios-mentoria", "ministerios-seguranca", "ministerios-indicadores", "ministerios-apresentacao-integral", "ministerios-documento-integral"].includes(item.id)), [section]);
 
-  async function saveForOffline() {
-    await AsyncStorage.setItem("sementes:conteudos", JSON.stringify(CONTENT_MODULES));
+  const sectionInfo = {
+    filosofia: { name: "filosofia-da-semente", label: "Filosofia da Semente", ids: ["filosofia", "distincao", "principios", "lideranca", "filosofia-cristocentrismo", "filosofia-palavra", "filosofia-oracao", "filosofia-relacionamentos", "filosofia-todos-enviados", "filosofia-multiplicacao", "filosofia-contextualizacao", "documento-integral"] },
+    projeto: { name: "projeto-sementes", label: "Projeto Sementes", ids: ["projeto-acolhimento", "jornada", "projeto-discipulados", "projeto-equipes", "igreja-viva", "projeto-cuidado", "projeto-integracao", "projeto-formacao", "projeto-avaliacao", "projeto-multiplicacao", "projeto-territorio", "projeto-documento-integral"] },
+    ministerios: { name: "ministerios-regionais", label: "Ministérios Regionais", ids: ["ministerios-fundamento", "ministerios-alinhamento", "ministerios-principios", "ministerios-governanca", "ministerios-ciclo", "ministerios-areas", "ministerios-capacitacao", "ministerios-mentoria", "ministerios-seguranca", "ministerios-indicadores", "ministerios-apresentacao-integral", "ministerios-documento-integral"] },
+  } as const;
+
+  async function exportSelectedContent(format: ContentExportFormat) {
+    const group = sectionInfo[section];
+    const items = CONTENT_MODULES.filter((item) => group.ids.includes(item.id as never));
+    const text = contentText(group.label, items);
+    const extension = format === "pdf" ? "pdf" : "txt";
+    const fileName = `${group.name}.${extension}`;
+    setFormatPickerOpen(false);
+    await AsyncStorage.setItem(`sementes:conteudos:${section}`, JSON.stringify(items));
     if (Platform.OS === "web") {
-      const groups = [
-        { name: "filosofia-da-semente", label: "Filosofia da Semente", ids: ["filosofia", "distincao", "principios", "lideranca", "filosofia-cristocentrismo", "filosofia-palavra", "filosofia-oracao", "filosofia-relacionamentos", "filosofia-todos-enviados", "filosofia-multiplicacao", "filosofia-contextualizacao", "documento-integral"] },
-        { name: "projeto-sementes", label: "Projeto Sementes", ids: ["projeto-acolhimento", "jornada", "projeto-discipulados", "projeto-equipes", "igreja-viva", "projeto-cuidado", "projeto-integracao", "projeto-formacao", "projeto-avaliacao", "projeto-multiplicacao", "projeto-territorio", "projeto-documento-integral"] },
-        { name: "ministerios-regionais", label: "Ministérios Regionais", ids: ["ministerios-fundamento", "ministerios-alinhamento", "ministerios-principios", "ministerios-governanca", "ministerios-ciclo", "ministerios-areas", "ministerios-capacitacao", "ministerios-mentoria", "ministerios-seguranca", "ministerios-indicadores", "ministerios-apresentacao-integral", "ministerios-documento-integral"] },
-      ];
-      for (const group of groups) {
-        const content = CONTENT_MODULES.filter((item) => group.ids.includes(item.id)).map((item) => `${item.title}\n\n${item.body}\n\nLeitura de apoio: ${item.scripture}\nPróximo passo: ${item.practice}`).join(`\n\n${"=".repeat(70)}\n\n`);
-        const blob = new Blob([`${group.label}\n\n${content}`], { type: "text/plain;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
-        const anchor = document.createElement("a"); anchor.href = url; anchor.download = `${group.name}.txt`; anchor.click(); URL.revokeObjectURL(url);
-      }
+      const blob = new Blob([format === "pdf" ? makeTextPdf(group.label, text) : text], { type: format === "pdf" ? "application/pdf" : "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a"); anchor.href = url; anchor.download = fileName; anchor.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } else {
+      const directory = FileSystem.documentDirectory;
+      if (!directory) { Alert.alert("Não foi possível salvar", "O armazenamento local não está disponível neste dispositivo."); return; }
+      const uri = `${directory}${fileName}`;
+      await FileSystem.writeAsStringAsync(uri, format === "pdf" ? makeTextPdf(group.label, text) : text, { encoding: FileSystem.EncodingType.UTF8 });
+      if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(uri, { mimeType: format === "pdf" ? "application/pdf" : "text/plain", dialogTitle: `Salvar ${group.label}` });
     }
     setSaved(true);
-    Alert.alert("Conteúdo salvo", Platform.OS === "web" ? "Os três arquivos da biblioteca foram baixados para o dispositivo." : "Este material já está disponível dentro do app, mesmo sem internet.");
+    Alert.alert("Conteúdo salvo", `${group.label} foi preparado em formato ${format.toUpperCase()}.`);
   }
 
   async function copyText(text: string) {
@@ -79,10 +94,11 @@ export default function ConteudosScreen() {
         <Text style={[styles.title, { color: colors.foreground, fontSize: 29 * textScale, lineHeight: 35 * textScale }]}>Aprenda no seu ritmo.</Text>
         <Text style={[styles.subtitle, { color: colors.muted, fontSize: 14 * textScale, lineHeight: 21 * textScale }]}>Conteúdos essenciais para compreender a visão, praticar o cuidado e formar discípulos.</Text>
         <View style={[styles.sectionChooser, { borderColor: colors.border, backgroundColor: colors.surface }]}><Pressable onPress={() => { setSection("filosofia"); setSelected(null); }} style={[styles.sectionTab, section === "filosofia" && { backgroundColor: colors.primary }]} accessibilityRole="tab" accessibilityState={{ selected: section === "filosofia" }}><Text style={[styles.sectionTabText, { color: section === "filosofia" ? "#FFFFFF" : colors.foreground, fontSize: 13 * textScale }]}>Filosofia da Semente</Text></Pressable><Pressable onPress={() => { setSection("projeto"); setSelected(null); }} style={[styles.sectionTab, section === "projeto" && { backgroundColor: colors.primary }]} accessibilityRole="tab" accessibilityState={{ selected: section === "projeto" }}><Text style={[styles.sectionTabText, { color: section === "projeto" ? "#FFFFFF" : colors.foreground, fontSize: 13 * textScale }]}>Projeto Sementes</Text></Pressable><Pressable onPress={() => { setSection("ministerios"); setSelected(null); }} style={[styles.sectionTab, section === "ministerios" && { backgroundColor: colors.primary }]} accessibilityRole="tab" accessibilityState={{ selected: section === "ministerios" }}><Text style={[styles.sectionTabText, { color: section === "ministerios" ? "#FFFFFF" : colors.foreground, fontSize: 13 * textScale }]}>Ministérios Regionais</Text></Pressable></View>
-        <View style={styles.syncRow}><Pressable onPress={saveForOffline} style={({ pressed }) => [styles.offlineButton, { backgroundColor: saved ? "#E9F7F0" : colors.surface, borderColor: saved ? "#B6E6CF" : colors.border }, pressed && styles.pressed]}>
+        <View style={styles.syncRow}><Pressable onPress={() => setFormatPickerOpen(true)} style={({ pressed }) => [styles.offlineButton, { backgroundColor: saved ? "#E9F7F0" : colors.surface, borderColor: saved ? "#B6E6CF" : colors.border }, pressed && styles.pressed]}>
           <IconSymbol name={saved ? "checkmark.circle.fill" : "arrow.down.circle.fill"} size={19} color={saved ? "#167C55" : colors.primary} />
-          <Text style={[styles.offlineText, { color: saved ? "#167C55" : colors.foreground }]}>{saved ? "Salvo para leitura offline" : "Salvar biblioteca no dispositivo"}</Text>
+          <Text style={[styles.offlineText, { color: saved ? "#167C55" : colors.foreground }]}>{saved ? `${sectionInfo[section].label} salvo` : `Salvar ${sectionInfo[section].label}`}</Text>
         </Pressable><Text style={[styles.syncText, { color: colors.muted }]}>{materialsQuery.isFetching ? "Atualizando conteúdo online…" : lastSyncedAt ? `Última atualização: ${new Date(lastSyncedAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}` : "Conteúdo local disponível"}</Text></View>
+        {formatPickerOpen && <View style={[styles.formatPicker, { backgroundColor: colors.surface, borderColor: colors.primary + "70" }]}><Text style={[styles.formatTitle, { color: colors.foreground }]}>Salvar {sectionInfo[section].label}</Text><Text style={[styles.formatSubtitle, { color: colors.muted }]}>Escolha o formato deste material:</Text><View style={styles.formatActions}><Pressable onPress={() => void exportSelectedContent("pdf")} style={[styles.formatButton, { backgroundColor: colors.primary }]}><Text style={styles.formatButtonText}>PDF</Text></Pressable><Pressable onPress={() => void exportSelectedContent("txt")} style={[styles.formatButton, { borderColor: colors.border, borderWidth: 1 }]}><Text style={[styles.formatButtonText, { color: colors.foreground }]}>TXT</Text></Pressable><Pressable onPress={() => setFormatPickerOpen(false)} style={[styles.formatButton, { borderColor: colors.border, borderWidth: 1 }]}><Text style={[styles.formatButtonText, { color: colors.muted }]}>Cancelar</Text></Pressable></View></View>}
         <View style={styles.list}>
           {visibleModules.map((item, index) => {
             const isOpen = selected?.id === item.id;
@@ -114,6 +130,12 @@ const styles = StyleSheet.create({
   offlineText: { fontSize: 12, fontWeight: "700" },
   syncRow: { gap: 6, marginTop: 18 },
   syncText: { fontSize: 10, lineHeight: 15 },
+  formatPicker: { borderRadius: 16, borderWidth: 1, padding: 14, marginTop: 10 },
+  formatTitle: { fontSize: 15, fontWeight: "800" },
+  formatSubtitle: { fontSize: 12, marginTop: 4 },
+  formatActions: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 },
+  formatButton: { borderRadius: 10, paddingHorizontal: 14, paddingVertical: 9 },
+  formatButtonText: { color: "#FFFFFF", fontSize: 12, fontWeight: "800" },
   sectionChooser: { flexDirection: "row", borderWidth: 1, borderRadius: 15, padding: 4, gap: 4, marginTop: 20 },
   sectionTab: { flex: 1, borderRadius: 11, paddingHorizontal: 8, paddingVertical: 11, alignItems: "center", justifyContent: "center" },
   sectionTabText: { fontWeight: "800", textAlign: "center" },
