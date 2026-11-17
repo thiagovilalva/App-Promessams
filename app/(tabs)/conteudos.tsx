@@ -63,6 +63,29 @@ export default function ConteudosScreen() {
     const fileName = `${group.name}.${extension}`;
     setFormatPickerOpen(false);
     await AsyncStorage.setItem(`sementes:conteudos:${section}`, JSON.stringify(items));
+    // A apostila e os slides possuem diagramação editorial própria. No PDF de
+    // Ministérios Regionais, preservamos os arquivos originais e acrescentamos
+    // os itens temáticos ao final, em vez de reconstruir tudo como texto simples.
+    if (section === "ministerios" && format === "pdf") {
+      const unifiedUrl = `${getApiBaseUrl()}/downloads/ministerios-regionais-unificado.pdf`;
+      if (Platform.OS === "web") {
+        const response = await fetch(unifiedUrl);
+        if (!response.ok) throw new Error("Não foi possível baixar o PDF unificado dos Ministérios Regionais.");
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement("a"); anchor.href = url; anchor.download = fileName; anchor.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } else {
+        const directory = FileSystem.documentDirectory;
+        if (!directory) { Alert.alert("Não foi possível salvar", "O armazenamento local não está disponível neste dispositivo."); return; }
+        const uri = `${directory}${fileName}`;
+        await FileSystem.downloadAsync(unifiedUrl, uri);
+        if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(uri, { mimeType: "application/pdf", dialogTitle: `Salvar ${group.label}` });
+      }
+      setSaved(true);
+      Alert.alert("Conteúdo salvo", `${group.label} foi preparado em PDF com a formatação original.`);
+      return;
+    }
     if (Platform.OS === "web") {
       const blob = new Blob([format === "pdf" ? makeTextPdfBytes(group.label, text) : text], { type: format === "pdf" ? "application/pdf" : "text/plain;charset=utf-8" });
       const url = URL.createObjectURL(blob);
