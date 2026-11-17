@@ -14,7 +14,7 @@ import { trpc } from "@/lib/trpc";
 import { getApiBaseUrl } from "@/constants/oauth";
 import { CONTENT_MODULES, type ContentModule } from "@/shared/knowledge";
 import { mergeRemoteMaterials, REMOTE_MATERIALS_CACHE_KEY, REMOTE_MATERIALS_SYNC_KEY, type RemoteMaterial } from "@/shared/remote-content";
-import { contentText, makeTextPdf, makeTextPdfBytes, type ContentExportFormat } from "@/lib/content-export";
+import { contentText, type ContentExportFormat } from "@/lib/content-export";
 
 export default function ConteudosScreen() {
   const colors = useColors();
@@ -63,11 +63,16 @@ export default function ConteudosScreen() {
     const fileName = `${group.name}.${extension}`;
     setFormatPickerOpen(false);
     await AsyncStorage.setItem(`sementes:conteudos:${section}`, JSON.stringify(items));
-    // A apostila e os slides possuem diagramação editorial própria. No PDF de
-    // Ministérios Regionais, preservamos os arquivos originais e acrescentamos
-    // os itens temáticos ao final, em vez de reconstruir tudo como texto simples.
-    if (section === "ministerios" && format === "pdf") {
-      const unifiedUrl = `${getApiBaseUrl()}/downloads/ministerios-regionais-unificado.pdf`;
+    // Os PDFs oficiais possuem diagramação editorial própria. Preservamos os
+    // arquivos enviados, em vez de reconstruí-los como texto simples. O PDF de
+    // Ministérios contém somente a apostila seguida da apresentação original.
+    if (format === "pdf") {
+      const officialPdf = {
+        filosofia: "filosofia-da-semente-revisada.pdf",
+        projeto: "projeto-sementes-revisado.pdf",
+        ministerios: "ministerios-regionais-unificado.pdf",
+      }[section];
+      const unifiedUrl = `${getApiBaseUrl()}/downloads/${officialPdf}`;
       if (Platform.OS === "web") {
         const response = await fetch(unifiedUrl);
         if (!response.ok) throw new Error("Não foi possível baixar o PDF unificado dos Ministérios Regionais.");
@@ -87,7 +92,7 @@ export default function ConteudosScreen() {
       return;
     }
     if (Platform.OS === "web") {
-      const blob = new Blob([format === "pdf" ? makeTextPdfBytes(group.label, text) : text], { type: format === "pdf" ? "application/pdf" : "text/plain;charset=utf-8" });
+      const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a"); anchor.href = url; anchor.download = fileName; anchor.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
@@ -95,18 +100,8 @@ export default function ConteudosScreen() {
       const directory = FileSystem.documentDirectory;
       if (!directory) { Alert.alert("Não foi possível salvar", "O armazenamento local não está disponível neste dispositivo."); return; }
       const uri = `${directory}${fileName}`;
-      if (format === "pdf") {
-        // PDF usa WinAnsi; Base64 evita que o UTF-8 corrompa acentos no Android.
-        const bytes = makeTextPdfBytes(group.label, text);
-        let binary = "";
-        for (let index = 0; index < bytes.length; index += 0x8000) binary += String.fromCharCode(...bytes.subarray(index, index + 0x8000));
-        const encoded = typeof btoa === "function" ? btoa(binary) : globalThis.Buffer?.from(binary, "binary").toString("base64");
-        if (!encoded) throw new Error("Não foi possível codificar o PDF neste dispositivo.");
-        await FileSystem.writeAsStringAsync(uri, encoded, { encoding: FileSystem.EncodingType.Base64 });
-      } else {
-        await FileSystem.writeAsStringAsync(uri, text, { encoding: FileSystem.EncodingType.UTF8 });
-      }
-      if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(uri, { mimeType: format === "pdf" ? "application/pdf" : "text/plain", dialogTitle: `Salvar ${group.label}` });
+      await FileSystem.writeAsStringAsync(uri, text, { encoding: FileSystem.EncodingType.UTF8 });
+      if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(uri, { mimeType: "text/plain", dialogTitle: `Salvar ${group.label}` });
     }
     setSaved(true);
     Alert.alert("Conteúdo salvo", `${group.label} foi preparado em formato ${format.toUpperCase()}.`);
