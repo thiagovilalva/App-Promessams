@@ -17,7 +17,7 @@ function pdfEscape(value: string) {
   return winAnsi(value).replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
 }
 
-function wrap(value: string, width = 92) {
+function wrap(value: string, width = 108) {
   const words = value.trim().split(/\s+/).filter(Boolean);
   const lines: string[] = [];
   let line = "";
@@ -45,7 +45,7 @@ function makePageLines(title: string, text: string) {
     const value = raw.trimEnd();
     if (!value.trim()) { lines.push({ text: "", kind: "blank" }); continue; }
     const kind = isHeading(value) ? "heading" : "body";
-    for (const part of wrap(value, kind === "heading" ? 70 : 92)) lines.push({ text: part, kind });
+    for (const part of wrap(value, kind === "heading" ? 82 : 108)) lines.push({ text: part, kind });
   }
   const pages: typeof lines[] = [];
   let page: typeof lines = [];
@@ -108,17 +108,17 @@ export function makeTextPdf(title: string, text: string) {
   pages.forEach((pageLines, pageIndex) => {
     const commands = [
       "q", "0.055 0.49 0.33 rg", "0 812 595 30 re f", "Q",
-      "BT", "/F2 9 Tf", "1 1 1 rg", "44 823 Td", `(${pdfEscape(title)}) Tj`, "ET",
-      "BT", "/F1 8 Tf", "0.34 0.38 0.36 rg", "44 30 Td", `(PromessaMS  ·  ${pageIndex + 1}) Tj`, "ET",
+      "BT", "/F2 9 Tf", "1 1 1 rg", "30 823 Td", `(${pdfEscape(title)}) Tj`, "ET",
+      "BT", "/F1 8 Tf", "0.34 0.38 0.36 rg", "30 30 Td", `(PromessaMS  ·  ${pageIndex + 1}) Tj`, "ET",
     ];
     let y = 780;
     for (const line of pageLines) {
       if (line.kind === "blank") { y -= 8; continue; }
       if (line.kind === "heading") {
-        commands.push("BT", "/F2 12 Tf", "0.055 0.49 0.33 rg", `44 ${y} Td`, `(${pdfEscape(line.text)}) Tj`, "ET");
+        commands.push("BT", "/F2 12 Tf", "0.055 0.49 0.33 rg", `30 ${y} Td`, `(${pdfEscape(line.text)}) Tj`, "ET");
         y -= 22;
       } else {
-        commands.push("BT", "/F1 10 Tf", "0.12 0.14 0.13 rg", `44 ${y} Td`, `(${pdfEscape(line.text)}) Tj`, "ET");
+        commands.push("BT", "/F1 10 Tf", "0.12 0.14 0.13 rg", `30 ${y} Td`, `(${pdfEscape(line.text)}) Tj`, "ET");
         y -= 15;
       }
     }
@@ -133,7 +133,7 @@ export function makeTextPdf(title: string, text: string) {
   let pdf = "%PDF-1.4\n%\xE2\xE3\xCF\xD3\n";
   const offsets = [0];
   objects.forEach((object, index) => { offsets[index + 1] = byteStringToUint8(pdf).length; pdf += `${index + 1} 0 obj\n${object}\nendobj\n`; });
-  const xref = pdf.length;
+  const xref = byteStringToUint8(pdf).length;
   pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
   for (let index = 1; index <= objects.length; index++) pdf += `${String(offsets[index]).padStart(10, "0")} 00000 n \n`;
   pdf += `trailer\n<< /Size ${objects.length + 1} /Root ${catalogId} 0 R >>\nstartxref\n${xref}\n%%EOF`;

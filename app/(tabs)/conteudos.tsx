@@ -46,7 +46,7 @@ export default function ConteudosScreen() {
     setLastSyncedAt(now);
     void AsyncStorage.multiSet([[REMOTE_MATERIALS_CACHE_KEY, JSON.stringify(materialsQuery.data)], [REMOTE_MATERIALS_SYNC_KEY, now]]);
   }, [materialsQuery.data]);
-  const visibleModules = useMemo(() => CONTENT_MODULES.filter((item) => section === "filosofia" ? ["filosofia", "distincao", "principios", "lideranca", "filosofia-cristocentrismo", "filosofia-palavra", "filosofia-oracao", "filosofia-relacionamentos", "filosofia-todos-enviados", "filosofia-multiplicacao", "filosofia-contextualizacao", "documento-integral"].includes(item.id) : section === "projeto" ? ["projeto-acolhimento", "jornada", "projeto-discipulados", "projeto-equipes", "igreja-viva", "projeto-cuidado", "projeto-integracao", "projeto-formacao", "projeto-avaliacao", "projeto-multiplicacao", "projeto-territorio", "projeto-documento-integral"].includes(item.id) : ["ministerios-fundamento", "ministerios-alinhamento", "ministerios-principios", "ministerios-governanca", "ministerios-ciclo", "ministerios-areas", "ministerios-capacitacao", "ministerios-mentoria", "ministerios-seguranca", "ministerios-indicadores", "ministerios-apresentacao-integral", "ministerios-documento-integral"].includes(item.id)), [section]);
+  const visibleModules = useMemo(() => CONTENT_MODULES.filter((item) => section === "filosofia" ? ["documento-integral", "filosofia", "distincao", "principios", "lideranca", "filosofia-cristocentrismo", "filosofia-palavra", "filosofia-oracao", "filosofia-relacionamentos", "filosofia-todos-enviados", "filosofia-multiplicacao", "filosofia-contextualizacao"].includes(item.id) : section === "projeto" ? ["projeto-documento-integral", "projeto-acolhimento", "jornada", "projeto-discipulados", "projeto-equipes", "igreja-viva", "projeto-cuidado", "projeto-integracao", "projeto-formacao", "projeto-avaliacao", "projeto-multiplicacao", "projeto-territorio"].includes(item.id) : ["ministerios-fundamento", "ministerios-documento-integral", "ministerios-apresentacao-integral", "ministerios-alinhamento", "ministerios-principios", "ministerios-governanca", "ministerios-ciclo", "ministerios-areas", "ministerios-capacitacao", "ministerios-mentoria", "ministerios-seguranca", "ministerios-indicadores"].includes(item.id)), [section]);
 
   const sectionInfo = {
     filosofia: { name: "filosofia-da-semente", label: "Filosofia da Semente", ids: ["documento-integral", "filosofia", "distincao", "principios", "lideranca", "filosofia-cristocentrismo", "filosofia-palavra", "filosofia-oracao", "filosofia-relacionamentos", "filosofia-todos-enviados", "filosofia-multiplicacao", "filosofia-contextualizacao"] },
@@ -57,7 +57,7 @@ export default function ConteudosScreen() {
 
   async function exportSelectedContent(format: ContentExportFormat) {
     const group = sectionInfo[section];
-    const items = CONTENT_MODULES.filter((item) => group.ids.includes(item.id as never));
+    const items = group.ids.map((id) => CONTENT_MODULES.find((item) => item.id === id)).filter((item): item is (typeof CONTENT_MODULES)[number] => Boolean(item));
     const text = contentText(group.label, items);
     const extension = format === "pdf" ? "pdf" : "txt";
     const fileName = `${group.name}.${extension}`;
