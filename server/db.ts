@@ -1,6 +1,6 @@
-import { and, desc, eq, gte, lte } from "drizzle-orm";
+import { and, avg, count, countDistinct, desc, eq, gte, lt, lte, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { Conversation, InsertConversation, InsertMaterial, InsertUser, conversations, materials, users } from "../drizzle/schema";
+import { Conversation, InsertConversation, InsertMaterial, InsertSiteAnalyticsEvent, InsertUser, conversations, materials, siteAnalyticsEvents, users } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 import { DOCTRINAL_STUDIES } from "../shared/doctrinal-knowledge";
 
@@ -110,6 +110,55 @@ export async function deleteAllUserConversations(userId: number) {
   if (!db) return false;
   await db.delete(conversations).where(eq(conversations.userId, userId));
   return true;
+}
+
+const ANALYTICS_RETENTION_DAYS = 60;
+
+export async function recordAnalyticsEvent(input: Omit<InsertSiteAnalyticsEvent, "id" | "createdAt">) {
+  const db = await getDb();
+  if (!db) return null;
+  await db.insert(siteAnalyticsEvents).values(input);
+  return { recorded: true } as const;
+}
+
+function analyticsCutoff() {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - ANALYTICS_RETENTION_DAYS);
+  return cutoff;
+}
+
+function analyticsConditions(filter: { from?: Date; to?: Date; platform?: "all" | "web" | "app" }) {
+  const from = filter.from && filter.from > analyticsCutoff() ? filter.from : analyticsCutoff();
+  const conditions = [gte(siteAnalyticsEvents.createdAt, from)];
+  if (filter.to) conditions.push(lte(siteAnalyticsEvents.createdAt, filter.to));
+  if (filter.platform && filter.platform !== "all") conditions.push(eq(siteAnalyticsEvents.platform, filter.platform));
+  return conditions;
+}
+
+export async function getAnalyticsReport(filter: { from?: Date; to?: Date; platform?: "all" | "web" | "app" } = {}) {
+  const db = await getDb();
+  if (!db) return { retentionDays: ANALYTICS_RETENTION_DAYS, totalPageViews: 0, uniqueVisitors: 0, uniqueSessions: 0, averageSessionSeconds: 0, pages: [], features: [] };
+  await db.delete(siteAnalyticsEvents).where(lt(siteAnalyticsEvents.createdAt, analyticsCutoff()));
+  const conditions = analyticsConditions(filter);
+  const where = and(...conditions);
+  const pageWhere = and(where, eq(siteAnalyticsEvents.eventType, "page_view"));
+  const [summary] = await db.select({
+    totalPageViews: count(siteAnalyticsEvents.id),
+    uniqueVisitors: countDistinct(siteAnalyticsEvents.visitorId),
+    uniqueSessions: countDistinct(siteAnalyticsEvents.sessionId),
+  }).from(siteAnalyticsEvents).where(pageWhere);
+  const [duration] = await db.select({ averageSessionSeconds: avg(siteAnalyticsEvents.durationSeconds) }).from(siteAnalyticsEvents).where(and(where, sql`${siteAnalyticsEvents.eventType} in ('heartbeat', 'session_end')`));
+  const pages = await db.select({ path: siteAnalyticsEvents.path, feature: siteAnalyticsEvents.feature, count: count(siteAnalyticsEvents.id) }).from(siteAnalyticsEvents).where(pageWhere).groupBy(siteAnalyticsEvents.path, siteAnalyticsEvents.feature).orderBy(desc(count(siteAnalyticsEvents.id))).limit(20);
+  const features = await db.select({ feature: siteAnalyticsEvents.feature, count: count(siteAnalyticsEvents.id) }).from(siteAnalyticsEvents).where(pageWhere).groupBy(siteAnalyticsEvents.feature).orderBy(desc(count(siteAnalyticsEvents.id))).limit(20);
+  return {
+    retentionDays: ANALYTICS_RETENTION_DAYS,
+    totalPageViews: Number(summary?.totalPageViews ?? 0),
+    uniqueVisitors: Number(summary?.uniqueVisitors ?? 0),
+    uniqueSessions: Number(summary?.uniqueSessions ?? 0),
+    averageSessionSeconds: Math.round(Number(duration?.averageSessionSeconds ?? 0)),
+    pages: pages.map((item) => ({ path: item.path, feature: item.feature, count: Number(item.count) })),
+    features: features.map((item) => ({ feature: item.feature, count: Number(item.count) })),
+  };
 }
 
 function normalizeReportText(value: string) {

@@ -1,4 +1,4 @@
-import { boolean, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { boolean, int, index, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
@@ -44,3 +44,24 @@ export const conversations = mysqlTable("conversations", {
 });
 export type Conversation = typeof conversations.$inferSelect;
 export type InsertConversation = typeof conversations.$inferInsert;
+
+export const siteAnalyticsEvents = mysqlTable("site_analytics_events", {
+  id: int("id").autoincrement().primaryKey(),
+  visitorId: varchar("visitorId", { length: 64 }).notNull(),
+  sessionId: varchar("sessionId", { length: 64 }).notNull(),
+  eventType: mysqlEnum("eventType", ["session_start", "page_view", "heartbeat", "session_end"]).notNull(),
+  platform: mysqlEnum("platform", ["web", "app"]).notNull(),
+  path: varchar("path", { length: 255 }).notNull(),
+  feature: varchar("feature", { length: 80 }).notNull(),
+  durationSeconds: int("durationSeconds").default(0).notNull(),
+  referrer: varchar("referrer", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => ({
+  createdAtIdx: index("site_analytics_created_at_idx").on(table.createdAt),
+  sessionIdx: index("site_analytics_session_idx").on(table.sessionId),
+  visitorIdx: index("site_analytics_visitor_idx").on(table.visitorId),
+  platformIdx: index("site_analytics_platform_idx").on(table.platform, table.createdAt),
+}));
+
+export type SiteAnalyticsEvent = typeof siteAnalyticsEvents.$inferSelect;
+export type InsertSiteAnalyticsEvent = typeof siteAnalyticsEvents.$inferInsert;

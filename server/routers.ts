@@ -7,7 +7,7 @@ import { buildDoctrinalContext, buildDoctrinalFallback, DOCTRINAL_STUDIES } from
 import { classifyChatComplexity, fallbackAnswer, needsOnlineResearch } from "../shared/chat-fallback";
 import { ADMIN_LEVELS, ADMIN_SOURCE_NOTE, buildAdminContext, type AdminLevel } from "../shared/admin-knowledge";
 import { COOKIE_NAME } from "../shared/const";
-import { createMaterial, deleteAllUserConversations, deleteUserConversation, getAllMaterials, getConversationReport, getPublishedMaterials, getUserConversations, publishMaterial, saveConversation } from "./db";
+import { createMaterial, deleteAllUserConversations, deleteUserConversation, getAllMaterials, getAnalyticsReport, getConversationReport, getPublishedMaterials, getUserConversations, publishMaterial, recordAnalyticsEvent, saveConversation } from "./db";
 import { storagePut } from "./storage";
 import { invokeLLM } from "./_core/llm";
 import { ENV } from "./_core/env";
@@ -112,6 +112,32 @@ export const appRouter = router({
         if (value.to && /^\d{4}-\d{2}-\d{2}$/.test(value.to)) to = new Date(`${value.to}T23:59:59.999Z`);
       }
       return getConversationReport({ from, to });
+    }),
+  }),
+  analytics: router({
+    track: publicProcedure.input(z.object({
+      eventType: z.enum(["session_start", "page_view", "heartbeat", "session_end"]),
+      visitorId: z.string().regex(/^[a-z0-9-]{8,64}$/i),
+      sessionId: z.string().regex(/^[a-z0-9-]{8,64}$/i),
+      platform: z.enum(["web", "app"]),
+      path: z.string().min(1).max(255),
+      feature: z.string().min(1).max(80),
+      durationSeconds: z.number().int().min(0).max(86400).default(0),
+      referrer: z.string().max(255).optional(),
+    })).mutation(({ input }) => recordAnalyticsEvent({ ...input, referrer: input.referrer ?? null })),
+    report: adminProcedure.input(z.object({ period: z.enum(["all", "7", "30", "60", "custom"]).default("60"), from: z.string().optional(), to: z.string().optional(), platform: z.enum(["all", "web", "app"]).default("all") }).optional()).query(({ input }) => {
+      const value = input ?? { period: "60" as const, platform: "all" as const };
+      const now = new Date();
+      let from: Date | undefined;
+      let to: Date | undefined;
+      if (value.period === "7" || value.period === "30" || value.period === "60") {
+        from = new Date(now);
+        from.setDate(from.getDate() - Number(value.period));
+      } else if (value.period === "custom") {
+        if (value.from && /^\d{4}-\d{2}-\d{2}$/.test(value.from)) from = new Date(`${value.from}T00:00:00.000Z`);
+        if (value.to && /^\d{4}-\d{2}-\d{2}$/.test(value.to)) to = new Date(`${value.to}T23:59:59.999Z`);
+      }
+      return getAnalyticsReport({ from, to, platform: value.platform });
     }),
   }),
   chat: router({

@@ -20,42 +20,46 @@ const sections = [
   },
   {
     title: "4. Como usamos os dados",
-    body: "Usamos os dados para fornecer o chat contextual, manter recursos como favoritos, anotações, progresso e histórico, melhorar a estabilidade e a segurança do serviço, responder ao suporte e cumprir obrigações legais aplicáveis. Não usamos o conteúdo das perguntas para enviar publicidade direcionada dentro do PromessaMS.",
+    body: "Usamos os dados para fornecer o chat contextual, manter recursos como favoritos, anotações, progresso e histórico, medir de forma agregada o uso do site e do app, melhorar a estabilidade e a segurança do serviço, responder ao suporte e cumprir obrigações legais aplicáveis. Não usamos o conteúdo das perguntas para enviar publicidade direcionada dentro do PromessaMS.",
   },
   {
-    title: "5. Compartilhamento e prestadores",
+    title: "5. Analytics anônimo de acesso",
+    body: "O PromessaMS registra, de forma agregada e sem associar os eventos à sua conta, páginas visitadas, funções utilizadas, plataforma (site ou app), uma identificação técnica aleatória de visitante e sessão, origem reduzida ao domínio e duração aproximada da sessão. Não registramos o texto digitado no chat, nomes, e-mails, endereço IP completo ou conteúdo das conversas para essa finalidade. Esses eventos são mantidos por no máximo 60 dias e depois removidos automaticamente.",
+  },
+  {
+    title: "6. Compartilhamento e prestadores",
     body: "Para prestar os recursos solicitados, os dados podem ser processados por provedores técnicos de hospedagem, autenticação, armazenamento, análise técnica e inteligência artificial. Ao enviar um pedido de música, seu nome, e-mail e música escolhida são encaminhados à Rádio da Promessa e ao provedor ConectaSTM para processar a solicitação. O PromessaMS não grava esses campos em seu banco; mantém temporariamente em memória o endereço IP e o horário da solicitação para limitar abuso. Os provedores da rádio podem aplicar suas próprias regras de retenção. Também podemos compartilhar dados quando exigido por lei ou para proteger direitos e segurança.",
   },
   {
-    title: "6. Conteúdo offline e armazenamento no dispositivo",
+    title: "7. Conteúdo offline e armazenamento no dispositivo",
     body: "Materiais de leitura, preferências, favoritos, anotações e parte do histórico podem permanecer armazenados localmente no seu dispositivo para permitir o uso offline e melhorar a experiência. Desinstalar o aplicativo ou limpar seus dados pode apagar esse conteúdo local. O histórico associado a uma conta pode permanecer sincronizado até que seja excluído de acordo com os recursos disponíveis da conta.",
   },
   {
-    title: "7. Permissões e recursos do dispositivo",
+    title: "8. Permissões e recursos do dispositivo",
     body: "O app pode usar internet para chat, autenticação e conteúdos online; armazenamento local para leitura e preferências; área de transferência quando você solicita copiar um texto ou PIX; áudio quando você solicita leitura em voz alta ou rádio; e notificações somente se autorizadas pelo sistema. O app não acessa contatos, localização ou câmera sem uma solicitação específica de recurso que explique a finalidade.",
   },
   {
-    title: "8. Segurança",
+    title: "9. Segurança",
     body: "Adotamos medidas técnicas e administrativas razoáveis para proteger os dados contra acesso não autorizado, perda, alteração ou divulgação indevida. Nenhum serviço conectado à internet pode garantir segurança absoluta; por isso, proteja seu dispositivo e não compartilhe credenciais.",
   },
   {
-    title: "9. Crianças",
+    title: "10. Crianças",
     body: "O PromessaMS não é destinado especificamente a crianças. O uso por menores deve ocorrer com orientação e supervisão dos responsáveis, conforme a legislação aplicável. Não solicitamos conscientemente dados pessoais de crianças para fins de publicidade.",
   },
   {
-    title: "10. Seus direitos e solicitações",
+    title: "11. Seus direitos e solicitações",
     body: "Você pode solicitar informações sobre o tratamento dos seus dados, correção, eliminação quando aplicável, revogação de consentimentos e esclarecimentos sobre esta política. Para isso, entre em contato pelo WhatsApp oficial ou pelos canais institucionais da Convenção Regional Sul-Mato-Grossense. Podemos solicitar informações mínimas para confirmar a identidade e proteger a conta.",
   },
   {
-    title: "11. Retenção e exclusão",
+    title: "12. Retenção e exclusão",
     body: "Mantemos os dados pelo tempo necessário para oferecer os recursos, cumprir obrigações legais, resolver disputas e aplicar acordos. Quando não houver mais necessidade legítima, os dados serão excluídos, anonimizados ou mantidos somente pelo prazo exigido por lei.",
   },
   {
-    title: "12. Alterações nesta política",
+    title: "13. Alterações nesta política",
     body: "Podemos atualizar esta Política de Privacidade para refletir mudanças no aplicativo, nos serviços ou na legislação. Publicaremos a versão atualizada nesta mesma página e indicaremos a data da última atualização. Mudanças relevantes serão comunicadas no app quando apropriado.",
   },
   {
-    title: "13. Contato",
+    title: "14. Contato",
     body: "Para dúvidas ou solicitações relacionadas à privacidade, use o canal oficial: WhatsApp +55 (67) 99913-2610. Ao entrar em contato, descreva sua solicitação sem enviar dados pessoais além do necessário.",
   },
 ];
